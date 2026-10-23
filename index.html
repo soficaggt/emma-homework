@@ -143,7 +143,7 @@ textarea.in { min-height: 90px; resize: vertical; }
       <span class="pill c-fixed"><i></i>Plans</span>
       <span class="pill c-flex"><i></i>Breaks</span>
     </div>
-    <div class="toolbar"><button class="editbtn" id="editBtn" type="button" aria-pressed="false" hidden>Edit plan</button></div>
+    <div class="toolbar" style="gap:8px"><a class="editbtn" id="proofLink" href="proof.html" hidden style="text-decoration:none;background:var(--hunter)">Emma's proof</a><button class="editbtn" id="editBtn" type="button" aria-pressed="false" hidden>Edit plan</button></div>
   </header>
   <main id="days" style="display:grid;gap:24px"><p class="loading">Loading…</p></main>
   <p class="status" id="status"></p>
@@ -182,6 +182,8 @@ let data = null, editing = false, busy = 0, pendingRender = false;
 
 // ---- config: the Google script link comes in the URL once (#api=...) and is remembered ----
 (function () {
+  const k = location.hash.match(/key=([^&]+)/);
+  if (k) { try { localStorage.setItem("emma-hw-sofia", decodeURIComponent(k[1])); } catch (e) {} }
   const m = location.hash.match(/api=([^&]+)/);
   if (m) {
     API = decodeURIComponent(m[1]);
@@ -205,6 +207,7 @@ function minutes(dur) {
   return hit ? m : 0;
 }
 function fmtTotal(m) { if (!m) return ""; const h = m / 60; return h >= 1 ? (Math.round(h * 4) / 4) + " hrs total" : m + " min total"; }
+const noProof = t => (data && data.noProof || ["flex", "fixed"]).includes(t.cat);
 const byOrder = (a, b) => (Number(a.order) || 0) - (Number(b.order) || 0) || String(a.id).localeCompare(String(b.id));
 
 // ---- talking to the Google Sheet ----
@@ -256,7 +259,7 @@ function render() {
   const root = document.getElementById("days"); root.textContent = "";
   const live = data.tasks.filter(t => !t.deleted);
 
-  const earlier = live.filter(t => t.date < today && !t.done && t.cat !== "flex" && t.cat !== "fixed").sort((a, b) => a.date.localeCompare(b.date) || byOrder(a, b));
+  const earlier = live.filter(t => t.date < today && !t.done && !noProof(t)).sort((a, b) => a.date.localeCompare(b.date) || byOrder(a, b));
   if (earlier.length) root.appendChild(daySection({ title: "Still to do from earlier", earlier: true }, earlier));
 
   for (let d = today; d <= end; d = addDays(d, 1)) {
@@ -334,9 +337,9 @@ function checkbox(t) {
   cb.setAttribute("aria-label", t.title);
   cb.addEventListener("click", ev => {
     if (t.done) { local(t.id, { done: false, doneAt: "" }); render(); post({ action: "uncomplete", id: t.id }); return; }
-    if (t.cat === "flex" || t.cat === "fixed") {
+    if (noProof(t)) {
       local(t.id, { done: true, doneAt: new Date().toISOString() }); render(); confetti();
-      if (t.cat === "fixed") toast(t.title);
+      if (t.cat !== "flex") toast(t.title);
       post({ action: "complete", id: t.id }); return;
     }
     ev.preventDefault();
@@ -390,7 +393,7 @@ function openStart() {
   const dlg = document.getElementById("startDlg"), pk = document.getElementById("picker");
   pk.textContent = "";
   const today = data.today;
-  const open = data.tasks.filter(t => !t.deleted && !t.done && t.cat !== "flex" && t.cat !== "fixed" && t.date <= addDays(today, 1));
+  const open = data.tasks.filter(t => !t.deleted && !t.done && !noProof(t) && t.date <= addDays(today, 1));
   const groups = [["Still to do from earlier", open.filter(t => t.date < today)], ["Today", open.filter(t => t.date === today)], ["Tomorrow", open.filter(t => t.date === addDays(today, 1))]];
   groups.forEach(([name, list]) => {
     if (!list.length) return;
@@ -512,6 +515,7 @@ function confetti() {
   })(t0);
 }
 
+try { if (localStorage.getItem("emma-hw-sofia")) document.getElementById("proofLink").hidden = false; } catch (e) {}
 document.getElementById("editBtn").addEventListener("click", () => { editing = !editing; render(); });
 document.getElementById("days").addEventListener("focusout", () => setTimeout(() => { if (pendingRender) render(); }, 0));
 load();
