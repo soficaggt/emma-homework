@@ -81,6 +81,17 @@ h1 span { font-family: var(--hand); font-weight: 700; color: var(--test); font-s
 .lb .note a { color: #d9c7ff; font-weight: 700; font-size: .85rem; }
 .lb button { position: absolute; border: 0; background: rgba(30,22,52,.75); color: #fff; box-shadow: 0 0 0 1.5px rgba(255,255,255,.35); width: 44px; height: 44px; border-radius: 50%; font-size: 1.4rem; cursor: pointer; display: grid; place-items: center; }
 .lb .x { top: 0; right: 0; } .lb .prev { left: 0; top: 50%; transform: translateY(-50%); } .lb .next { right: 0; top: 50%; transform: translateY(-50%); }
+.live { border-radius: 22px; padding: 16px 18px; box-shadow: var(--shadow); display: flex; align-items: center; gap: 14px; background: var(--card); }
+.live.on { background: linear-gradient(120deg, var(--school-bg), var(--card) 70%); outline: 2.5px solid var(--school); }
+.live .pulse { flex: none; width: 14px; height: 14px; border-radius: 50%; background: var(--muted); opacity: .5; }
+.live.on .pulse { background: var(--school); opacity: 1; box-shadow: 0 0 0 0 var(--school); animation: ring 1.8s ease-out infinite; }
+@keyframes ring { 0% { box-shadow: 0 0 0 0 rgba(47,191,143,.55); } 100% { box-shadow: 0 0 0 14px rgba(47,191,143,0); } }
+.live div { display: grid; gap: 1px; min-width: 0; }
+.live small { font-size: .78rem; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); }
+.live.on small { color: var(--school); }
+.live b { font-family: var(--hand); font-size: 1.7rem; line-height: 1.05; }
+.live span { color: var(--muted); font-size: .88rem; font-weight: 700; }
+@media (prefers-reduced-motion: reduce) { .live.on .pulse { animation: none; } }
 .setup { background: var(--card); border-radius: 20px; padding: 18px; box-shadow: var(--shadow); }
 @media (prefers-reduced-motion: reduce) { .polaroid, .grid > * { transition: none; transform: none !important; } }
 </style>
@@ -93,6 +104,7 @@ h1 span { font-family: var(--hand); font-weight: 700; color: var(--test); font-s
     <h1>Emma's <span>proof</span></h1>
     <p class="sub">Every finished assignment with her picture or note. Tap one to see it big.</p>
   </header>
+  <section class="live" id="live" aria-live="polite"><i class="pulse"></i><div><small id="liveLabel">Checking…</small><b id="liveTitle"></b><span id="liveSub"></span></div></section>
   <nav class="days" id="days" aria-label="Pick a day"></nav>
   <div class="summary" id="summary"></div>
   <section class="grid" id="grid"></section>
@@ -142,6 +154,31 @@ async function load() {
     renderDays(dates); render();
     $("status").textContent = "";
   } catch (e) { $("status").textContent = e.message === "not allowed" ? "This link isn't unlocked. Use Sofia's special link." : "Couldn't load. Check your internet and reload."; }
+}
+let live = null;
+async function loadLive() {
+  if (!API) return;
+  try {
+    const j = await (await fetch(API + (API.includes("?") ? "&" : "?") + "t=" + Date.now())).json();
+    if (j.ok) { live = j; renderLive(); }
+  } catch (e) {}
+}
+function mins(iso) { const m = Math.max(0, Math.round((Date.now() - new Date(iso)) / 60000)); return m < 60 ? m + " min" : Math.floor(m / 60) + " hr " + (m % 60) + " min"; }
+function renderLive() {
+  if (!live) return;
+  const st = live.status, box = $("live");
+  if (st && st.taskId) {
+    box.classList.add("on");
+    $("liveLabel").textContent = "Working right now";
+    $("liveTitle").textContent = st.title;
+    $("liveSub").textContent = "Started " + clock(st.startedAt) + " · " + mins(st.startedAt) + " so far";
+  } else {
+    box.classList.remove("on");
+    $("liveLabel").textContent = "Not in a work session";
+    const last = live.tasks.filter(t => t.done && t.doneAt && !(live.noProof || []).includes(t.cat)).sort((a, b) => b.doneAt.localeCompare(a.doneAt))[0];
+    $("liveTitle").textContent = last ? "Last finished: " + last.title : "Nothing started yet";
+    $("liveSub").textContent = last ? new Date(last.doneAt).toLocaleString([], { weekday: "short", hour: "numeric", minute: "2-digit" }) : "";
+  }
 }
 function renderDays(dates) {
   const nav = $("days"); nav.textContent = "";
@@ -215,8 +252,11 @@ document.addEventListener("keydown", e => {
 let sx = null;
 $("lb").addEventListener("touchstart", e => { sx = e.touches[0].clientX; }, { passive: true });
 $("lb").addEventListener("touchend", e => { if (sx == null) return; const dx = e.changedTouches[0].clientX - sx; if (Math.abs(dx) > 50) openLb(lbIndex + (dx < 0 ? 1 : -1)); sx = null; });
-load();
+load(); loadLive();
 setInterval(() => { if ($("lb").hidden && !document.hidden) load(); }, 60000);
+setInterval(() => { if (!document.hidden) loadLive(); }, 20000);
+setInterval(renderLive, 30000);
+document.addEventListener("visibilitychange", () => { if (!document.hidden) { loadLive(); load(); } });
 </script>
 </body>
 </html>
