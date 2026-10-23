@@ -1,0 +1,341 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Emma's Homework Week</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700;800&display=swap">
+<style>
+:root {
+  --bg: #f4efff; --bg2: #ffeef6; --card: #ffffff; --fg: #2b2440; --muted: #7a7192; --line: #ebe4f7;
+  --test: #ff6b8a; --test-bg: #ffe6ec; --school: #2fbf8f; --school-bg: #dff7ee;
+  --hunter: #9b6bff; --hunter-bg: #efe7ff; --rsm: #3d8bff; --rsm-bg: #e3eeff;
+  --fixed: #8a84a3; --fixed-bg: #efedf5; --flex: #f0a516; --flex-bg: #fff3d9;
+  --accent: #9b6bff; --shadow: 0 6px 0 #e4dbf6;
+  --display: "Fredoka", "Trebuchet MS", system-ui, sans-serif;
+  --body: "Nunito", system-ui, -apple-system, sans-serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) { :root {
+  --bg: #17132a; --bg2: #24152b; --card: #211c36; --fg: #f3efff; --muted: #a89fc4; --line: #322b4d;
+  --test: #ff8aa3; --test-bg: #3b1d2b; --school: #4fdcaa; --school-bg: #163229;
+  --hunter: #b996ff; --hunter-bg: #2c2148; --rsm: #74abff; --rsm-bg: #1c2848;
+  --fixed: #aaa4c2; --fixed-bg: #2a2640; --flex: #ffc24d; --flex-bg: #3a2e14;
+  --accent: #b996ff; --shadow: 0 6px 0 #0f0c1e; color-scheme: dark } }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); background-image: radial-gradient(circle at 10% 0%, var(--bg2) 0, transparent 45%), radial-gradient(circle at 100% 30%, var(--bg2) 0, transparent 40%); background-attachment: fixed; color: var(--fg); font-family: var(--body); font-size: 16px; line-height: 1.45; }
+.wrap { max-width: 680px; margin: 0 auto; padding-block: 32px 64px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: grid; gap: 24px; }
+header { display: grid; gap: 14px; }
+.kicker { font-family: var(--display); font-weight: 600; font-size: .85rem; letter-spacing: .14em; text-transform: uppercase; color: var(--accent); }
+h1 { font-family: var(--display); font-weight: 700; font-size: clamp(2.2rem, 8vw, 3.2rem); line-height: 1; margin: 0; text-wrap: balance; }
+.sub { color: var(--muted); margin: 0; }
+.overall { background: var(--card); border-radius: 20px; padding: 16px 18px; box-shadow: var(--shadow); display: grid; gap: 10px; }
+.overall-top { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.overall b { font-family: var(--display); font-size: 1.4rem; font-variant-numeric: tabular-nums; }
+.last { font-size: .88rem; color: var(--muted); }
+.bar { height: 12px; border-radius: 99px; background: var(--line); overflow: hidden; }
+.bar span { display: block; height: 100%; width: 0; border-radius: 99px; background: linear-gradient(90deg, var(--test), var(--hunter), var(--rsm), var(--school)); transition: width .4s ease; }
+.legend { display: flex; flex-wrap: wrap; gap: 8px; }
+.pill { display: inline-flex; align-items: center; gap: 6px; font-size: .8rem; font-weight: 800; padding: 5px 11px; border-radius: 99px; background: var(--cb); color: var(--c); }
+.pill i { width: 9px; height: 9px; border-radius: 50%; background: var(--c); }
+.c-test { --c: var(--test); --cb: var(--test-bg); }
+.c-school { --c: var(--school); --cb: var(--school-bg); }
+.c-hunter { --c: var(--hunter); --cb: var(--hunter-bg); }
+.c-rsm { --c: var(--rsm); --cb: var(--rsm-bg); }
+.c-fixed { --c: var(--fixed); --cb: var(--fixed-bg); }
+.c-flex { --c: var(--flex); --cb: var(--flex-bg); }
+.day { background: var(--card); border-radius: 24px; padding: 20px; box-shadow: var(--shadow); display: grid; gap: 14px; }
+.dayhead { display: grid; gap: 8px; }
+.dayrow { display: flex; justify-content: space-between; align-items: baseline; gap: 4px 12px; flex-wrap: wrap; }
+.dayhead h2 { font-family: var(--display); font-weight: 700; font-size: 1.6rem; margin: 0; line-height: 1.1; }
+.dayhead h2 small { font-weight: 500; font-size: .95rem; color: var(--muted); margin-left: 6px; }
+.count { font-family: var(--display); font-weight: 600; color: var(--accent); font-variant-numeric: tabular-nums; }
+.meta { color: var(--muted); font-size: .9rem; margin: 0; }
+.day .bar { height: 8px; }
+.tasks { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.task { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 12px; background: var(--cb); border-radius: 16px; padding: 11px 14px; }
+.check { appearance: none; -webkit-appearance: none; width: 26px; height: 26px; margin: 0; border-radius: 9px; border: 2.5px solid var(--c); background: var(--card); cursor: pointer; display: grid; place-items: center; transition: transform .15s ease, background .15s ease; }
+.check::after { content: ""; width: 7px; height: 13px; border: solid #fff; border-width: 0 3px 3px 0; transform: rotate(45deg) translate(-1px, -1px) scale(0); transition: transform .15s ease; }
+.check:checked { background: var(--c); transform: scale(1.08); }
+.check:checked::after { transform: rotate(45deg) translate(-1px, -1px) scale(1); }
+.check:focus-visible { outline: 3px solid var(--c); outline-offset: 2px; }
+.info { min-width: 0; display: grid; gap: 1px; }
+.title { font-weight: 800; }
+.note { font-size: .86rem; color: var(--muted); }
+.task.done .title, .task.done .note { text-decoration: line-through; opacity: .5; }
+.dur { font-family: var(--display); font-weight: 600; font-size: .9rem; color: var(--c); background: var(--card); padding: 4px 10px; border-radius: 99px; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.status { font-size: .85rem; color: var(--muted); text-align: center; margin: 0; }
+.toolbar { display: flex; justify-content: flex-end; }
+.editbtn { font: inherit; font-family: var(--display); font-weight: 600; background: var(--accent); color: #fff; border: 0; border-radius: 99px; padding: 9px 18px; cursor: pointer; box-shadow: 0 4px 0 var(--line); }
+.editbtn[aria-pressed="true"] { background: var(--school); }
+.editbtn:focus-visible, .addbtn:focus-visible, .rm:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.task.editing { grid-template-columns: auto 1fr; align-items: start; }
+.task.editing .check { margin-top: 6px; }
+.fields { min-width: 0; display: grid; gap: 6px; }
+.editline { display: flex; flex-wrap: wrap; gap: 6px; }
+.in { font: inherit; color: var(--fg); background: var(--card); border: 2px solid var(--line); border-radius: 10px; padding: 6px 10px; min-width: 0; width: 100%; }
+.in:focus { outline: none; border-color: var(--c); }
+.in-title { font-weight: 800; }
+.in-note { font-size: .9rem; }
+.in-dur { width: 7.5em; flex: none; }
+.in-cat { width: auto; flex: 1 1 9em; }
+.rm { font: inherit; font-size: .85rem; font-weight: 700; color: var(--test); background: none; border: 2px solid var(--test); border-radius: 10px; padding: 4px 10px; cursor: pointer; }
+.addbtn { font: inherit; font-weight: 800; color: var(--accent); background: none; border: 2.5px dashed var(--accent); border-radius: 16px; padding: 10px; cursor: pointer; }
+.toast { position: fixed; left: 50%; bottom: calc(20px + env(safe-area-inset-bottom, 0px)); transform: translate(-50%, 20px); width: min(420px, calc(100% - 32px)); background: var(--fg); color: var(--card); border-radius: 18px; padding: 14px 18px; font-weight: 700; box-shadow: 0 10px 30px rgba(0,0,0,.25); opacity: 0; pointer-events: none; transition: opacity .25s ease, transform .25s ease; z-index: 20; }
+.toast.show { opacity: 1; transform: translate(-50%, 0); }
+.toast b { font-family: var(--display); font-size: 1.15rem; display: block; margin-bottom: 2px; }
+@media (prefers-reduced-motion: reduce) { .check, .check::after, .bar span { transition: none; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <span class="kicker">Oct 21 to Oct 25</span>
+    <h1>Emma's Homework Week</h1>
+    <p class="sub">Dinner floats, eat whenever. Check off each thing as you finish it. Tap Edit plan to rename work, change how long it takes, or add homework.</p>
+    <div class="overall">
+      <div class="overall-top"><b id="overallCount">0 of 0 done</b><span class="last" id="last"></span></div>
+      <div class="bar"><span id="overallBar"></span></div>
+    </div>
+    <div class="legend">
+      <span class="pill c-test"><i></i>Test prep</span>
+      <span class="pill c-school"><i></i>School homework</span>
+      <span class="pill c-hunter"><i></i>Hunter</span>
+      <span class="pill c-rsm"><i></i>RSM</span>
+      <span class="pill c-fixed"><i></i>Plans</span>
+      <span class="pill c-flex"><i></i>Breaks</span>
+    </div>
+    <div class="toolbar"><button class="editbtn" id="editBtn" type="button" aria-pressed="false">Edit plan</button></div>
+  </header>
+  <main id="days" style="display:grid;gap:24px"></main>
+  <p class="status" id="status"></p>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"><b id="toastTitle"></b><span>Sofia is going to get an alert, so get ready for a call from her.</span></div>
+
+<script>
+// Phone alerts go to Sofia through the free ntfy app, subscribed to this topic.
+const NTFY_TOPIC = "emma-hw-5e47c8b0dc56";
+const STORE_KEY = "emma-homework-week-v1";
+
+const daily = (p) => [
+  { id: p + "-math", title: "Math homework", note: "New from class today", dur: "30 min", cat: "school" },
+  { id: p + "-hist", title: "History homework", note: "New from class today", dur: "30 min", cat: "school" },
+  { id: p + "-s1", subject: "Biology", note: "Pick the subject you got", dur: "20 min", cat: "school" },
+  { id: p + "-s2", subject: "Physics", note: "Pick the subject you got", dur: "20 min", cat: "school" },
+  { id: p + "-s3", subject: "Latin", note: "Pick the subject you got", dur: "20 min", cat: "school" }
+];
+const DAYS = [
+  { key: "wed", name: "Wednesday", date: "Oct 21", meta: "Start around 5:20, finish around 2am", tasks: [
+    { id: "wed-hobbit", title: "Hobbit review", note: "Post-its in the book, English test tomorrow", dur: "1 hr", cat: "test" },
+    { id: "wed-chem", title: "Chem review", note: "Chem test tomorrow", dur: "45 min", cat: "test" },
+    { id: "wed-hist", title: "History review", note: "Get started tonight, test is Friday", dur: "1 hr", cat: "test" },
+    { id: "wed-phys", title: "Physics packet", note: "With friends on the phone", dur: "1.5 hrs", cat: "school" },
+    { id: "wed-math", title: "School math", note: "Due tomorrow", dur: "2 hrs", cat: "school" },
+    { id: "wed-chempk", title: "Chemistry packet", note: "Due tomorrow", dur: "30 min", cat: "school" },
+    { id: "wed-latin", title: "Latin", note: "Due tomorrow", dur: "15 min", cat: "school" },
+    { id: "wed-dinner", title: "Dinner", note: "Whenever you want", dur: "30 min", cat: "flex" },
+    { id: "wed-breaks", title: "Breaks", note: "10 min between tasks, plus 30 min extra cushion", dur: "1.5 hrs", cat: "flex" }
+  ]},
+  { key: "thu", name: "Thursday", date: "Oct 22", meta: "Skip debate, home around 4, finish around 2:30am", tasks: [
+    { id: "thu-hread1", title: "Hunter reading 1", note: "At school: lunch, free period, or the bus", dur: "45 min", cat: "hunter" },
+    ...daily("thu"),
+    { id: "thu-hist", title: "History review", note: "The big one, test tomorrow", dur: "1.5 hrs", cat: "test" },
+    { id: "thu-hess1", title: "Hunter essay 1", note: "Due before tutoring Friday", dur: "1 hr", cat: "hunter" },
+    { id: "thu-hess2", title: "Hunter essay 2", note: "Due before tutoring Friday", dur: "1 hr", cat: "hunter" },
+    { id: "thu-hmath1", title: "Hunter math 1", note: "Due before tutoring Friday", dur: "1 hr", cat: "hunter" },
+    { id: "thu-hmath2", title: "Hunter math 2", note: "Due before tutoring Friday", dur: "1 hr", cat: "hunter" },
+    { id: "thu-dinner", title: "Dinner", note: "Whenever you want", dur: "30 min", cat: "flex" },
+    { id: "thu-breaks", title: "Breaks", note: "10 min between tasks, plus 30 min extra cushion", dur: "2 hrs", cat: "flex" }
+  ]},
+  { key: "fri", name: "Friday", date: "Oct 23", meta: "All at home, finish around midnight", tasks: [
+    { id: "fri-hread2", title: "Hunter reading 2", note: "After school before robotics, or at school", dur: "45 min", cat: "hunter" },
+    { id: "fri-robotics", title: "Robotics", note: "At home", dur: "4 to 6", cat: "fixed" },
+    { id: "fri-dinner", title: "Dinner", note: "Whenever you want, 6 to 6:30 is open", dur: "30 min", cat: "flex" },
+    { id: "fri-tutor", title: "Hunter tutoring", note: "All Hunter work done by now", dur: "6:30 to 7:30", cat: "fixed" },
+    { id: "fri-rsm1", title: "RSM homework 1", note: "Starts around 7:40", dur: "2 hrs", cat: "rsm" },
+    { id: "fri-rsm2", title: "RSM homework 2", note: "Due Saturday", dur: "2 hrs", cat: "rsm" },
+    { id: "fri-breaks", title: "Breaks", note: "15 min between RSMs, plus 30 min extra cushion", dur: "45 min", cat: "flex" }
+  ]},
+  { key: "sat", name: "Saturday", date: "Oct 24", meta: "Sleep in, both Saturday RSMs are done", tasks: [
+    { id: "sat-rsm", title: "RSM class", note: "Bring both homeworks", dur: "10am", cat: "fixed" }
+  ]},
+  { key: "sun", name: "Sunday", date: "Oct 25", meta: "Friday's new homework and the Monday RSMs", tasks: [
+    ...daily("sun").map(t => ({ ...t, note: t.note.replace("today", "Friday") })),
+    { id: "sun-rsm3", title: "RSM homework 3", note: "Due Monday", dur: "2 hrs", cat: "rsm" },
+    { id: "sun-rsm4", title: "RSM homework 4", note: "Due Monday", dur: "2 hrs", cat: "rsm" },
+    { id: "sun-rsm5", title: "RSM homework 5", note: "Due Monday", dur: "2 hrs", cat: "rsm" },
+    { id: "sun-breaks", title: "Breaks", note: "10 min between tasks, plus 30 min extra cushion", dur: "1.5 hrs", cat: "flex" }
+  ]}
+];
+
+// Everything Emma had already checked off or edited on the old page.
+const SEED = {
+  "cmvirmvqecc09": { at: null, cat: "hunter", custom: true, day: "thu", deleted: false, done: false, dur: "1hour", note: "Fri", order: 2792.6266708860003, title: "Essay" },
+  "cmvirnn8hbyqi": { at: "2026-10-22T01:44:08.849Z", cat: "hunter", custom: true, day: "wed", deleted: false, done: true, dur: "1hour", note: "Fri", order: 2792.6267065290003, title: "Essay" },
+  "thu-hess1": { deleted: true }, "thu-hess2": { deleted: true },
+  "fri-breaks": { at: "2026-10-21T21:37:05.736Z", done: false },
+  "fri-robotics": { done: false },
+  "wed-breaks": { at: "2026-10-22T02:17:57.959Z", done: true },
+  "wed-chem": { at: "2026-10-22T00:07:14.637Z", done: true, cat: "school" },
+  "wed-chempk": { note: "I'll do it last because technically it's not graded" },
+  "wed-dinner": { at: "2026-10-22T01:44:05.634Z", done: true },
+  "wed-hist": { at: "2026-10-22T03:05:03.558Z", done: true, cat: "school" },
+  "wed-hobbit": { at: "2026-10-22T02:17:45.075Z", done: true, cat: "school" },
+  "wed-math": { at: "2026-10-21T23:50:10.375Z", done: true },
+  "wed-phys": { note: "Probably doing it at lunch, since physics is after lunch" },
+  "thu-hist": { cat: "test" }
+};
+
+const CATS = [["test", "Test prep"], ["school", "School homework"], ["hunter", "Hunter"], ["rsm", "RSM"], ["fixed", "Plans"], ["flex", "Breaks"]];
+const byId = {};
+DAYS.forEach(d => d.tasks.forEach((t, i) => {
+  if (t.subject) { t.title = t.subject + " homework"; t.note = "Rename it if you got a different subject"; delete t.subject; }
+  t.day = d.key; t.order = i; byId[t.id] = t;
+}));
+
+let state = {};
+try { const s = localStorage.getItem(STORE_KEY); state = s ? JSON.parse(s) : {}; } catch (e) { state = {}; }
+if (!Object.keys(state).length) state = JSON.parse(JSON.stringify(SEED));
+function persist() {
+  try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); }
+  catch (e) { setStatus("This browser isn't saving checkmarks. Try a normal (not private) window."); }
+}
+
+let editing = false, pendingRender = false;
+
+function tasksFor(d) {
+  const list = d.tasks.map(t => ({ ...t, ...(state[t.id] || {}), id: t.id }));
+  Object.entries(state).forEach(([id, v]) => { if (v.custom && v.day === d.key && !byId[id]) list.push({ ...v, id }); });
+  return list.filter(t => !t.deleted).sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+}
+function minutes(dur) {
+  const s = String(dur || "").toLowerCase();
+  let m = 0, hit = false;
+  const h = s.match(/([\d.]+)\s*(hrs?|hours?|h)\b/); if (h) { m += parseFloat(h[1]) * 60; hit = true; }
+  const mm = s.match(/(\d+)\s*(mins?|minutes?|m)\b/); if (mm) { m += parseInt(mm[1], 10); hit = true; }
+  return hit ? m : 0;
+}
+function fmtTotal(m) { if (!m) return ""; const h = m / 60; return h >= 1 ? (Math.round(h * 4) / 4) + " hrs total" : m + " min total"; }
+function el(tag, cls, text) { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; }
+function counts() {
+  let all = 0, done = 0;
+  DAYS.forEach(d => { const t = tasksFor(d); all += t.length; done += t.filter(x => x.done).length; });
+  return { all, done };
+}
+
+function render() {
+  if (editing && document.activeElement && document.activeElement.closest && document.activeElement.closest("#days") && /INPUT|SELECT/.test(document.activeElement.tagName)) { pendingRender = true; return; }
+  pendingRender = false;
+  const root = document.getElementById("days");
+  root.textContent = "";
+  DAYS.forEach(d => {
+    const tasks = tasksFor(d);
+    const done = tasks.filter(t => t.done).length;
+    const total = tasks.reduce((s, t) => s + minutes(t.dur), 0);
+    const sec = el("section", "day");
+    const head = el("div", "dayhead");
+    const row = el("div", "dayrow");
+    const h2 = el("h2", null, d.name); h2.appendChild(el("small", null, d.date));
+    row.append(h2, el("span", "count", `${done} of ${tasks.length}`));
+    const meta = el("p", "meta", d.meta + (total ? " · " + fmtTotal(total) : ""));
+    const bar = el("div", "bar"); const fill = el("span"); fill.style.width = (tasks.length ? done / tasks.length * 100 : 0) + "%"; bar.appendChild(fill);
+    head.append(row, meta, bar);
+    sec.appendChild(head);
+    const ul = el("ul", "tasks");
+    tasks.forEach(t => ul.appendChild(editing ? editRow(t) : viewRow(t)));
+    sec.appendChild(ul);
+    if (editing) {
+      const add = el("button", "addbtn", "+ Add homework"); add.type = "button";
+      add.addEventListener("click", () => addTask(d));
+      sec.appendChild(add);
+    }
+    root.appendChild(sec);
+  });
+  const c = counts();
+  document.getElementById("overallCount").textContent = `${c.done} of ${c.all} done`;
+  document.getElementById("overallBar").style.width = (c.all ? c.done / c.all * 100 : 0) + "%";
+  const recent = Object.entries(state).map(([id, v]) => ({ ...(byId[id] || {}), ...v })).filter(v => v.done && v.at && !v.deleted).sort((a, b) => String(b.at).localeCompare(String(a.at)))[0];
+  document.getElementById("last").textContent = recent ? `Last done: ${recent.title || ""}, ${new Date(recent.at).toLocaleString([], { weekday: "short", hour: "numeric", minute: "2-digit" })}` : "";
+  const eb = document.getElementById("editBtn");
+  eb.textContent = editing ? "Done editing" : "Edit plan";
+  eb.setAttribute("aria-pressed", editing ? "true" : "false");
+}
+
+function checkbox(t) {
+  const cb = el("input", "check"); cb.type = "checkbox"; cb.checked = !!t.done;
+  cb.setAttribute("aria-label", t.title);
+  cb.addEventListener("change", () => {
+    save(t.id, { done: cb.checked, at: new Date().toISOString() });
+    if (cb.checked) { toast(t.title); notify(t.title); }
+  });
+  return cb;
+}
+function viewRow(t) {
+  const li = el("li", "task c-" + t.cat + (t.done ? " done" : ""));
+  const info = el("div", "info");
+  info.append(el("span", "title", t.title));
+  if (t.note) info.append(el("span", "note", t.note));
+  li.append(checkbox(t), info, el("span", "dur", t.dur || ""));
+  return li;
+}
+function editRow(t) {
+  const li = el("li", "task editing c-" + t.cat + (t.done ? " done" : ""));
+  const f = el("div", "fields");
+  const title = el("input", "in in-title"); title.id = "title-" + t.id; title.value = t.title || ""; title.placeholder = "Name of the work"; title.setAttribute("aria-label", "Name");
+  title.addEventListener("change", () => save(t.id, { title: title.value.trim() || "Untitled" }));
+  const note = el("input", "in in-note"); note.value = t.note || ""; note.placeholder = "Note (optional)"; note.setAttribute("aria-label", "Note");
+  note.addEventListener("change", () => save(t.id, { note: note.value.trim() }));
+  const line = el("div", "editline");
+  const dur = el("input", "in in-dur"); dur.value = t.dur || ""; dur.placeholder = "45 min"; dur.setAttribute("aria-label", "How long it takes");
+  dur.addEventListener("change", () => save(t.id, { dur: dur.value.trim() }));
+  const cat = el("select", "in in-cat"); cat.setAttribute("aria-label", "Type");
+  CATS.forEach(([v, n]) => { const o = el("option", null, n); o.value = v; cat.appendChild(o); });
+  cat.value = t.cat;
+  cat.addEventListener("change", () => save(t.id, { cat: cat.value }, true));
+  const rm = el("button", "rm", "Remove"); rm.type = "button";
+  rm.addEventListener("click", () => save(t.id, { deleted: true }, true));
+  line.append(dur, cat, rm);
+  f.append(title, note, line);
+  li.append(checkbox(t), f);
+  return li;
+}
+function addTask(d) {
+  const id = "c" + Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+  state[id] = { custom: true, day: d.key, order: 1000 + Date.now() / 1e9, title: "New homework", note: "", dur: "30 min", cat: "school", done: false };
+  persist(); render();
+  const inp = document.getElementById("title-" + id);
+  if (inp) { inp.focus(); inp.select(); }
+}
+function save(id, patch, rerender) {
+  state[id] = { ...(state[id] || {}), ...patch };
+  persist();
+  if (!editing || rerender || "done" in patch) render();
+}
+
+async function notify(title) {
+  const c = counts();
+  const time = new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+  try {
+    await fetch("https://ntfy.sh/" + NTFY_TOPIC, { method: "POST", body: `Emma finished: ${title}, ${time}. ${c.done} of ${c.all} done.` });
+    setStatus("");
+  } catch (e) { setStatus("Checked off, but the alert to Sofia didn't send. Text her instead."); }
+}
+
+let toastTimer = null;
+function toast(name) {
+  const t = document.getElementById("toast");
+  document.getElementById("toastTitle").textContent = "Nice, " + (name || "that") + " is done!";
+  t.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove("show"), 4500);
+}
+function setStatus(m) { document.getElementById("status").textContent = m; }
+
+document.getElementById("editBtn").addEventListener("click", () => { editing = !editing; render(); });
+document.getElementById("days").addEventListener("focusout", () => setTimeout(() => { if (pendingRender) render(); }, 0));
+render();
+</script>
+</body>
+</html>
