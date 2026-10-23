@@ -256,7 +256,7 @@ function render() {
   const root = document.getElementById("days"); root.textContent = "";
   const live = data.tasks.filter(t => !t.deleted);
 
-  const earlier = live.filter(t => t.date < today && !t.done && t.cat !== "flex").sort((a, b) => a.date.localeCompare(b.date) || byOrder(a, b));
+  const earlier = live.filter(t => t.date < today && !t.done && t.cat !== "flex" && t.cat !== "fixed").sort((a, b) => a.date.localeCompare(b.date) || byOrder(a, b));
   if (earlier.length) root.appendChild(daySection({ title: "Still to do from earlier", earlier: true }, earlier));
 
   for (let d = today; d <= end; d = addDays(d, 1)) {
@@ -334,7 +334,11 @@ function checkbox(t) {
   cb.setAttribute("aria-label", t.title);
   cb.addEventListener("click", ev => {
     if (t.done) { local(t.id, { done: false, doneAt: "" }); render(); post({ action: "uncomplete", id: t.id }); return; }
-    if (t.cat === "flex") { local(t.id, { done: true, doneAt: new Date().toISOString() }); render(); post({ action: "complete", id: t.id }); return; }
+    if (t.cat === "flex" || t.cat === "fixed") {
+      local(t.id, { done: true, doneAt: new Date().toISOString() }); render(); confetti();
+      if (t.cat === "fixed") toast(t.title);
+      post({ action: "complete", id: t.id }); return;
+    }
     ev.preventDefault();
     askProof(t);
   });
@@ -386,7 +390,7 @@ function openStart() {
   const dlg = document.getElementById("startDlg"), pk = document.getElementById("picker");
   pk.textContent = "";
   const today = data.today;
-  const open = data.tasks.filter(t => !t.deleted && !t.done && t.cat !== "flex" && t.date <= addDays(today, 1));
+  const open = data.tasks.filter(t => !t.deleted && !t.done && t.cat !== "flex" && t.cat !== "fixed" && t.date <= addDays(today, 1));
   const groups = [["Still to do from earlier", open.filter(t => t.date < today)], ["Today", open.filter(t => t.date === today)], ["Tomorrow", open.filter(t => t.date === addDays(today, 1))]];
   groups.forEach(([name, list]) => {
     if (!list.length) return;
@@ -451,7 +455,7 @@ document.getElementById("proofSubmit").addEventListener("click", async () => {
   btn.disabled = true; btn.textContent = "Sending…";
   const ok = await post({ action: "complete", id: t.id, proofText: document.getElementById("proofText").value.trim(), photo: proofPhoto ? { data: proofPhoto } : null });
   btn.textContent = "Check it off";
-  if (ok) { document.getElementById("proofDlg").close(); toast(t.title); }
+  if (ok) { document.getElementById("proofDlg").close(); confetti(); toast(t.title); }
   else { document.getElementById("proofErr").textContent = "That didn't send. Check your internet and try again."; updateProofBtn(); }
 });
 document.querySelectorAll("[data-close]").forEach(b => b.addEventListener("click", () => b.closest("dialog").close()));
@@ -460,9 +464,52 @@ let toastTimer = null;
 function toast(name) {
   const t = document.getElementById("toast");
   document.getElementById("toastTitle").textContent = "Nice, " + (name || "that") + " is done!";
-  document.getElementById("toastMsg").textContent = "Sofia is going to get an alert, so get ready for a call from her.";
+  document.getElementById("toastMsg").textContent = "Sofia will be alerted. Get ready for her call at 10pm!";
   t.classList.add("show"); clearTimeout(toastTimer);
   toastTimer = setTimeout(() => t.classList.remove("show"), 4500);
+}
+
+// ---- confetti: hearts, stars and bits falling down the screen ----
+function confetti() {
+  if (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const c = document.createElement("canvas");
+  c.style.cssText = "position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:30";
+  document.body.appendChild(c);
+  const dpr = window.devicePixelRatio || 1, W = innerWidth, H = innerHeight;
+  c.width = W * dpr; c.height = H * dpr;
+  const ctx = c.getContext("2d"); ctx.scale(dpr, dpr);
+  const colors = ["#ff6b8a", "#9b6bff", "#3d8bff", "#2fbf8f", "#f0a516", "#ffb3c7", "#c7b3ff"];
+  const shapes = ["heart", "star", "rect", "circle"];
+  const bits = Array.from({ length: 140 }, () => ({
+    x: Math.random() * W, y: -20 - Math.random() * H * 0.6,
+    s: 7 + Math.random() * 9, vy: 2 + Math.random() * 3, vx: -1 + Math.random() * 2,
+    r: Math.random() * 6.28, vr: -0.1 + Math.random() * 0.2, sway: Math.random() * 6.28,
+    color: colors[Math.floor(Math.random() * colors.length)], shape: shapes[Math.floor(Math.random() * shapes.length)]
+  }));
+  function draw(b) {
+    ctx.save(); ctx.translate(b.x, b.y); ctx.rotate(b.r); ctx.fillStyle = b.color; const s = b.s;
+    if (b.shape === "heart") {
+      ctx.beginPath(); ctx.moveTo(0, s * 0.3);
+      ctx.bezierCurveTo(-s * 0.6, -s * 0.2, -s * 0.3, -s * 0.7, 0, -s * 0.35);
+      ctx.bezierCurveTo(s * 0.3, -s * 0.7, s * 0.6, -s * 0.2, 0, s * 0.3); ctx.fill();
+    } else if (b.shape === "star") {
+      ctx.beginPath();
+      for (let i = 0; i < 10; i++) { const a = i * Math.PI / 5 - Math.PI / 2, rr = i % 2 ? s * 0.25 : s * 0.6; ctx.lineTo(Math.cos(a) * rr, Math.sin(a) * rr); }
+      ctx.closePath(); ctx.fill();
+    } else if (b.shape === "circle") { ctx.beginPath(); ctx.arc(0, 0, s * 0.35, 0, 6.28); ctx.fill(); }
+    else ctx.fillRect(-s * 0.4, -s * 0.2, s * 0.8, s * 0.4);
+    ctx.restore();
+  }
+  const t0 = performance.now();
+  (function frame(now) {
+    ctx.clearRect(0, 0, W, H);
+    let alive = false;
+    bits.forEach(b => {
+      b.sway += 0.05; b.x += b.vx + Math.sin(b.sway) * 0.8; b.y += b.vy; b.r += b.vr;
+      if (b.y < H + 30) { alive = true; draw(b); }
+    });
+    if (alive && now - t0 < 6000) requestAnimationFrame(frame); else c.remove();
+  })(t0);
 }
 
 document.getElementById("editBtn").addEventListener("click", () => { editing = !editing; render(); });
