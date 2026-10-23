@@ -207,6 +207,22 @@ function minutes(dur) {
   return hit ? m : 0;
 }
 function fmtTotal(m) { if (!m) return ""; const h = m / 60; return h >= 1 ? (Math.round(h * 4) / 4) + " hrs total" : m + " min total"; }
+const NTFY_TOPIC = "emma-hw-5e47c8b0dc56";
+const noAlert = t => (data && data.noAlert || ["flex"]).includes(t.cat);
+function nowClock() { return new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }).toLowerCase().replace(" ", ""); }
+function alertSofia(msg, click) {
+  const headers = { "Title": "Emma homework" };
+  if (click) headers["Click"] = click;
+  fetch("https://ntfy.sh/" + NTFY_TOPIC, { method: "POST", body: msg, headers }).catch(() => {});
+}
+function finishedAlert(id) {
+  const t = data && data.tasks.find(x => x.id === id);
+  if (!t || noAlert(t)) return;
+  const todays = data.tasks.filter(x => !x.deleted && x.date === data.today);
+  const proof = noProof(t) ? "" : t.proofPhoto && t.proofText ? " (photo + note)" : t.proofPhoto ? " (photo)" : " (note only)";
+  alertSofia("Emma finished: " + t.title + ", " + nowClock() + proof + (t.proofText ? '\n"' + t.proofText.slice(0, 200) + '"' : "") +
+    "\nToday: " + todays.filter(x => x.done).length + " of " + todays.length + " done", t.proofPhoto || location.origin + location.pathname);
+}
 const noProof = t => (data && data.noProof || ["flex", "fixed"]).includes(t.cat);
 const byOrder = (a, b) => (Number(a.order) || 0) - (Number(b.order) || 0) || String(a.id).localeCompare(String(b.id));
 
@@ -291,7 +307,7 @@ function renderWorking() {
     const t = data.tasks.find(x => x.id === st.taskId);
     if (t && !t.done) { const fin = el("button", "btn", "I finished it"); fin.type = "button"; fin.onclick = () => askProof(t); btns.append(fin); }
     const stop = el("button", "btn ghost", "Stop"); stop.type = "button";
-    stop.onclick = () => { data.status = null; render(); post({ action: "stop" }); };
+    stop.onclick = () => { const was = data.status; data.status = null; render(); post({ action: "stop" }); if (was) alertSofia("Emma stopped working on " + was.title + " (not checked off), " + nowClock()); };
     btns.append(stop);
     w.append(now, btns);
   } else {
@@ -336,11 +352,11 @@ function checkbox(t) {
   const cb = el("input", "check"); cb.type = "checkbox"; cb.checked = !!t.done;
   cb.setAttribute("aria-label", t.title);
   cb.addEventListener("click", ev => {
-    if (t.done) { local(t.id, { done: false, doneAt: "" }); render(); post({ action: "uncomplete", id: t.id }); return; }
+    if (t.done) { local(t.id, { done: false, doneAt: "" }); render(); post({ action: "uncomplete", id: t.id }); if (!noAlert(t)) alertSofia("Heads up: Emma UNCHECKED " + t.title + ", " + nowClock() + ". It was marked done before.", t.proofPhoto || ""); return; }
     if (noProof(t)) {
       local(t.id, { done: true, doneAt: new Date().toISOString() }); render(); confetti();
       if (t.cat !== "flex") toast(t.title);
-      post({ action: "complete", id: t.id }); return;
+      post({ action: "complete", id: t.id }).then(ok => { if (ok) finishedAlert(t.id); }); return;
     }
     ev.preventDefault();
     askProof(t);
@@ -400,7 +416,7 @@ function openStart() {
     pk.append(el("div", "grp", name));
     list.sort(byOrder).forEach(t => {
       const b = el("button", "c-" + t.cat, t.title); b.type = "button";
-      b.onclick = () => { dlg.close(); data.status = { taskId: t.id, title: t.title, startedAt: new Date().toISOString() }; render(); post({ action: "start", id: t.id }); };
+      b.onclick = () => { dlg.close(); data.status = { taskId: t.id, title: t.title, startedAt: new Date().toISOString() }; render(); post({ action: "start", id: t.id }); alertSofia("Emma started: " + t.title + ", " + nowClock()); };
       pk.append(b);
     });
   });
@@ -458,7 +474,7 @@ document.getElementById("proofSubmit").addEventListener("click", async () => {
   btn.disabled = true; btn.textContent = "Sending…";
   const ok = await post({ action: "complete", id: t.id, proofText: document.getElementById("proofText").value.trim(), photo: proofPhoto ? { data: proofPhoto } : null });
   btn.textContent = "Check it off";
-  if (ok) { document.getElementById("proofDlg").close(); confetti(); toast(t.title); }
+  if (ok) { document.getElementById("proofDlg").close(); confetti(); toast(t.title); finishedAlert(t.id); }
   else { document.getElementById("proofErr").textContent = "That didn't send. Check your internet and try again."; updateProofBtn(); }
 });
 document.querySelectorAll("[data-close]").forEach(b => b.addEventListener("click", () => b.closest("dialog").close()));
