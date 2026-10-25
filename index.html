@@ -77,6 +77,9 @@ h1 { font-family: var(--display); font-weight: 700; font-size: clamp(2.2rem, 8vw
 .editbtn:focus-visible, .addbtn:focus-visible, .rm:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
 .task.editing { grid-template-columns: auto 1fr; align-items: start; }
 .task.editing .check { margin-top: 6px; }
+.plan-mark { width: 26px; height: 26px; display: grid; place-items: center; }
+.plan-mark::before { content: ""; width: 10px; height: 10px; border-radius: 50%; background: var(--c); }
+.task.editing .plan-mark { margin-top: 6px; }
 .fields { min-width: 0; display: grid; gap: 6px; }
 .editline { display: flex; flex-wrap: wrap; gap: 6px; }
 .in { font: inherit; color: var(--fg); background: var(--card); border: 2px solid var(--line); border-radius: 10px; padding: 6px 10px; min-width: 0; width: 100%; }
@@ -222,11 +225,12 @@ function alertSofia(msg, click) {
 function finishedAlert(id) {
   const t = data && data.tasks.find(x => x.id === id);
   if (!t || noAlert(t)) return;
-  const todays = data.tasks.filter(x => !x.deleted && x.date === data.today);
+  const todays = data.tasks.filter(x => !x.deleted && x.date === data.today && !isPlan(x));
   const proof = noProof(t) ? "" : t.proofPhoto && t.proofText ? " (photo + note)" : t.proofPhoto ? " (photo)" : " (note only)";
   alertSofia("Emma finished: " + t.title + ", " + nowClock() + proof + (t.proofText ? '\n"' + t.proofText.slice(0, 200) + '"' : "") +
     "\nToday: " + todays.filter(x => x.done).length + " of " + todays.length + " done", t.proofPhoto || location.origin + location.pathname);
 }
+const isPlan = t => t.cat === "fixed"; // plans just happen, nothing to check off
 const noProof = t => (data && data.noProof || ["flex", "fixed"]).includes(t.cat);
 const byOrder = (a, b) => (Number(a.order) || 0) - (Number(b.order) || 0) || String(a.id).localeCompare(String(b.id));
 
@@ -287,7 +291,7 @@ function render() {
     root.appendChild(daySection({ date: d, title: dayName(d), sub: shortDate(d), isToday: d === today }, tasks));
   }
 
-  const todays = live.filter(t => t.date === today);
+  const todays = live.filter(t => t.date === today && !isPlan(t));
   const done = todays.filter(t => t.done).length;
   document.getElementById("overall").hidden = false;
   document.getElementById("overallCount").textContent = `Today: ${done} of ${todays.length} done`;
@@ -329,12 +333,13 @@ function daySection(d, tasks) {
   const h2 = el("h2", null, d.title);
   if (d.sub) h2.appendChild(el("small", null, d.sub));
   if (d.isToday) h2.appendChild(el("span", "today-tag", "Today"));
-  const done = tasks.filter(t => t.done).length;
-  row.append(h2, el("span", "count", `${done} of ${tasks.length}`));
+  const checkable = tasks.filter(t => !isPlan(t));
+  const done = checkable.filter(t => t.done).length;
+  row.append(h2, el("span", "count", `${done} of ${checkable.length}`));
   head.append(row);
   const total = tasks.reduce((s, t) => s + minutes(t.dur), 0);
   if (total) head.append(el("p", "meta", fmtTotal(total)));
-  const bar = el("div", "bar"); const fill = el("span"); fill.style.width = (tasks.length ? done / tasks.length * 100 : 0) + "%"; bar.appendChild(fill);
+  const bar = el("div", "bar"); const fill = el("span"); fill.style.width = (checkable.length ? done / checkable.length * 100 : 0) + "%"; bar.appendChild(fill);
   head.append(bar);
   sec.appendChild(head);
   const ul = el("ul", "tasks");
@@ -353,6 +358,7 @@ function daySection(d, tasks) {
 }
 
 function checkbox(t) {
+  if (isPlan(t)) { const m = el("span", "plan-mark"); m.setAttribute("aria-hidden", "true"); return m; }
   const cb = el("input", "check"); cb.type = "checkbox"; cb.checked = !!t.done;
   cb.setAttribute("aria-label", t.title);
   cb.addEventListener("click", ev => {
