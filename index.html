@@ -492,7 +492,7 @@ function toast(name) {
   toastTimer = setTimeout(() => t.classList.remove("show"), 4500);
 }
 
-// ---- confetti: hearts, stars and bits falling down the screen ----
+// ---- confetti: squishies that fall, land and squish at the bottom ----
 function confetti() {
   if (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) return;
   const c = document.createElement("canvas");
@@ -501,37 +501,82 @@ function confetti() {
   const dpr = window.devicePixelRatio || 1, W = innerWidth, H = innerHeight;
   c.width = W * dpr; c.height = H * dpr;
   const ctx = c.getContext("2d"); ctx.scale(dpr, dpr);
-  const colors = ["#ff6b8a", "#9b6bff", "#3d8bff", "#2fbf8f", "#f0a516", "#ffb3c7", "#c7b3ff"];
-  const shapes = ["heart", "star", "rect", "circle"];
-  const bits = Array.from({ length: 140 }, () => ({
-    x: Math.random() * W, y: -20 - Math.random() * H * 0.6,
-    s: 7 + Math.random() * 9, vy: 2 + Math.random() * 3, vx: -1 + Math.random() * 2,
-    r: Math.random() * 6.28, vr: -0.1 + Math.random() * 0.2, sway: Math.random() * 6.28,
-    color: colors[Math.floor(Math.random() * colors.length)], shape: shapes[Math.floor(Math.random() * shapes.length)]
-  }));
+  // pastel body + darker outline for each squishy
+  const palette = [["#ffc8d8", "#e889a6"], ["#d9c8ff", "#a38ae0"], ["#c4e2ff", "#7fb0e6"], ["#c8f0dc", "#78c9a2"], ["#fff1b8", "#e3c25c"], ["#ffd9c2", "#ec9f78"]];
+  const kinds = ["mochi", "cat", "bunny", "strawberry", "bear"];
+  const n = Math.min(46, Math.round(W / 12));
+  const bits = Array.from({ length: n }, () => {
+    const k = kinds[Math.floor(Math.random() * kinds.length)];
+    const col = k === "strawberry" ? ["#ff9fb2", "#e46b86"] : palette[Math.floor(Math.random() * palette.length)];
+    return {
+      x: Math.random() * W, y: -40 - Math.random() * H * 0.7, s: 22 + Math.random() * 18,
+      vy: 1 + Math.random() * 2, vx: -0.8 + Math.random() * 1.6, r: -0.3 + Math.random() * 0.6, vr: -0.02 + Math.random() * 0.04,
+      wob: Math.random() * 6.28, sq: 0, sqv: 0, landed: 0, alpha: 1, kind: k, fill: col[0], line: col[1]
+    };
+  });
+  function blob(w, h) { ctx.beginPath(); ctx.ellipse(0, 0, w, h, 0, 0, 6.28); }
+  function face(s, dy) {
+    ctx.fillStyle = "#4a3a44";
+    ctx.beginPath(); ctx.arc(-s * 0.2, dy, s * 0.06, 0, 6.28); ctx.arc(s * 0.2, dy, s * 0.06, 0, 6.28); ctx.fill();
+    ctx.strokeStyle = "#4a3a44"; ctx.lineWidth = Math.max(1.2, s * 0.045); ctx.lineCap = "round";
+    ctx.beginPath(); ctx.arc(-s * 0.05, dy + s * 0.08, s * 0.05, 0.2, Math.PI - 0.2); ctx.stroke();
+    ctx.beginPath(); ctx.arc(s * 0.05, dy + s * 0.08, s * 0.05, 0.2, Math.PI - 0.2); ctx.stroke();
+    ctx.fillStyle = "rgba(255,120,150,.45)";
+    ctx.beginPath(); ctx.ellipse(-s * 0.33, dy + s * 0.1, s * 0.09, s * 0.055, 0, 0, 6.28); ctx.ellipse(s * 0.33, dy + s * 0.1, s * 0.09, s * 0.055, 0, 0, 6.28); ctx.fill();
+  }
+  function shine(s) { ctx.fillStyle = "rgba(255,255,255,.65)"; ctx.beginPath(); ctx.ellipse(-s * 0.25, -s * 0.22, s * 0.11, s * 0.06, -0.6, 0, 6.28); ctx.fill(); }
   function draw(b) {
-    ctx.save(); ctx.translate(b.x, b.y); ctx.rotate(b.r); ctx.fillStyle = b.color; const s = b.s;
-    if (b.shape === "heart") {
-      ctx.beginPath(); ctx.moveTo(0, s * 0.3);
-      ctx.bezierCurveTo(-s * 0.6, -s * 0.2, -s * 0.3, -s * 0.7, 0, -s * 0.35);
-      ctx.bezierCurveTo(s * 0.3, -s * 0.7, s * 0.6, -s * 0.2, 0, s * 0.3); ctx.fill();
-    } else if (b.shape === "star") {
+    const s = b.s, sx = 1 + b.sq, sy = 1 - b.sq;
+    ctx.save(); ctx.globalAlpha = b.alpha; ctx.translate(b.x, b.y);
+    ctx.rotate(b.landed ? b.r * 0.3 : b.r);
+    ctx.translate(0, s * 0.4); ctx.scale(sx, sy); ctx.translate(0, -s * 0.4); // squish from the bottom
+    ctx.fillStyle = b.fill; ctx.strokeStyle = b.line; ctx.lineWidth = Math.max(1.5, s * 0.06);
+    if (b.kind === "cat" || b.kind === "bear" || b.kind === "bunny") {
       ctx.beginPath();
-      for (let i = 0; i < 10; i++) { const a = i * Math.PI / 5 - Math.PI / 2, rr = i % 2 ? s * 0.25 : s * 0.6; ctx.lineTo(Math.cos(a) * rr, Math.sin(a) * rr); }
-      ctx.closePath(); ctx.fill();
-    } else if (b.shape === "circle") { ctx.beginPath(); ctx.arc(0, 0, s * 0.35, 0, 6.28); ctx.fill(); }
-    else ctx.fillRect(-s * 0.4, -s * 0.2, s * 0.8, s * 0.4);
+      if (b.kind === "cat") { [-1, 1].forEach(d => { ctx.moveTo(d * s * 0.42, -s * 0.05); ctx.lineTo(d * s * 0.36, -s * 0.48); ctx.lineTo(d * s * 0.1, -s * 0.28); }); ctx.closePath(); }
+      else if (b.kind === "bear") { [-1, 1].forEach(d => { ctx.moveTo(d * s * 0.32 + s * 0.13, -s * 0.3); ctx.arc(d * s * 0.32, -s * 0.3, s * 0.13, 0, 6.28); }); }
+      else { [-1, 1].forEach(d => { ctx.moveTo(d * s * 0.17 + s * 0.1, -s * 0.5); ctx.ellipse(d * s * 0.17, -s * 0.5, s * 0.1, s * 0.26, d * 0.15, 0, 6.28); }); }
+      ctx.fill(); ctx.stroke();
+    }
+    if (b.kind === "strawberry") {
+      ctx.beginPath(); ctx.moveTo(-s * 0.45, -s * 0.15);
+      ctx.bezierCurveTo(-s * 0.5, s * 0.25, -s * 0.15, s * 0.45, 0, s * 0.45);
+      ctx.bezierCurveTo(s * 0.15, s * 0.45, s * 0.5, s * 0.25, s * 0.45, -s * 0.15);
+      ctx.bezierCurveTo(s * 0.4, -s * 0.4, -s * 0.4, -s * 0.4, -s * 0.45, -s * 0.15); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = "#fff6c9"; [[-0.25, 0.05], [0.25, 0.05], [0, 0.3], [-0.15, 0.22], [0.15, 0.22]].forEach(([a, d]) => { ctx.beginPath(); ctx.ellipse(a * s, d * s, s * 0.025, s * 0.04, 0, 0, 6.28); ctx.fill(); });
+      ctx.fillStyle = "#8fd6a2"; ctx.strokeStyle = "#5fb37a";
+      ctx.beginPath(); for (let i = 0; i < 5; i++) { const a = Math.PI + i * Math.PI / 4; ctx.ellipse(Math.cos(a) * s * 0.18, -s * 0.33 + Math.sin(a) * s * 0.05, s * 0.12, s * 0.05, a, 0, 6.28); } ctx.fill();
+      face(s, -s * 0.12);
+    } else {
+      blob(s * 0.5, s * 0.4); ctx.fill(); ctx.stroke();
+      if (b.kind === "bunny" || b.kind === "cat") { ctx.fillStyle = "rgba(255,150,175,.5)"; ctx.beginPath(); if (b.kind === "bunny") [-1, 1].forEach(d => { ctx.moveTo(d * s * 0.17 + s * 0.05, -s * 0.5); ctx.ellipse(d * s * 0.17, -s * 0.5, s * 0.05, s * 0.16, d * 0.15, 0, 6.28); }); ctx.fill(); }
+      if (b.kind === "bear") { ctx.fillStyle = "rgba(255,255,255,.55)"; ctx.beginPath(); ctx.ellipse(0, s * 0.12, s * 0.17, s * 0.12, 0, 0, 6.28); ctx.fill(); }
+      face(s, s * 0.02);
+      shine(s);
+    }
     ctx.restore();
   }
-  const t0 = performance.now();
+  const floor = H - 8, t0 = performance.now();
   (function frame(now) {
     ctx.clearRect(0, 0, W, H);
-    let alive = false;
+    const t = now - t0; let alive = false;
     bits.forEach(b => {
-      b.sway += 0.05; b.x += b.vx + Math.sin(b.sway) * 0.8; b.y += b.vy; b.r += b.vr;
-      if (b.y < H + 30) { alive = true; draw(b); }
+      if (b.alpha <= 0) return;
+      // spring that makes them jiggle
+      b.sqv += -0.18 * b.sq; b.sqv *= 0.86; b.sq += b.sqv;
+      if (!b.landed || b.y < floor - b.s * 0.4) {
+        b.vy += 0.12; b.wob += 0.08; b.x += b.vx + Math.sin(b.wob) * 0.4; b.y += b.vy; b.r += b.vr;
+        if (!b.landed) b.sq += Math.sin(b.wob * 1.3) * 0.004;
+        if (b.y > floor - b.s * 0.4) { // hit the floor: squish and bounce
+          b.y = floor - b.s * 0.4; b.sqv += Math.min(0.12, b.vy * 0.03);
+          b.vy = -b.vy * 0.35; b.vx *= 0.6; b.landed++;
+          if (Math.abs(b.vy) < 1) b.vy = 0;
+        }
+      }
+      if (t > 4200) b.alpha -= 0.025;
+      alive = true; draw(b);
     });
-    if (alive && now - t0 < 6000) requestAnimationFrame(frame); else c.remove();
+    if (alive && t < 6500) requestAnimationFrame(frame); else c.remove();
   })(t0);
 }
 
