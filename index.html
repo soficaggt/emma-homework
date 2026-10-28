@@ -42,7 +42,7 @@ h1 { font-family: var(--display); font-weight: 700; font-size: clamp(2.2rem, 8vw
 .bar span { display: block; height: 100%; width: 0; border-radius: 99px; background: linear-gradient(90deg, #ff6b8a, #9b6bff, #3d8bff, #2fbf8f); transition: width .4s ease; }
 
 /* colors: each task gets a hue; tags no longer decide it */
-.hue { --h: 265; --sat: 1; --cb: hsl(var(--h) calc(var(--ts) * var(--sat)) var(--tl)); --c: hsl(var(--h) calc(var(--as) * var(--sat)) var(--al)); }
+.hue { --h: 265; --sat: 1; --so: 0; --hh: calc(var(--h) + var(--so)); --cb: hsl(var(--hh) calc(var(--ts) * var(--sat)) var(--tl)); --c: hsl(var(--hh) calc(var(--as) * var(--sat)) var(--al)); }
 .h-pink { --h: 340; } .h-red { --h: 2; } .h-orange { --h: 24; } .h-yellow { --h: 46; } .h-lime { --h: 84; } .h-green { --h: 148; }
 .h-white { --h: 250; --sat: .05; } .h-black { --h: 250; --sat: .15; }
 .h-teal { --h: 176; } .h-sky { --h: 198; } .h-blue { --h: 222; } .h-purple { --h: 262; } .h-lavender { --h: 286; } .h-brown { --h: 26; --sat: .45; } .h-gray { --h: 250; --sat: .12; }
@@ -118,15 +118,16 @@ label.lbl { display: grid; gap: 2px; font-size: .75rem; font-weight: 800; color:
 .sortable-chosen { box-shadow: 0 10px 24px rgba(60, 30, 120, .25); }
 .dropzone-empty { color: var(--muted); font-size: .9rem; padding: 10px; border: 2px dashed var(--line); border-radius: 14px; text-align: center; list-style: none; }
 
-.task.h-white { --cb: #ffffff; --c: #8e86a6; box-shadow: inset 0 0 0 2px #e6e0f2; color: #2b2440; }
-.task.h-black { --cb: #2b2440; --c: #c9b4ff; color: #f6f2ff; }
-.task.h-black .tag, .task.h-black .dur, .task.h-black .ib, .task.h-black .due:not(.today):not(.late) { background: #463d63; }
-.task.h-white .tag, .task.h-white .dur, .task.h-white .ib, .task.h-white .due:not(.today):not(.late) { background: #f1edf9; color: #2b2440; }
-.task.h-white .tag, .task.h-white .dur { color: #6b6385; }
+.task.h-white { --cb: hsl(var(--sh, 250) 70% 97%); --c: hsl(var(--sh, 250) 45% 55%); box-shadow: inset 0 0 0 2px hsl(var(--sh, 250) 45% 86%); color: #2b2440; }
+.task.h-black { --cb: hsl(var(--sh, 250) 28% 15%); --c: hsl(var(--sh, 250) 80% 76%); color: #f6f2ff; }
+.task.h-black .tag, .task.h-black .dur, .task.h-black .ib, .task.h-black .due:not(.today):not(.late) { background: hsl(var(--sh, 250) 22% 27%); }
+.task.h-white .tag, .task.h-white .dur, .task.h-white .ib, .task.h-white .due:not(.today):not(.late) { background: hsl(var(--sh, 250) 50% 92%); color: #2b2440; }
 .task.h-black .chips, .task.h-white .chips { color: inherit; opacity: .85; }
 .sw.h-white { background: #fff; box-shadow: 0 0 0 2px #cfc6e4; } .sw.h-black { background: #2b2440; }
-.cell .it.h-white { background: #fff; border-left-color: #b8afcf; color: #2b2440; } .cell .it.h-black { background: #2b2440; border-left-color: #c9b4ff; color: #fff; }
-@media (prefers-color-scheme: dark) { .task.h-white { --cb: #ece8f6; box-shadow: none; } .task.h-black { --cb: #0c0a14; } }
+.cell .it.h-white { background: hsl(var(--sh, 250) 70% 97%); border-left-color: hsl(var(--sh, 250) 45% 70%); color: #2b2440; } .cell .it.h-black { background: hsl(var(--sh, 250) 28% 15%); border-left-color: hsl(var(--sh, 250) 80% 76%); color: #fff; }
+.picker button.h-white { background: hsl(var(--sh, 250) 70% 97%); box-shadow: inset 0 0 0 2px hsl(var(--sh, 250) 45% 86%); color: #2b2440; } .picker button.h-black { background: hsl(var(--sh, 250) 28% 15%); color: #fff; }
+.swlbl { grid-column: 1 / -1; font-size: .78rem; font-weight: 800; color: var(--muted); margin-top: 4px; }
+@media (prefers-color-scheme: dark) { .task.h-white { box-shadow: none; } }
 
 /* not today pile */
 .pile { background: var(--card); border-radius: 24px; padding: 16px; box-shadow: var(--shadow); display: grid; gap: 10px; border: 2.5px dashed var(--line); }
@@ -225,7 +226,7 @@ dialog p { margin: 0 0 14px; color: var(--muted); font-size: .92rem; }
 textarea.in { min-height: 90px; resize: vertical; }
 .actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
 .err { color: var(--bad); font-weight: 700; font-size: .9rem; margin-top: 8px; min-height: 1em; }
-.swatches { display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; margin: 6px 0 4px; }
+.swatches { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin: 6px 0 4px; }
 .sw { width: 100%; aspect-ratio: 1; border-radius: 50%; border: 3px solid var(--card); background: var(--c); cursor: pointer; box-shadow: 0 0 0 2px var(--line); }
 .sw[aria-pressed="true"] { box-shadow: 0 0 0 3px var(--fg); }
 .sw.auto { background: conic-gradient(#ff8fb1, #ffd36b, #8fe3b4, #8fc3ff, #c3a2ff, #ff8fb1); }
@@ -334,7 +335,9 @@ textarea.in { min-height: 90px; resize: vertical; }
 <script>
 const CATS = [["test", "Test prep"], ["school", "School homework"], ["hunter", "Hunter"], ["rsm", "RSM"], ["fixed", "Plan"], ["flex", "Break"]];
 const CAT_NAME = Object.fromEntries(CATS);
-const COLORS = ["purple", "blue", "green", "gray", "lavender", "sky", "teal", "lime", "yellow", "orange", "pink", "red", "brown", "white", "black"];
+const LADDER = ["purple", "blue", "white", "black", "red", "orange", "yellow", "green", "gray"];
+const EXTRA = ["pink", "lavender", "sky", "teal", "lime", "brown"];
+const COLORS = LADDER.concat(EXTRA);
 const CAT_COLOR = { test: "pink", school: "green", hunter: "purple", rsm: "blue", fixed: "gray", flex: "yellow" };
 const CFG_KEY = "emma-hw-api";
 const NTFY_TOPIC = "emma-hw-5e47c8b0dc56";
@@ -398,8 +401,25 @@ function finishedAlert(id) {
     "\nToday: " + todays.filter(x => x.done).length + " of " + todays.length + " done", t.proofPhoto || location.origin + location.pathname);
 }
 
-// ---- colors: how necessary it is to get done that day (the helper sets these; Emma can change them) ----
-// no color picked yet: purple = due tomorrow or late, blue = due in 2 days, green = due later, gray = no deadline / plans / breaks
+// ---- colors: how necessary it is to get done that day ----
+// purple > blue > white > black > red > orange > yellow > green > gray (gray = truly optional, almost never)
+// The helper sets these; with no color picked, the site guesses from the due date. Each color is nudged toward
+// the subject's own hue (analogous colors), and white/black are tinted with it, so subjects still look related.
+const SUBJECTS = [
+  [/latin/, 350], [/hist/, 28], [/rsm|algebra|geometry|\bgeo\b/, 205], [/math|quiz/, 220], [/english|vocab|hobbit|grammar|reading|essay|book/, 150],
+  [/bio|science/, 110], [/physics|chem/, 185], [/hunter/, 290], [/robot|canva/, 50], [/dinner|break|snack/, 40]
+];
+function subjectHue(t) { const s = (t.title + " " + t.note).toLowerCase(); const m = SUBJECTS.find(([re]) => re.test(s)); return m ? m[1] : null; }
+const BASE_HUE = { purple: 262, blue: 222, red: 2, orange: 24, yellow: 46, green: 148, pink: 340, lavender: 286, sky: 198, teal: 176, lime: 84, brown: 26, gray: 250 };
+function colorVars(t, c) {
+  const sh = subjectHue(t); if (sh == null) return "";
+  if (c === "white" || c === "black") return "--sh:" + sh;
+  const b = BASE_HUE[c]; if (b == null || c === "gray") return "";
+  let d = ((sh - b + 540) % 360) - 180;             // shortest way around the color wheel
+  d = Math.max(-16, Math.min(16, d * 0.35));          // nudge, but stay clearly the same color
+  return "--so:" + Math.round(d);
+}
+function paint(node, t) { const c = colorOf(t); node.classList.add("hue", "h-" + c); const v = colorVars(t, c); if (v) node.setAttribute("style", (node.getAttribute("style") || "") + ";" + v); return node; }
 const WEEKDAY_WORDS = [["sun"], ["mon"], ["tue", "tues"], ["wed", "weds", "wens"], ["thu", "thur", "thurs"], ["fri"], ["sat"]];
 function dueOf(t) {
   if (t.due) return t.due;
@@ -414,12 +434,13 @@ function dueOf(t) {
   return d;
 }
 function priorityColor(t) {
-  if (isPlan(t) || t.cat === "flex") return "gray";
-  const due = dueOf(t);
-  if (!due) return "gray";
   const ref = data && t.date < data.today ? data.today : t.date;
+  if (isPlan(t)) return "purple";                    // a class or test that day just happens
+  if (t.cat === "flex") return "yellow";
+  const due = dueOf(t);
+  if (!due) return t.cat === "test" ? "blue" : "black";
   const gap = Math.round((new Date(due + "T12:00:00Z") - new Date(ref + "T12:00:00Z")) / 864e5);
-  return gap <= 1 ? "purple" : gap === 2 ? "blue" : "green";
+  return gap <= 1 ? "purple" : gap === 2 ? "blue" : gap === 3 ? "white" : gap === 4 ? "black" : gap === 5 ? "red" : gap === 6 ? "orange" : gap === 7 ? "yellow" : "green";
 }
 function buildSubjectColors() {}
 function colorOf(t) { return t.color || priorityColor(t); }
@@ -609,8 +630,8 @@ function dueChip(t) {
 function taskRow(t, o) {
   o = o || {};
   const active = data.status && data.status.taskId === t.id;
-  const li = el("li", "task " + hueClass(colorOf(t)) + (t.done ? " done" : "") + (active ? " active" : "") + (isPlan(t) ? " plan" : "") + (o.editing ? " editing" : ""));
-  li.dataset.id = t.id;
+  const li = el("li", "task" + (t.done ? " done" : "") + (active ? " active" : "") + (isPlan(t) ? " plan" : "") + (o.editing ? " editing" : ""));
+  li.dataset.id = t.id; paint(li, t);
   const info = el("div", "info");
   if (active) info.append(el("span", "tag-now", "Working on this"));
   const title = el("span", "title", t.title); title.tabIndex = 0; title.setAttribute("role", "button"); title.setAttribute("aria-label", "Rename " + t.title);
@@ -691,18 +712,18 @@ $("confirmYes").addEventListener("click", () => { $("confirmDlg").close(); if (c
 
 function pickColor(t) {
   const sw = $("swatches"); sw.textContent = "";
-  const cur = colorOf(t);
-  COLORS.forEach(c => {
-    const b = btn("sw " + hueClass(c), "", () => { $("colorDlg").close(); edit(t, { color: c }); }, c);
-    b.setAttribute("aria-pressed", c === cur ? "true" : "false"); sw.append(b);
-  });
+  const cur = t.color || "";
+  const add = c => { const b = btn("sw hue h-" + c, "", () => { $("colorDlg").close(); edit(t, { color: c }); }, c); const v = colorVars(t, c); if (v) b.setAttribute("style", v); b.setAttribute("aria-pressed", c === cur ? "true" : "false"); sw.append(b); };
+  sw.append(el("span", "swlbl", "Most important first"));
+  LADDER.forEach(add);
+  sw.append(el("span", "swlbl", "Other colors"));
+  EXTRA.forEach(add);
   const auto = btn("sw auto", "", () => { $("colorDlg").close(); edit(t, { color: "" }); }, "Automatic");
-  auto.setAttribute("aria-pressed", t.color ? "false" : "true");
+  auto.setAttribute("aria-pressed", cur ? "false" : "true");
   sw.append(auto);
-  $("colorMsg").textContent = "Purple = must do today. Blue = really should do today. Green = could move to another day. Gray = easy to skip. Any other color is fine too. The rainbow one goes back to automatic.";
+  $("colorMsg").textContent = "Purple = must do today, then blue, white, black, red, orange, yellow, green. Gray = totally optional. The rainbow circle goes back to automatic.";
   $("colorDlg").showModal();
 }
-
 function checkbox(t) {
   if (isPlan(t)) { const m = el("span", "plan-mark"); m.setAttribute("aria-hidden", "true"); return m; }
   const cb = el("input", "check"); cb.type = "checkbox"; cb.checked = !!t.done;
@@ -772,7 +793,7 @@ function renderCal(root) {
     const c = btn("cell" + (d.slice(0, 7) !== calMonth ? " out" : "") + (d === data.today ? " today" : ""), "", () => openCalDay(d), dayName(d) + " " + shortDate(d));
     c.append(el("span", "n", String(Number(d.slice(8)))));
     const items = calItems(d);
-    items.slice(0, 3).forEach(t => c.append(el("span", "it " + hueClass(colorOf(t)), (t.cat === "test" ? "Test: " : "") + t.title)));
+    items.slice(0, 3).forEach(t => c.append(paint(el("span", "it", (t.cat === "test" ? "Test: " : "") + t.title), t)));
     if (items.length > 3) c.append(el("span", "more", "+" + (items.length - 3) + " more"));
     g.append(c);
   }
@@ -900,7 +921,7 @@ function openStart() {
     if (!list.length) return;
     pk.append(el("div", "grp", name));
     list.sort(byOrder).forEach(t => {
-      pk.append(btn(hueClass(colorOf(t)), t.title, () => { dlg.close(); data.status = { taskId: t.id, title: t.title, startedAt: new Date().toISOString() }; render(); post({ action: "start", id: t.id }); alertSofia("Emma started: " + t.title + ", " + nowClock()); }));
+      pk.append(paint(btn("", t.title, () => { dlg.close(); data.status = { taskId: t.id, title: t.title, startedAt: new Date().toISOString() }; render(); post({ action: "start", id: t.id }); alertSofia("Emma started: " + t.title + ", " + nowClock()); }), t));
     });
   });
   if (!pk.children.length) pk.append(el("p", null, "Nothing left to start today."));

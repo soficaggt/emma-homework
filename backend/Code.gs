@@ -550,8 +550,8 @@ function chat_(req) {
     'If a request is unclear (which task, which day), ask one short question instead of guessing. ' +
     'After changing things, reply in one or two short, friendly sentences saying what changed. No emojis. ' +
     'Always give a due date when you know one. ' +
-    'Every task gets a color for how necessary it is to get done that day: purple = must do today, no way around it (due tomorrow, a test tomorrow, already late). ' +
-    'blue = really should do today. green = good to do today but could move to another day without much trouble. gray = easy to skip, move, or delete (optional review, extra practice, breaks, plans). ' +
+    'Every task gets a color for how necessary it is to get done that day, most necessary first: purple (must do today, no way around it: due tomorrow, a test tomorrow, already late), blue, white, black, red, orange, yellow, green, and gray last. ' +
+    'Gray is only for things that are truly optional and fine to skip or delete; almost nothing should be gray, because almost all of her work really matters. Use the whole ladder to show small differences. ' +
     'Set color on every task you add, and re-color tasks when things change (a due date moves, a test gets closer). If they pick a color themselves, keep it. ' +
     'Durations look like "30 min" or "1.5 hrs". Dates are yyyy-mm-dd.\n\nThe plan right now:\n' + planText_(readTasks_());
 
