@@ -18,20 +18,45 @@ const WEEKDAYS = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
 const CHAT_MODEL = 'claude-sonnet-5-5';
 const CHATS_PER_DAY = 80;
 
-// Squishies you can get from the mystery box. Weights: common 60, uncommon 28, rare 10, legendary 2.
-const SQUISHIES = {
-  common: ['mochi', 'cat', 'bunny', 'bear', 'frog', 'chick'],
-  uncommon: ['strawberry', 'peach', 'boba', 'dumpling', 'cloud', 'ghost'],
-  rare: ['axolotl', 'penguin', 'dino', 'avocado'],
-  legendary: ['unicorn', 'galaxycat']
-};
-const SQ_NAMES = { mochi: 'Mochi', cat: 'Kitty', bunny: 'Bunny', bear: 'Bear', frog: 'Froggy', chick: 'Chick', strawberry: 'Strawberry', peach: 'Peach',
-  boba: 'Boba Tea', dumpling: 'Dumpling', cloud: 'Cloud', ghost: 'Ghostie', axolotl: 'Axolotl', penguin: 'Penguin', dino: 'Dino', avocado: 'Avocado',
-  unicorn: 'Unicorn', galaxycat: 'Galaxy Cat' };
-const SQ_FIXED = { strawberry: 'pink', peach: 'orange', boba: 'brown', avocado: 'lime', galaxycat: 'purple', cloud: 'sky', ghost: 'lavender', chick: 'yellow', frog: 'green' };
-const SQ_COLORS = ['pink', 'lavender', 'sky', 'teal', 'yellow', 'orange', 'purple', 'lime'];
-const COLOR_WORDS = { pink: 'Strawberry Milk', red: 'Cherry', orange: 'Peachy', yellow: 'Lemon', lime: 'Matcha', green: 'Minty', teal: 'Ocean', sky: 'Cotton Cloud',
-  blue: 'Blueberry', purple: 'Grape', lavender: 'Lavender', brown: 'Cocoa', gray: 'Cozy' };
+// The mystery box gives real, trending squishies (names are the real ones, so Sofia can order the one Emma picks).
+// Each one can only be won once. Weights: common 60, uncommon 28, rare 10, legendary 2.
+// [id, real name, how it's drawn, color, rarity]
+const CATALOG = [
+  ['nice-cube', 'NeeDoh Nice Cube', 'cube', 'sky', 'common'],
+  ['nice-ice-baby', 'NeeDoh Nice Ice Baby', 'minicube', 'lavender', 'common'],
+  ['gumdrop', 'NeeDoh Gumdrop', 'gumdrop', 'pink', 'common'],
+  ['gummy-bear', 'NeeDoh Gummy Bear', 'gummybear', 'orange', 'common'],
+  ['groovy-glob', 'NeeDoh Groovy Glob', 'glob', 'teal', 'common'],
+  ['mochi-cat', 'Mochi cat squishy', 'cat', 'pink', 'common'],
+  ['mochi-bunny', 'Mochi bunny squishy', 'bunny', 'lavender', 'common'],
+  ['mochi-hamster', 'Mochi hamster squishy', 'hamster', 'orange', 'common'],
+  ['squeezy-butter', 'Sunny Days Squeezy Butter', 'butter', 'yellow', 'common'],
+  ['pink-butter', 'Crunchy butter squishy (pink)', 'butter', 'pink', 'common'],
+  ['dumpling', 'Squeezy dumpling squishy', 'dumpling', 'white', 'common'],
+  ['donut', 'Sprinkle donut squishy', 'donut', 'pink', 'common'],
+  ['big-cheese', 'NeeDoh Big Cheese', 'cheese', 'yellow', 'uncommon'],
+  ['swiss-cheese', 'Swiss cheese squishy', 'cheese', 'yellow', 'uncommon'],
+  ['bread-loaf', 'Slow-rising bread squishy', 'bread', 'brown', 'uncommon'],
+  ['taba-chick', 'Taba squishy chick', 'chick', 'yellow', 'uncommon'],
+  ['taba-paw', 'Taba squishy cat paw', 'paw', 'pink', 'uncommon'],
+  ['taba-strawberry', 'Taba squishy strawberry', 'strawberry', 'pink', 'uncommon'],
+  ['taba-capybara', 'Taba squishy capybara', 'capybara', 'brown', 'uncommon'],
+  ['taba-cookie', 'Taba cookie squishy', 'cookie', 'brown', 'uncommon'],
+  ['bigblok', "Squeez'M BigBlok Stress Cube", 'cube', 'purple', 'uncommon'],
+  ['globbles', 'Crayola Globbles', 'ball', 'lime', 'uncommon'],
+  ['boba', 'Boba tea squishy', 'boba', 'brown', 'uncommon'],
+  ['glitter-cube', 'Glitter gel mini cube', 'minicube', 'pink', 'uncommon'],
+  ['axolotl-bubble', 'Axolotl-in-a-bubble squishy', 'axolotl', 'pink', 'rare'],
+  ['jumbo-bread', 'Kiibru Colossal English Bread Squishy', 'bread', 'orange', 'rare'],
+  ['jumbo-butter', 'ButterSquishy Jumbo (14 oz)', 'butter', 'yellow', 'rare'],
+  ['gump-loop', 'Speks Gump Jumbo Loop', 'loop', 'purple', 'rare'],
+  ['jumbo-carrot', 'Toymendous Jumbo Squishy Carrot', 'carrot', 'orange', 'rare'],
+  ['peach', 'Peach squishy', 'peach', 'orange', 'rare'],
+  ['mochi-penguin', 'Christmas mochi penguin', 'penguin', 'sky', 'rare'],
+  ['jumbo-tree', 'VUNZEU Jumbo Christmas Tree Squishy', 'tree', 'green', 'legendary'],
+  ['jumbo-burger', 'YOYI Jumbo Hamburger Squishy', 'burger', 'orange', 'legendary'],
+  ['ice-cream', 'YOYI Jumbo Ice Cream Cone Squishy', 'icecream', 'pink', 'legendary']
+];
 
 // Recurring "possible homework". Edit the Template tab in the sheet to change it.
 const SCHOOL_NIGHT = [
@@ -206,16 +231,26 @@ function cleared_(all, d) {
   const list = all.filter(t => checkable_(t) && t.date === d);
   return list.length > 0 && list.every(t => t.done || t.pile);
 }
-function boxDates_(all, squishies) {
+// The day's mystery box is earned the moment every item for that day is handled, and only on that day.
+function earned_() { try { return JSON.parse(PropertiesService.getScriptProperties().getProperty('earned') || '[]'); } catch (e) { return []; } }
+function checkEarn_(all) {
   const today = ymd_(new Date()), start = PropertiesService.getScriptProperties().getProperty('rewardsStart') || today;
-  const have = {}; squishies.forEach(s => { have[s.date] = true; });
-  return [addDays_(today, -1), today].filter(d => d >= start && !have[d] && cleared_(all, d));
+  const list = earned_();
+  if (today < start || list.indexOf(today) >= 0 || !cleared_(all || readTasks_(), today)) return false;
+  list.push(today);
+  PropertiesService.getScriptProperties().setProperty('earned', JSON.stringify(list.slice(-120)));
+  return true;
 }
-// Weeks (Monday to Sunday) where every day that had homework earned a squishy.
+function boxDates_(all, squishies) {
+  const opened = {}; squishies.forEach(s => { opened[s.date] = true; });
+  return earned_().filter(d => !opened[d]);
+}
+// Weeks (Monday to Sunday) where every day that had homework earned a box.
 function tokens_(all, squishies) {
   const today = ymd_(new Date()), start = PropertiesService.getScriptProperties().getProperty('rewardsStart') || today;
   const have = {}, used = {};
-  squishies.forEach(s => { have[s.date] = true; if (s.realWeek) used[s.realWeek] = true; });
+  earned_().forEach(d => { have[d] = true; });
+  squishies.forEach(s => { if (s.realWeek) used[s.realWeek] = true; });
   const out = [];
   for (let w = monday_(start); w <= monday_(today); w = addDays_(w, 7)) {
     const sun = addDays_(w, 6);
@@ -224,23 +259,25 @@ function tokens_(all, squishies) {
     for (let d = w; d <= sun; d = addDays_(d, 1)) {
       if (d < start) continue;
       if (have[d]) { any = true; continue; }
-      if (all.some(t => checkable_(t) && t.date === d)) { if (d === today && cleared_(all, d)) continue; ok = false; }
+      if (all.some(t => checkable_(t) && t.date === d)) ok = false;
     }
     if (any && ok) out.push(w);
   }
   return out;
 }
 function pick_(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
-function rollSquishy_() {
+function rollSquishy_(squishies) {
+  const owned = {}; squishies.forEach(q => { owned[q.name] = true; });
+  const left = CATALOG.filter(c => !owned[c[1]]);
+  if (!left.length) return null;
   const r = Math.random() * 100;
-  const rarity = r < 2 ? 'legendary' : r < 12 ? 'rare' : r < 40 ? 'uncommon' : 'common';
-  const kind = pick_(SQUISHIES[rarity]);
-  const color = SQ_FIXED[kind] || pick_(SQ_COLORS);
-  // kinds that always look the same get a fun word instead of a color word
-  const word = ['mochi', 'cat', 'bunny', 'bear', 'axolotl', 'dino'].indexOf(kind) >= 0 ? COLOR_WORDS[color]
-    : kind === 'galaxycat' || kind === 'unicorn' ? 'Sparkle' : pick_(['Sleepy', 'Happy', 'Tiny', 'Bouncy', 'Cozy', 'Sweet', 'Giggly']);
-  const name = word + ' ' + SQ_NAMES[kind];
-  return { kind: kind, color: color, name: name, rarity: rarity };
+  const want = r < 2 ? 'legendary' : r < 12 ? 'rare' : r < 40 ? 'uncommon' : 'common';
+  const order = ['legendary', 'rare', 'uncommon', 'common'];
+  // if she already has every one of that rarity, step to the nearest rarity that has some left
+  const tries = [want].concat(order.filter(x => x !== want).sort((a, b) => Math.abs(order.indexOf(a) - order.indexOf(want)) - Math.abs(order.indexOf(b) - order.indexOf(want))));
+  const pool = tries.map(x => left.filter(c => c[4] === x)).find(list => list.length);
+  const c = pick_(pool);
+  return { kind: c[2], color: c[3], name: c[1], rarity: c[4] };
 }
 
 function snapshot_() {
@@ -254,7 +291,7 @@ function snapshot_() {
   readRows_('Days', D_COLS).forEach(r => { if (r.date >= since && r.bring) bring[r.date] = r.bring; });
   return { ok: true, today: today, days: DAYS_AHEAD, tasks: tasks, status: readStatus_(), bring: bring,
     squishies: squishies.map(s => { const c = Object.assign({}, s); delete c._row; return c; }),
-    boxes: boxDates_(all, squishies), tokens: tokens_(all, squishies),
+    boxes: boxDates_(all, squishies), tokens: tokens_(all, squishies), catalogSize: CATALOG.length,
     chat: !!PropertiesService.getScriptProperties().getProperty('ANTHROPIC_API_KEY') };
 }
 
@@ -418,7 +455,8 @@ function doPost(e) {
     } else if (a === 'openBox') {
       const squishies = readRows_('Squishies', Q_COLS);
       if (boxDates_(all, squishies).indexOf(req.date) < 0) throw new Error('no box');
-      const s = rollSquishy_();
+      const s = rollSquishy_(squishies);
+      if (!s) throw new Error('all collected');
       s.id = 'q' + newId_(); s.date = req.date; s.openedAt = new Date().toISOString(); s.realWeek = '';
       writeRow_('Squishies', Q_COLS, s);
       extra.opened = s.id;
@@ -432,6 +470,7 @@ function doPost(e) {
     } else {
       throw new Error('unknown action');
     }
+    if (['complete', 'edit', 'arrange', 'add'].indexOf(a) >= 0 && checkEarn_()) extra.justEarned = ymd_(new Date());
     return json_(Object.assign(snapshot_(), extra));
   } catch (err) {
     return json_({ ok: false, error: String(err && err.message || err) });
@@ -550,7 +589,7 @@ function chat_(req) {
     'If a request is unclear (which task, which day), ask one short question instead of guessing. ' +
     'After changing things, reply in one or two short, friendly sentences saying what changed. No emojis. ' +
     'Always give a due date when you know one. ' +
-    'Every task gets a color for how necessary it is to get done that day, most necessary first: purple (must do today, no way around it: due tomorrow, a test tomorrow, already late), blue, white, black, red, orange, yellow, green, and gray last. ' +
+    'Every task gets a color for how necessary it is to get done that day, most necessary first: purple (must do today, no way around it: due tomorrow, a test tomorrow, already late), blue, white, red, orange, yellow, green, and gray last. Never use black. ' +
     'Gray is only for things that are truly optional and fine to skip or delete; almost nothing should be gray, because almost all of her work really matters. Use the whole ladder to show small differences. ' +
     'Set color on every task you add, and re-color tasks when things change (a due date moves, a test gets closer). If they pick a color themselves, keep it. ' +
     'Durations look like "30 min" or "1.5 hrs". Dates are yyyy-mm-dd.\n\nThe plan right now:\n' + planText_(readTasks_());
@@ -574,5 +613,6 @@ function chat_(req) {
     });
     msgs.push({ role: 'user', content: results });
   }
-  return Object.assign(snapshot_(), { reply: reply || (changed ? 'Done!' : 'Hmm, can you say that another way?'), completed: completed });
+  const earnedNow = changed && checkEarn_() ? ymd_(new Date()) : '';
+  return Object.assign(snapshot_(), { reply: reply || (changed ? 'Done!' : 'Hmm, can you say that another way?'), completed: completed, justEarned: earnedNow });
 }

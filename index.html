@@ -42,7 +42,7 @@ h1 { font-family: var(--display); font-weight: 700; font-size: clamp(2.2rem, 8vw
 .bar span { display: block; height: 100%; width: 0; border-radius: 99px; background: linear-gradient(90deg, #ff6b8a, #9b6bff, #3d8bff, #2fbf8f); transition: width .4s ease; }
 
 /* colors: each task gets a hue; tags no longer decide it */
-.hue { --h: 265; --sat: 1; --so: 0; --hh: calc(var(--h) + var(--so)); --cb: hsl(var(--hh) calc(var(--ts) * var(--sat)) var(--tl)); --c: hsl(var(--hh) calc(var(--as) * var(--sat)) var(--al)); }
+.hue { --h: 265; --sat: 1; --so: 0; --dl: 0%; --hh: calc(var(--h) + var(--so)); --cb: hsl(var(--hh) calc(var(--ts) * var(--sat)) calc(var(--tl) + var(--dl) * .6)); --c: hsl(var(--hh) calc(var(--as) * var(--sat)) calc(var(--al) + var(--dl))); }
 .h-pink { --h: 340; } .h-red { --h: 2; } .h-orange { --h: 24; } .h-yellow { --h: 46; } .h-lime { --h: 84; } .h-green { --h: 148; }
 .h-white { --h: 250; --sat: .05; } .h-black { --h: 250; --sat: .15; }
 .h-teal { --h: 176; } .h-sky { --h: 198; } .h-blue { --h: 218; } .h-purple { --h: 276; } .h-lavender { --h: 286; } .h-brown { --h: 26; --sat: .45; } .h-gray { --h: 250; --sat: .12; }
@@ -119,7 +119,7 @@ label.lbl { display: grid; gap: 2px; font-size: .75rem; font-weight: 800; color:
 .dropzone-empty { color: var(--muted); font-size: .9rem; padding: 10px; border: 2px dashed var(--line); border-radius: 14px; text-align: center; list-style: none; }
 
 .task.h-white { --cb: hsl(var(--sh, 250) 70% 97%); --c: hsl(var(--sh, 250) 45% 55%); box-shadow: inset 0 0 0 2px hsl(var(--sh, 250) 45% 86%); color: #2b2440; }
-.task.h-black { --cb: hsl(var(--sh, 250) 28% 15%); --c: hsl(var(--sh, 250) 80% 76%); color: #f6f2ff; }
+.task.h-black { --cb: hsl(var(--sh, 250) 40% 90%); --c: hsl(var(--sh, 250) 45% 45%); }
 .task.h-black .tag, .task.h-black .dur, .task.h-black .ib, .task.h-black .due:not(.today):not(.late) { background: hsl(var(--sh, 250) 22% 27%); }
 .task.h-white .tag, .task.h-white .dur, .task.h-white .ib, .task.h-white .due:not(.today):not(.late) { background: hsl(var(--sh, 250) 50% 92%); color: #2b2440; }
 .task.h-black .chips, .task.h-white .chips { color: inherit; opacity: .85; }
@@ -141,7 +141,7 @@ label.lbl { display: grid; gap: 2px; font-size: .75rem; font-weight: 800; color:
 .heart { border: 0; background: none; padding: 0; width: 30px; height: 28px; cursor: pointer; display: grid; place-items: center; }
 .heart svg, .sw svg { width: 26px; height: 26px; fill: var(--hc); stroke: var(--hs, transparent); stroke-width: 1.5; filter: drop-shadow(0 1px 0 rgba(0,0,0,.12)); transition: transform .15s ease; }
 .heart:hover svg, .heart:focus-visible svg { transform: scale(1.15); }
-.hue { --hc: hsl(var(--hh) 90% 60%); }
+.hue { --hc: hsl(var(--hh) 92% calc(62% + var(--dl))); }
 .h-white { --hc: #ffffff; --hs: #b9b1cf; } .h-black { --hc: #17131f; --hs: #f6f2ff; } .h-gray { --hc: #aaa5b8; }
 .tap { cursor: pointer; }
 .chips .note.tap:hover, .dur.tap:hover, .tag.tap:hover { box-shadow: 0 0 0 2px var(--c); border-radius: 99px; }
@@ -153,9 +153,10 @@ label.lbl { display: grid; gap: 2px; font-size: .75rem; font-weight: 800; color:
 .bring { cursor: pointer; }
 .bring.empty { background: none; border: 2px dashed var(--line); color: var(--muted); padding: 5px 12px; font-size: .85rem; }
 .cell .it.done { text-decoration: line-through; opacity: .55; }
-.sw { display: grid; place-items: center; background: none !important; box-shadow: none !important; border: 0; width: 100%; aspect-ratio: 1; padding: 0; cursor: pointer; border-radius: 12px; }
-.sw svg { width: 80%; height: 80%; }
-.sw[aria-pressed="true"] { outline: 3px solid var(--fg); outline-offset: -2px; }
+.sw { display: grid; justify-items: center; gap: 2px; background: none !important; box-shadow: none !important; border: 0; width: 100%; padding: 6px 2px; cursor: pointer; border-radius: 14px; color: var(--fg); }
+.sw svg { width: 40px; height: 40px; }
+.sw small { font-size: .72rem; font-weight: 800; line-height: 1.15; text-align: center; color: var(--muted); }
+.sw[aria-pressed="true"] { background: var(--line) !important; }
 .sw.auto svg { fill: url(#rainbow); }
 
 /* not today pile */
@@ -211,24 +212,46 @@ label.lbl { display: grid; gap: 2px; font-size: .75rem; font-weight: 800; color:
 .empty { text-align: center; color: var(--muted); padding: 30px 10px; }
 
 /* mystery box overlay */
-.boxov { position: fixed; inset: 0; z-index: 40; background: rgba(20, 14, 40, .82); display: grid; place-items: center; padding: 20px; }
-.boxov[hidden] { display: none; }
-.boxstage { display: grid; justify-items: center; gap: 10px; text-align: center; color: #fff; max-width: 360px; }
-.boxstage .holder { position: relative; width: 190px; height: 300px; display: grid; align-items: end; justify-items: center; }
-.boxstage .bx { width: 170px; height: 170px; cursor: pointer; border: 0; background: none; padding: 0; animation: wiggle 1.4s ease-in-out infinite; }
+.boxov { position: fixed; inset: 0; z-index: 40; background: radial-gradient(circle at 50% 40%, rgba(120, 70, 200, .85), rgba(20, 14, 40, .92)); display: grid; place-items: center; padding: 20px; }
+#glitter { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.boxstage { position: relative; display: grid; justify-items: center; gap: 10px; text-align: center; color: #fff; max-width: 380px; }
+.yay { width: 120px; height: 120px; animation: yay 1s cubic-bezier(.3, 1.6, .5, 1) both; }
+.yay svg { width: 100%; height: 100%; animation: spin 6s linear infinite; }
+@keyframes yay { from { transform: scale(0) rotate(-40deg); } to { transform: scale(1) rotate(0); } }
+@keyframes spin { to { transform: rotate(360deg); } }
+.boxstage:not(.celebrate) .yay { display: none; }
+.boxstage.celebrate .holder, .boxstage.celebrate #boxActions { display: none; }
+.boxstage:not(.celebrate) #celebrateActions { display: none; }
+.boxstage.celebrate h3 { font-size: 2.4rem; animation: pop .7s cubic-bezier(.3, 1.6, .5, 1) both; }
+.boxstage .holder { position: relative; width: 200px; height: 280px; display: grid; align-items: end; justify-items: center; }
+.boxstage .bx { width: 170px; height: 170px; cursor: pointer; border: 0; background: none; padding: 0; animation: hover 2.2s ease-in-out infinite; }
 .boxstage .bx svg { width: 100%; height: 100%; overflow: visible; }
+@keyframes hover { 0%, 100% { transform: translateY(0) rotate(-2deg); } 50% { transform: translateY(-16px) rotate(2deg); } }
+.boxstage.shake .bx { animation: shake .11s linear infinite; }
+@keyframes shake { 0% { transform: translate(0, -6px) rotate(-7deg); } 50% { transform: translate(3px, -4px) rotate(7deg); } 100% { transform: translate(-2px, -6px) rotate(-7deg); } }
 .boxstage .lid { transition: transform .5s cubic-bezier(.3, 1.6, .5, 1), opacity .5s ease .3s; transform-origin: 85px 70px; }
-.boxstage.open .lid { transform: translate(70px, -30px) rotate(40deg); opacity: 0; }
-.boxstage.open .bx { animation: none; }
-.boxstage .pop { position: absolute; left: 50%; bottom: 95px; width: 170px; height: 170px; margin-left: -85px; transform: scale(0); pointer-events: none; }
+.boxstage.open .lid { transform: translate(80px, -60px) rotate(50deg); opacity: 0; }
+.boxstage.open .bx { animation: none; transform: scale(.95); transition: transform .3s; }
+.boxstage .pop { position: absolute; left: 50%; bottom: 100px; width: 180px; height: 180px; margin-left: -90px; transform: scale(0); pointer-events: none; z-index: 2; }
 .boxstage.revealed .pop { animation: pop .8s cubic-bezier(.3, 1.6, .5, 1) forwards; }
 @keyframes pop { 0% { transform: translateY(80px) scale(.2); } 60% { transform: translateY(-30px) scale(1.12, .9); } 80% { transform: translateY(0) scale(.95, 1.06); } 100% { transform: translateY(0) scale(1); } }
-.boxstage .pop svg { width: 100%; height: 100%; }
+.boxstage .pop svg { width: 100%; height: 100%; filter: drop-shadow(0 0 18px rgba(255, 240, 180, .7)); }
+.boxstage .realname { margin: 0; font-size: .85rem; opacity: .85; }
+.btn.big { font-size: 1.15rem; padding: 14px 26px; box-shadow: 0 8px 24px rgba(0,0,0,.25); }
+.linkbtn.light { color: rgba(255,255,255,.7); font-size: .9rem; }
 .boxstage h3 { font-family: var(--display); font-size: 1.6rem; margin: 0; }
 .boxstage p { margin: 0; opacity: .9; }
 
 /* chat */
-.chatbtn { position: fixed; right: max(16px, env(safe-area-inset-right, 0px)); bottom: calc(18px + env(safe-area-inset-bottom, 0px)); z-index: 25; border: 0; cursor: pointer; background: var(--accent); color: #fff; font-family: var(--display); font-weight: 600; font-size: 1rem; border-radius: 99px; padding: 13px 20px; box-shadow: 0 8px 24px rgba(80, 40, 160, .35); display: flex; gap: 8px; align-items: center; }
+.dock { position: fixed; right: max(16px, env(safe-area-inset-right, 0px)); left: max(16px, env(safe-area-inset-left, 0px)); bottom: calc(16px + env(safe-area-inset-bottom, 0px)); z-index: 25; display: flex; justify-content: flex-end; align-items: flex-end; gap: 8px; pointer-events: none; }
+.dock > * { pointer-events: auto; }
+.chatbtn, .startbtn { border: 0; cursor: pointer; background: var(--accent); color: #fff; font-family: var(--display); font-weight: 600; font-size: 1rem; border-radius: 99px; padding: 13px 20px; box-shadow: 0 8px 24px rgba(80, 40, 160, .35); display: flex; gap: 8px; align-items: center; }
+.startbtn { background: var(--good); box-shadow: 0 8px 24px rgba(30, 140, 100, .35); }
+.workpill { background: var(--card); border-radius: 22px; padding: 10px 10px 10px 16px; box-shadow: 0 8px 24px rgba(80, 40, 160, .25); display: flex; align-items: center; gap: 10px; min-width: 0; max-width: min(460px, calc(100vw - 150px)); }
+.workpill .wt { display: grid; min-width: 0; }
+.workpill .wt small { color: var(--muted); font-size: .75rem; font-weight: 700; }
+.workpill .wt b { font-family: var(--display); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.workpill .btn { padding: 8px 14px; font-size: .9rem; }
 .chatbtn svg { width: 18px; height: 18px; }
 .chat { position: fixed; right: max(16px, env(safe-area-inset-right, 0px)); bottom: calc(18px + env(safe-area-inset-bottom, 0px)); z-index: 26; width: min(400px, calc(100% - 32px)); height: min(560px, calc(100dvh - 40px)); background: var(--card); border-radius: 24px; box-shadow: 0 20px 60px rgba(0,0,0,.3); display: grid; grid-template-rows: auto 1fr auto; overflow: hidden; }
 .chat[hidden] { display: none; }
@@ -255,7 +278,9 @@ dialog p { margin: 0 0 14px; color: var(--muted); font-size: .92rem; }
 textarea.in { min-height: 90px; resize: vertical; }
 .actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
 .err { color: var(--bad); font-weight: 700; font-size: .9rem; margin-top: 8px; min-height: 1em; }
-.swatches { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin: 6px 0 4px; }
+.swatches { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 6px 0 4px; }
+.linkbtn { border: 0; background: none; color: var(--accent); font-weight: 800; cursor: pointer; padding: 6px 0; }
+.linkbtn:disabled { color: var(--muted); cursor: default; font-weight: 600; font-size: .85rem; }
 .setup { display: grid; gap: 10px; }
 .loading { text-align: center; color: var(--muted); padding: 30px 0; }
 .status { font-size: .85rem; color: var(--muted); text-align: center; margin: 0; }
@@ -272,7 +297,6 @@ textarea.in { min-height: 90px; resize: vertical; }
     <span class="kicker" id="range">Next 7 days</span>
     <h1>Emma's Homework</h1>
     <p class="sub">Check things off when they're really done. Drag things to move them. Tap a name to rename it.</p>
-    <div class="card working" id="working" hidden></div>
     <div class="card overall" id="overall" hidden>
       <div class="overall-top"><b id="overallCount"></b><span class="last" id="last"></span></div>
       <div class="bar"><span id="overallBar"></span></div>
@@ -289,7 +313,7 @@ textarea.in { min-height: 90px; resize: vertical; }
   <p class="status" id="status"></p>
 </div>
 
-<button class="chatbtn" id="chatBtn" type="button" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg>Helper</button>
+<div class="dock" id="dock" hidden><div id="workPill"></div><button class="chatbtn" id="chatBtn" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a8 8 0 0 1-11.6 7.1L4 20l1-4.6A8 8 0 1 1 21 12z"/></svg>Helper</button></div>
 <section class="chat" id="chat" hidden aria-label="Helper chat">
   <header><b>Helper</b><button class="ib" type="button" id="chatClose" aria-label="Close chat"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg></button></header>
   <div class="msgs" id="msgs"></div>
@@ -297,11 +321,18 @@ textarea.in { min-height: 90px; resize: vertical; }
 </section>
 
 <div class="boxov" id="boxov" hidden>
+  <canvas id="glitter" aria-hidden="true"></canvas>
   <div class="boxstage" id="boxstage">
-    <h3 id="boxTitle">Mystery box!</h3>
-    <p id="boxSub">Tap the box to open it</p>
-    <div class="holder"><div class="pop" id="pop"></div><button class="bx" id="bx" type="button" aria-label="Open the mystery box"></button></div>
-    <div class="actions" id="boxActions" hidden style="justify-content:center"><button class="btn purple" type="button" id="boxDone">Add to my collection</button></div>
+    <div class="yay" id="yay" aria-hidden="true">
+      <svg viewBox="0 0 120 120"><g fill="#ffe08a"><path d="M60 6l7 20 21 1-16 13 6 20-18-12-18 12 6-20-16-13 21-1z"/></g><g fill="#ff9fbd"><circle cx="18" cy="40" r="6"/><circle cx="104" cy="52" r="5"/></g><g fill="#9fd0ff"><circle cx="28" cy="92" r="5"/><circle cx="96" cy="96" r="6"/></g></svg>
+    </div>
+    <h3 id="boxTitle">You're done!</h3>
+    <p id="boxSub">Congratulations!</p>
+    <div class="holder" id="holder"><div class="pop" id="pop"></div><button class="bx" id="bx" type="button" aria-label="Open the mystery box"></button></div>
+    <p class="realname" id="realName" hidden></p>
+    <div class="actions" id="celebrateActions" style="justify-content:center"><button class="btn purple big" type="button" id="toBox">Open mystery box</button></div>
+    <div class="actions" id="boxActions" hidden style="justify-content:center"><button class="btn purple big" type="button" id="boxDone">Add to my collection</button></div>
+    <button class="linkbtn light" type="button" id="boxLater">Later</button>
   </div>
 </div>
 
@@ -341,6 +372,7 @@ textarea.in { min-height: 90px; resize: vertical; }
   <h3 id="colorTitle">Pick a color</h3>
   <p id="colorMsg"></p>
   <div class="swatches" id="swatches"></div>
+  <button class="linkbtn" type="button" id="autoColor">Let it pick for me</button>
   <label class="lbl" style="margin-top:14px">Due date<span class="editline"><input class="in in-sm" type="date" id="dueIn"><button class="btn ghost" type="button" id="dueClear">No due date</button></span></label>
   <div class="actions"><button class="btn ghost" type="button" data-close>Close</button></div>
 </dialog>
@@ -363,9 +395,9 @@ textarea.in { min-height: 90px; resize: vertical; }
 <script>
 const CATS = [["test", "Test prep"], ["school", "School homework"], ["hunter", "Hunter"], ["rsm", "RSM"], ["fixed", "Plan"], ["flex", "Break"]];
 const CAT_NAME = Object.fromEntries(CATS);
-const LADDER = ["purple", "blue", "white", "black", "red", "orange", "yellow", "green", "gray"];
-const EXTRA = ["pink", "lavender", "sky", "teal", "lime", "brown"];
-const COLORS = LADDER.concat(EXTRA);
+const LADDER = ["purple", "blue", "white", "red", "orange", "yellow", "green", "gray"];
+const LADDER_LABEL = { purple: "Must do today", blue: "Really should", white: "Should do", red: "Good to do", orange: "If there\u2019s time", yellow: "Could wait", green: "Can wait", gray: "Optional" };
+const COLORS = LADDER;
 const CAT_COLOR = { test: "pink", school: "green", hunter: "purple", rsm: "blue", fixed: "gray", flex: "yellow" };
 const CFG_KEY = "emma-hw-api";
 const NTFY_TOPIC = "emma-hw-5e47c8b0dc56";
@@ -429,23 +461,25 @@ function finishedAlert(id) {
 }
 
 // ---- colors: how necessary it is to get done that day ----
-// purple > blue > white > black > red > orange > yellow > green > gray (gray = truly optional, almost never)
-// The helper sets these; with no color picked, the site guesses from the due date. Each color is nudged toward
-// the subject's own hue (analogous colors), and white/black are tinted with it, so subjects still look related.
+// purple > blue > white > red > orange > yellow > green > gray (gray = truly optional, almost never)
+// The helper sets these; with no color picked, the site guesses from the due date.
+// Within one color, each subject gets its own shade (a little warmer/cooler, lighter/deeper),
+// so two equally important things still look different, and a subject keeps the same shade everywhere.
 const SUBJECTS = [
   [/latin/, 350], [/hist/, 28], [/rsm|algebra|geometry|\bgeo\b/, 205], [/math|quiz/, 220], [/english|vocab|hobbit|grammar|reading|essay|book/, 150],
   [/bio|science/, 110], [/physics|chem/, 185], [/hunter/, 290], [/robot|canva/, 50], [/dinner|break|snack/, 40]
 ];
-function subjectHue(t) { const s = (t.title + " " + t.note).toLowerCase(); const m = SUBJECTS.find(([re]) => re.test(s)); return m ? m[1] : null; }
-const BASE_HUE = { purple: 276, blue: 218, red: 2, orange: 24, yellow: 46, green: 148, pink: 340, lavender: 286, sky: 198, teal: 176, lime: 84, brown: 26, gray: 250 };
+const SHADES = [[-20, 4], [0, -4], [20, 2], [-10, -9], [12, 7], [-28, -2], [28, -6], [-4, 9], [6, -12], [0, 4]];  // [hue shift, lightness shift]
+function subjectIndex(t) { const s = (t.title + " " + t.note).toLowerCase(); return SUBJECTS.findIndex(([re]) => re.test(s)); }
+function subjectHue(t) { const i = subjectIndex(t); return i < 0 ? null : SUBJECTS[i][1]; }
 function colorVars(t, c) {
-  const sh = subjectHue(t); if (sh == null) return "";
-  if (c === "white" || c === "black") return "--sh:" + sh;
-  const b = BASE_HUE[c]; if (b == null || c === "gray") return "";
-  let d = ((sh - b + 540) % 360) - 180;             // shortest way around the color wheel
-  const lim = c === "purple" || c === "blue" ? 7 : 16;  // purple and blue sit close together, so nudge them less
-  d = Math.max(-lim, Math.min(lim, d * 0.35));       // nudge, but stay clearly the same color
-  return "--so:" + Math.round(d);
+  const i = subjectIndex(t); if (i < 0) return "";
+  if (c === "white") return "--sh:" + SUBJECTS[i][1];
+  if (c === "gray") return "";
+  const [dh, dl] = SHADES[i % SHADES.length];
+  const k = c === "red" || c === "orange" || c === "yellow" ? .45 : 1;   // warm colors sit close together, so shift them less
+  const shift = c === "purple" ? Math.max(-24, Math.min(6, dh)) : Math.round(dh * k);  // purple stays purple, never pink
+  return "--so:" + shift + ";--dl:" + dl + "%";
 }
 function paint(node, t) { const c = colorOf(t); node.classList.add("hue", "h-" + c); const v = colorVars(t, c); if (v) node.setAttribute("style", (node.getAttribute("style") || "") + ";" + v); return node; }
 const WEEKDAY_WORDS = [["sun"], ["mon"], ["tue", "tues"], ["wed", "weds", "wens"], ["thu", "thur", "thurs"], ["fri"], ["sat"]];
@@ -468,7 +502,7 @@ function priorityColor(t) {
   const due = dueOf(t);
   if (!due) return t.cat === "test" ? "blue" : "white";
   const gap = Math.round((new Date(due + "T12:00:00Z") - new Date(ref + "T12:00:00Z")) / 864e5);
-  return gap <= 1 ? "purple" : gap === 2 ? "blue" : gap === 3 ? "white" : gap === 4 ? "black" : gap === 5 ? "red" : gap === 6 ? "orange" : gap === 7 ? "yellow" : "green";
+  return gap <= 1 ? "purple" : gap === 2 ? "blue" : gap === 3 ? "white" : gap === 4 ? "red" : gap === 5 ? "orange" : gap === 6 ? "yellow" : "green";
 }
 function buildSubjectColors() {}
 function colorOf(t) { return t.color || priorityColor(t); }
@@ -493,6 +527,7 @@ async function post(body) {
     busy--;
     if (!busy) { data = j; render(); }
     setStatus("");
+    maybeCelebrate(j);
     return j;
   } catch (e) {
     busy--;
@@ -543,25 +578,26 @@ function render() {
   if (view === "days") renderDays(root);
   else if (view === "cal") renderCal(root);
   else renderCollection(root);
-  $("chatBtn").hidden = !$("chat").hidden;
+  $("dock").hidden = !$("chat").hidden;
 }
 
+// the Start button floats at the bottom next to Helper, so it's always there while she scrolls
 function renderWorking() {
-  const w = $("working"); w.textContent = ""; w.hidden = false;
+  const w = $("workPill"); w.textContent = "";
   const st = data.status;
   if (st && st.taskId) {
-    const now = el("div", "now");
-    const b = el("b"); b.append(el("span", "pulse"), document.createTextNode(st.title));
-    now.append(el("small", null, "Working on now, since " + clock(st.startedAt)), b);
-    const btns = el("div"); btns.style.cssText = "display:flex;gap:8px;flex-wrap:wrap";
+    const pill = el("div", "workpill");
+    const wt = el("div", "wt"); const b = el("b"); b.append(el("span", "pulse"), document.createTextNode(st.title));
+    wt.append(el("small", null, "Working on, since " + clock(st.startedAt)), b);
+    pill.append(wt);
     const t = data.tasks.find(x => x.id === st.taskId);
-    if (t && !t.done) btns.append(btn("btn", "I finished it", () => askProof(t)));
-    btns.append(btn("btn ghost", "Stop", () => { const was = data.status; data.status = null; render(); post({ action: "stop" }); if (was) alertSofia("Emma stopped working on " + was.title + " (not checked off), " + nowClock()); }));
-    w.append(now, btns);
+    if (t && !t.done) pill.append(btn("btn", "Done", () => t.cat === "flex" || noProof(t) ? document.querySelector(`[data-id="${t.id}"] .check`)?.click() : askProof(t)));
+    pill.append(btn("btn ghost", "Stop", () => { const was = data.status; data.status = null; render(); post({ action: "stop" }); if (was) alertSofia("Emma stopped working on " + was.title + " (not checked off), " + nowClock()); }));
+    w.append(pill);
   } else {
-    const now = el("div", "now");
-    now.append(el("small", null, "Not working on anything right now"), el("b", null, "Ready to start?"));
-    w.append(now, btn("btn purple", "Start", openStart));
+    const go = btn("startbtn", "Start", openStart, "Start something");
+    go.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor"><path d="M7 4.5v15l12.5-7.5z"/></svg>Start';
+    w.append(go);
   }
 }
 
@@ -747,16 +783,17 @@ $("confirmYes").addEventListener("click", () => { $("confirmDlg").close(); if (c
 function pickColor(t) {
   const sw = $("swatches"); sw.textContent = "";
   const cur = t.color || "";
-  const add = c => { const b = btn("sw hue h-" + c, "", () => { $("colorDlg").close(); edit(t, { color: c }); }, c); const v = colorVars(t, c); if (v) b.setAttribute("style", v); b.innerHTML = HEART; b.setAttribute("aria-pressed", c === cur ? "true" : "false"); sw.append(b); };
-  sw.append(el("span", "swlbl", "Most important first"));
-  LADDER.forEach(add);
-  sw.append(el("span", "swlbl", "Other colors"));
-  EXTRA.forEach(add);
-  const auto = btn("sw auto", "", () => { $("colorDlg").close(); edit(t, { color: "" }); }, "Automatic");
-  auto.innerHTML = HEART; auto.setAttribute("aria-pressed", cur ? "false" : "true");
-  sw.append(auto);
+  LADDER.forEach((c, n) => {
+    const b = btn("sw hue h-" + c, "", () => { $("colorDlg").close(); edit(t, { color: c }); }, LADDER_LABEL[c]);
+    const v = colorVars(t, c); if (v) b.setAttribute("style", v);
+    b.innerHTML = HEART; b.append(el("small", null, (n + 1) + ". " + LADDER_LABEL[c]));
+    b.setAttribute("aria-pressed", c === cur ? "true" : "false"); sw.append(b);
+  });
   $("colorTitle").textContent = t.title;
-  $("colorMsg").textContent = "Purple = must do today, then blue, white, black, red, orange, yellow, green. Gray = totally optional. The rainbow heart goes back to automatic.";
+  $("colorMsg").textContent = "How important is it to get this done today? Most important first.";
+  $("autoColor").textContent = cur ? "Let it pick for me" : "Right now it picks for you from the due date";
+  $("autoColor").disabled = !cur;
+  $("autoColor").onclick = () => { $("colorDlg").close(); if (cur) edit(t, { color: "" }); };
   const due = $("dueIn"); due.value = t.due || "";
   due.onchange = () => { $("colorDlg").close(); edit(t, { due: due.value }); };
   $("dueClear").onclick = () => { $("colorDlg").close(); edit(t, { due: "" }); };
@@ -857,10 +894,12 @@ $("calAdd").addEventListener("submit", e => {
 });
 
 // ---- squishies ----
-const HUE = { pink: 340, red: 2, orange: 24, yellow: 46, lime: 84, green: 148, teal: 176, sky: 198, blue: 222, purple: 262, lavender: 286, brown: 26, gray: 250 };
+const HUE = { pink: 340, red: 2, orange: 24, yellow: 46, lime: 84, green: 148, teal: 176, sky: 198, blue: 222, purple: 270, lavender: 286, brown: 26, gray: 250, white: 30 };
 function squishySVG(kind, color) {
-  const h = HUE[color] ?? 300, sat = color === "brown" ? 45 : color === "gray" ? 10 : 90;
-  let F = `hsl(${h} ${sat}% 86%)`, S = `hsl(${h} ${Math.round(sat * .6)}% 60%)`;
+  const h = HUE[color] ?? 300, sat = color === "brown" ? 45 : color === "gray" ? 10 : color === "white" ? 30 : 90;
+  let F = color === "white" ? "#fffaf2" : `hsl(${h} ${sat}% 86%)`, S = `hsl(${h} ${Math.round(sat * .6)}% 60%)`;
+  const F2 = `hsl(${h} ${sat}% 93%)`, D = `hsl(${h} ${Math.round(sat * .7)}% 72%)`;
+  const glit = (pts) => pts.map(([x, y, r]) => `<circle cx="${x}" cy="${y}" r="${r}" fill="#fff" opacity=".85"/>`).join("");
   const ink = "#4a3a44";
   const face = (y, x = 50, s = 1) => `<g transform="translate(${x} ${y}) scale(${s})"><circle cx="-9" cy="0" r="3.2" fill="${ink}"/><circle cx="9" cy="0" r="3.2" fill="${ink}"/><circle cx="-8" cy="-1" r="1" fill="#fff"/><circle cx="10" cy="-1" r="1" fill="#fff"/><path d="M-4 4 q2 3 4 0 q2 3 4 0" fill="none" stroke="${ink}" stroke-width="1.8" stroke-linecap="round"/><ellipse cx="-16" cy="5" rx="4.5" ry="2.6" fill="#ff7a9c" opacity=".45"/><ellipse cx="16" cy="5" rx="4.5" ry="2.6" fill="#ff7a9c" opacity=".45"/></g>`;
   const shine = (x, y) => `<ellipse cx="${x}" cy="${y}" rx="7" ry="3.5" transform="rotate(-30 ${x} ${y})" fill="#fff" opacity=".7"/>`;
@@ -886,6 +925,25 @@ function squishySVG(kind, color) {
     case "avocado": b = `<path d="M50 14 C30 14 22 46 18 62 C14 82 34 90 50 90 C66 90 86 82 82 62 C78 46 70 14 50 14Z" fill="hsl(84 55% 72%)" stroke="hsl(110 40% 40%)" stroke-width="3"/><path d="M50 22 C36 24 30 50 28 62 C26 78 40 84 50 84 C60 84 74 78 72 62 C70 50 64 24 50 22Z" fill="hsl(70 80% 86%)"/><circle cx="50" cy="66" r="13" fill="hsl(25 50% 55%)"/>${face(44)}`; break;
     case "unicorn": b = `<path d="M50 6 L44 34 L56 34Z" fill="#ffe08a" stroke="#e3b84a" stroke-width="2" stroke-linejoin="round"/><path d="M26 44 L30 26 L42 38Z M74 44 L70 26 L58 38Z" fill="#fff" stroke="#c9b8e8" stroke-width="2.6"/>${blob(64, 32, 26).replace(F, "#fff").replace(S, "#c9b8e8")}<path d="M24 52 q-8 10 -2 22 M20 48 q-12 14 -4 28" fill="none" stroke="#ff9fbd" stroke-width="5" stroke-linecap="round"/><path d="M27 58 q-6 8 -1 16" fill="none" stroke="#9fd0ff" stroke-width="5" stroke-linecap="round"/>${shine(38, 52)}${face(64)}`; break;
     case "galaxycat": b = `<path d="M22 50 L24 22 L42 38Z M78 50 L76 22 L58 38Z" fill="#5b4aa8" stroke="#3a2d7a" stroke-width="2.6"/><ellipse cx="50" cy="62" rx="34" ry="26" fill="#5b4aa8" stroke="#3a2d7a" stroke-width="2.6"/>${[[30,52,1.6],[70,56,1.2],[60,78,1.4],[36,76,1],[46,46,1],[76,70,1.6]].map(([x,y,r]) => `<circle cx="${x}" cy="${y}" r="${r}" fill="#fff"/>`).join("")}<path d="M66 44 l1.5 4 4 1.5 -4 1.5 -1.5 4 -1.5 -4 -4 -1.5 4 -1.5z" fill="#ffe08a"/><g><circle cx="41" cy="62" r="3.2" fill="#fff"/><circle cx="59" cy="62" r="3.2" fill="#fff"/><path d="M46 66 q2 3 4 0 q2 3 4 0" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round"/></g>`; break;
+    case "cube": b = `<path d="M20 40 L50 27 L80 40 L80 74 L50 88 L20 74Z" fill="${F}" ${sw}/><path d="M20 40 L50 27 L80 40 L50 53Z" fill="#fff" opacity=".45"/><path d="M50 53 V88" stroke="${S}" stroke-width="2" opacity=".6"/>${shine(30, 56)}<g transform="translate(0 4)">${face(66, 36, .7)}</g>`; break;
+    case "minicube": b = `<g transform="translate(18 22) scale(.66)"><path d="M20 40 L50 27 L80 40 L80 74 L50 88 L20 74Z" fill="${F}" fill-opacity=".85" ${sw}/><path d="M20 40 L50 27 L80 40 L50 53Z" fill="#fff" opacity=".45"/><path d="M50 53 V88" stroke="${S}" stroke-width="2" opacity=".6"/>${face(68, 36, .8)}</g>${glit([[36,56,1.4],[44,66,1],[56,60,1.2],[60,72,1],[40,74,1.2],[64,52,1]])}`; break;
+    case "gumdrop": b = `<path d="M18 84 Q16 40 50 24 Q84 40 82 84 Q50 92 18 84Z" fill="${F}" ${sw}/>${glit([[30,48,1.6],[42,36,1.3],[60,40,1.5],[70,56,1.3],[26,66,1.3],[74,72,1.5],[52,30,1.2]])}${shine(36, 44)}${face(64)}`; break;
+    case "gummybear": b = `<g fill="${F}" fill-opacity=".88" ${sw}><circle cx="34" cy="22" r="8"/><circle cx="66" cy="22" r="8"/><ellipse cx="22" cy="62" rx="8" ry="11" transform="rotate(25 22 62)"/><ellipse cx="78" cy="62" rx="8" ry="11" transform="rotate(-25 78 62)"/><ellipse cx="36" cy="86" rx="10" ry="7"/><ellipse cx="64" cy="86" rx="10" ry="7"/><ellipse cx="50" cy="66" rx="24" ry="22"/><circle cx="50" cy="38" r="21"/></g><ellipse cx="50" cy="68" rx="12" ry="10" fill="#fff" opacity=".3"/>${shine(40, 28)}${face(40, 50, .85)}`; break;
+    case "glob": b = `<circle cx="50" cy="58" r="33" fill="${F}" fill-opacity=".9" ${sw}/><path d="M36 60 Q38 44 52 46 Q66 48 64 62 Q60 74 48 72 Q36 70 36 60Z" fill="hsl(${(h + 140) % 360} 85% 78%)" opacity=".8"/>${shine(36, 42)}${face(58)}`; break;
+    case "hamster": b = `<circle cx="28" cy="38" r="8" fill="${F}" ${sw}/><circle cx="72" cy="38" r="8" fill="${F}" ${sw}/><circle cx="28" cy="38" r="3.5" fill="#ffb3c7"/><circle cx="72" cy="38" r="3.5" fill="#ffb3c7"/><path d="M12 72 Q12 36 50 36 Q88 36 88 72 Q88 86 50 86 Q12 86 12 72Z" fill="${F}" ${sw}/><ellipse cx="50" cy="74" rx="20" ry="11" fill="#fff" opacity=".7"/><ellipse cx="40" cy="84" rx="4" ry="3" fill="#ffb3c7"/><ellipse cx="60" cy="84" rx="4" ry="3" fill="#ffb3c7"/>${shine(30, 50)}${face(60, 50, 1.1)}`; break;
+    case "butter": b = `<path d="M12 50 L30 38 L88 38 L88 70 L70 82 L12 82Z" fill="${F}" ${sw}/><path d="M12 50 L30 38 L88 38 L70 50Z" fill="#fff" opacity=".5"/><path d="M70 50 V82" stroke="${S}" stroke-width="2" opacity=".6"/><path d="M44 50 H70 V82 H44Z" fill="#fff" opacity=".85"/><path d="M44 62 H70 M44 68 H70" stroke="hsl(210 70% 75%)" stroke-width="2.5"/>${face(64, 28, .8)}`; break;
+    case "donut": b = `<ellipse cx="50" cy="60" rx="36" ry="30" fill="hsl(34 70% 78%)" stroke="hsl(30 45% 58%)" stroke-width="2.6"/><path d="M18 56 Q20 34 50 32 Q80 34 82 56 Q78 64 72 60 Q66 70 58 64 Q50 72 42 64 Q34 70 28 62 Q22 66 18 56Z" fill="${F}" ${sw}/><ellipse cx="50" cy="52" rx="10" ry="7" fill="hsl(34 70% 70%)" stroke="hsl(30 45% 58%)" stroke-width="2"/>${[[30,44,"#7fd1ff",20],[40,38,"#ffe08a",-30],[62,38,"#8fe3b4",40],[70,46,"#fff",-10],[56,62,"#ffe08a",15],[34,58,"#8fe3b4",-40]].map(([x,y,c,r]) => `<rect x="${x}" y="${y}" width="6" height="2.4" rx="1.2" fill="${c}" transform="rotate(${r} ${x} ${y})"/>`).join("")}${face(74, 50, .8)}`; break;
+    case "cheese": b = `<path d="M10 76 L90 76 L90 46 L10 62Z" fill="${F}" ${sw}/><path d="M10 62 L90 46 L66 32Z" fill="hsl(50 95% 92%)" ${sw}/>${[[30,70,5],[70,58,6],[52,66,3.5],[80,68,3],[60,40,3.5]].map(([x,y,r]) => `<circle cx="${x}" cy="${y}" r="${r}" fill="${D}"/>`).join("")}${face(66, 44, .8)}`; break;
+    case "bread": b = `<path d="M14 60 Q12 30 50 28 Q88 30 86 60 L84 84 Q50 90 16 84Z" fill="hsl(32 60% 72%)" stroke="hsl(28 45% 52%)" stroke-width="2.6"/><path d="M22 60 Q22 40 50 38 Q78 40 78 60 L76 80 Q50 84 24 80Z" fill="#fff3dd"/>${shine(30, 40)}${face(62)}`; break;
+    case "paw": b = `<ellipse cx="50" cy="64" rx="34" ry="26" fill="${F}" ${sw}/><path d="M36 70 Q36 56 50 56 Q64 56 64 70 Q64 80 50 80 Q36 80 36 70Z" fill="#ff9fbd"/>${[[30,46],[44,40],[58,40],[72,46]].map(([x,y]) => `<ellipse cx="${x}" cy="${y}" rx="6" ry="7" fill="#ff9fbd"/>`).join("")}${shine(24, 58)}`; break;
+    case "capybara": b = `<circle cx="28" cy="34" r="6" fill="hsl(28 45% 62%)"/><circle cx="72" cy="34" r="6" fill="hsl(28 45% 62%)"/><path d="M14 70 Q14 32 50 32 Q86 32 86 70 Q86 86 50 86 Q14 86 14 70Z" fill="hsl(30 50% 72%)" stroke="hsl(28 40% 50%)" stroke-width="2.6"/><ellipse cx="50" cy="66" rx="18" ry="13" fill="hsl(28 45% 60%)"/><ellipse cx="44" cy="62" rx="2" ry="3" fill="${ink}"/><ellipse cx="56" cy="62" rx="2" ry="3" fill="${ink}"/><path d="M30 50 q4 -3 8 0 M62 50 q4 -3 8 0" fill="none" stroke="${ink}" stroke-width="2" stroke-linecap="round"/><ellipse cx="24" cy="58" rx="5" ry="3" fill="#ff7a9c" opacity=".4"/><ellipse cx="76" cy="58" rx="5" ry="3" fill="#ff7a9c" opacity=".4"/>`; break;
+    case "cookie": b = `<path d="M50 24 C74 24 86 40 86 58 C86 80 70 88 50 88 C26 88 14 76 14 58 C14 46 20 38 28 32 Q34 38 40 32 Q44 26 50 24Z" fill="hsl(34 65% 74%)" stroke="hsl(28 45% 54%)" stroke-width="2.6"/>${[[30,52],[64,40],[72,64],[44,78],[58,76],[26,70]].map(([x,y]) => `<ellipse cx="${x}" cy="${y}" rx="4" ry="3.2" fill="hsl(20 40% 32%)"/>`).join("")}${face(60)}`; break;
+    case "ball": b = `<circle cx="50" cy="58" r="32" fill="${F}" fill-opacity=".92" ${sw}/><ellipse cx="38" cy="44" rx="9" ry="5" transform="rotate(-30 38 44)" fill="#fff" opacity=".75"/><circle cx="62" cy="40" r="3" fill="#fff" opacity=".6"/>${face(60)}`; break;
+    case "loop": b = `<circle cx="50" cy="56" r="26" fill="none" stroke="${S}" stroke-width="20"/><circle cx="50" cy="56" r="26" fill="none" stroke="${F}" stroke-width="15"/><path d="M30 40 Q38 32 48 31" fill="none" stroke="#fff" stroke-width="3.5" stroke-linecap="round" opacity=".7"/>${face(84, 50, .7)}`; break;
+    case "carrot": b = `<path d="M44 26 Q36 10 30 14 Q38 18 42 28 M50 24 Q50 6 44 8 Q50 14 48 26 M56 26 Q62 10 70 14 Q60 18 56 28" fill="#8fd6a2" stroke="#5fb37a" stroke-width="2.5" stroke-linejoin="round"/><path d="M28 32 Q50 20 72 32 Q66 66 52 90 Q48 92 46 88 Q34 64 28 32Z" fill="hsl(24 95% 74%)" stroke="hsl(20 70% 55%)" stroke-width="2.6"/><path d="M38 50 h8 M56 62 h7 M44 74 h6" stroke="hsl(20 70% 55%)" stroke-width="2" stroke-linecap="round"/>${face(42, 50, .85)}`; break;
+    case "tree": b = `<rect x="44" y="78" width="12" height="12" rx="2" fill="hsl(28 45% 55%)"/><path d="M50 12 L76 46 L64 46 L84 72 L16 72 L36 46 L24 46Z" fill="hsl(145 55% 70%)" stroke="hsl(145 40% 45%)" stroke-width="2.6" stroke-linejoin="round"/><path d="M50 4 l3 6 6 1 -4.5 4 1 6 -5.5 -3 -5.5 3 1 -6 -4.5 -4 6 -1z" fill="#ffe08a" stroke="#e3b84a" stroke-width="1.5"/>${[[38,60,"#ff9fbd"],[64,62,"#9fd0ff"],[56,40,"#ffe08a"],[30,68,"#c3a2ff"],[72,70,"#ff9fbd"]].map(([x,y,c]) => `<circle cx="${x}" cy="${y}" r="3.5" fill="${c}"/>`).join("")}${face(52, 50, .75)}`; break;
+    case "burger": b = `<path d="M16 76 Q16 88 50 88 Q84 88 84 76Z" fill="hsl(34 70% 72%)" stroke="hsl(28 45% 52%)" stroke-width="2.6"/><rect x="14" y="64" width="72" height="12" rx="6" fill="hsl(18 40% 42%)"/><path d="M14 62 L86 62 L76 72 L66 64 L56 72 L46 64 L36 72 L26 64Z" fill="#ffd34d"/><path d="M12 60 Q20 54 28 60 Q36 54 44 60 Q52 54 60 60 Q68 54 76 60 Q84 54 88 60" fill="none" stroke="#7fd18f" stroke-width="5" stroke-linecap="round"/><path d="M14 56 Q14 26 50 26 Q86 26 86 56Z" fill="hsl(34 75% 70%)" stroke="hsl(28 45% 52%)" stroke-width="2.6"/>${[[34,36],[48,32],[62,36],[42,44],[58,44],[70,46]].map(([x,y]) => `<ellipse cx="${x}" cy="${y}" rx="2.2" ry="1.3" fill="#fff6d8"/>`).join("")}${face(48, 50, .8)}`; break;
+    case "icecream": b = `<path d="M32 54 L50 92 L68 54Z" fill="hsl(36 70% 70%)" stroke="hsl(30 45% 50%)" stroke-width="2.6" stroke-linejoin="round"/><path d="M38 60 L58 74 M62 60 L42 74 M46 58 L58 66" stroke="hsl(30 45% 50%)" stroke-width="1.5" opacity=".6"/><path d="M24 54 Q20 26 50 22 Q80 26 76 54 Q72 62 66 56 Q62 64 56 58 Q50 66 44 58 Q38 64 34 56 Q28 62 24 54Z" fill="${F}" ${sw}/><circle cx="50" cy="16" r="6" fill="#ff6b8a"/><path d="M50 10 q2 -6 8 -7" fill="none" stroke="#5fb37a" stroke-width="2"/>${shine(36, 32)}${face(42)}`; break;
     default: b = `${blob()}${face(62)}`;
   }
   return `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" role="img" aria-hidden="true"><ellipse cx="50" cy="92" rx="28" ry="4" fill="#000" opacity=".08"/>${b}</svg>`;
@@ -900,7 +958,8 @@ function renderCollection(root) {
     c.append(tx, btn("btn ghost", "Not yet", () => { pickWeek = null; render(); }));
     wrap.append(c);
   }
-  if (!list.length) { wrap.append(el("div", "card empty", "No squishies yet. Clear a whole day (check things off or put them in Not today) to unlock a mystery box!")); root.append(wrap); return; }
+  if (!list.length) { wrap.append(el("div", "card empty", "No squishies yet. Finish everything for the day (check it off or put it in Not today) to open a mystery box!")); root.append(wrap); return; }
+  wrap.append(el("p", "meta", list.length + " of " + (data.catalogSize || list.length) + " squishies collected. Every one is a real squishy, and you never get the same one twice."));
   const g = el("div", "coll" + (pickWeek ? " picking" : ""));
   list.forEach(s => {
     const c = el(pickWeek ? "button" : "div", "sq");
@@ -923,31 +982,75 @@ $("calDlg").addEventListener("close", () => { $("calDlgList").textContent = ""; 
 
 const BOX = '<svg viewBox="0 0 170 170"><ellipse cx="85" cy="160" rx="62" ry="7" fill="#000" opacity=".2"/><rect x="25" y="70" width="120" height="85" rx="12" fill="#c3a2ff" stroke="#8a62e6" stroke-width="5"/><rect x="77" y="70" width="16" height="85" fill="#fff1b8"/><text x="85" y="128" text-anchor="middle" font-family="Fredoka" font-weight="700" font-size="40" fill="#fff">?</text><g class="lid"><rect x="15" y="48" width="140" height="28" rx="9" fill="#ff9fbd" stroke="#e06b93" stroke-width="5"/><rect x="77" y="48" width="16" height="28" fill="#fff1b8"/><path d="M85 48c-8-22-34-26-34-8 0 10 20 8 34 8zM85 48c8-22 34-26 34-8 0 10-20 8-34 8z" fill="#fff1b8" stroke="#e3c25c" stroke-width="4"/></g></svg>';
 let boxDate = null, boxBusy = false;
+const celebrated = {};
+// step 1: "You're done!" when the last thing for today gets handled
+function celebrate(d) {
+  celebrated[d] = true; boxDate = d;
+  const st = $("boxstage"); st.className = "boxstage celebrate";
+  $("boxTitle").textContent = "You're done!";
+  $("boxSub").textContent = "Congratulations! You finished everything for today.";
+  $("realName").hidden = true; $("boxLater").hidden = false;
+  $("boxov").hidden = false; glitter("rain"); $("toBox").focus();
+}
+// step 2: the box floats, tap it and it shakes, then bursts open with glitter
 function openBox(d) {
   boxDate = d;
   const st = $("boxstage"); st.className = "boxstage";
   $("bx").innerHTML = BOX; $("pop").innerHTML = "";
-  $("boxTitle").textContent = "Mystery box!"; $("boxSub").textContent = "Tap the box to open it";
-  $("boxActions").hidden = true; $("boxov").hidden = false; $("bx").focus();
+  $("boxTitle").textContent = "Mystery box!"; $("boxSub").textContent = "Tap it to open!";
+  $("boxActions").hidden = true; $("realName").hidden = true; $("boxLater").hidden = false;
+  $("boxov").hidden = false; $("bx").focus();
 }
+$("toBox").addEventListener("click", () => openBox(boxDate));
 $("bx").addEventListener("click", async () => {
-  if (boxBusy || !boxDate || $("boxstage").classList.contains("open")) return;
-  boxBusy = true; $("boxSub").textContent = "Opening…";
-  const j = await post({ action: "openBox", date: boxDate });
-  boxBusy = false;
+  const st = $("boxstage");
+  if (boxBusy || !boxDate || st.classList.contains("open") || st.classList.contains("shake")) return;
+  boxBusy = true; st.classList.add("shake"); $("boxSub").textContent = "Here it comes…"; $("boxLater").hidden = true;
+  const [j] = await Promise.all([post({ action: "openBox", date: boxDate }), new Promise(r => setTimeout(r, 1100))]);
+  boxBusy = false; st.classList.remove("shake");
   if (!j) { $("boxov").hidden = true; return; }
-  const s = (j.squishies || []).find(x => x.id === j.opened);
-  $("boxstage").classList.add("open");
+  if (!j.opened) { $("boxTitle").textContent = "You've collected them all!"; $("boxSub").textContent = "Every squishy is in your collection."; $("boxActions").hidden = false; return; }
+  const sq = (j.squishies || []).find(x => x.id === j.opened);
+  st.classList.add("open"); glitter("burst");
   setTimeout(() => {
-    $("pop").innerHTML = squishySVG(s.kind, s.color);
-    $("boxstage").classList.add("revealed");
-    $("boxTitle").textContent = s.name + "!";
-    $("boxSub").textContent = (s.rarity === "legendary" ? "LEGENDARY! Super rare!" : s.rarity === "rare" ? "A rare one!" : s.rarity === "uncommon" ? "Ooh, uncommon." : "So squishy.");
-    $("boxActions").hidden = false; confetti();
-  }, 450);
+    $("pop").innerHTML = squishySVG(sq.kind, sq.color);
+    st.classList.add("revealed");
+    $("boxTitle").textContent = sq.rarity === "legendary" ? "LEGENDARY!" : sq.rarity === "rare" ? "A rare one!" : sq.rarity === "uncommon" ? "Ooh, uncommon!" : "So squishy!";
+    $("boxSub").textContent = "You got: " + sq.name;
+    $("boxActions").hidden = false;
+  }, 380);
 });
-$("boxDone").addEventListener("click", () => { $("boxov").hidden = true; boxDate = null; render(); });
-function boxToast() { if (data && (data.boxes || []).length) toastMsg("Mystery box unlocked!", "You cleared the whole day. Open it up top."); }
+$("boxDone").addEventListener("click", () => { $("boxov").hidden = true; boxDate = null; view = "sq"; render(); });
+$("boxLater").addEventListener("click", () => { $("boxov").hidden = true; render(); });
+function boxToast() {}
+function maybeCelebrate(j) { if (j && j.justEarned && j.justEarned === j.today && !celebrated[j.justEarned]) setTimeout(() => celebrate(j.justEarned), 1200); }
+
+// glitter: soft sparkles raining down, or bursting out of the box
+function glitter(mode) {
+  if (window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+  const c = $("glitter"), dpr = window.devicePixelRatio || 1, W = innerWidth, H = innerHeight;
+  c.width = W * dpr; c.height = H * dpr; const ctx = c.getContext("2d"); ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const cols = ["#fff6c9", "#ffd1e1", "#d6ccff", "#c9f3e2", "#ffe08a", "#ffffff", "#b5dcff"];
+  const cx = W / 2, cy = H / 2 + 40, n = mode === "burst" ? 160 : 90;
+  const ps = Array.from({ length: n }, () => {
+    const a = Math.random() * 6.28, v = 3 + Math.random() * 7;
+    return mode === "burst"
+      ? { x: cx, y: cy, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 4, s: 2 + Math.random() * 4, c: cols[Math.floor(Math.random() * cols.length)], star: Math.random() < .4, life: 1, tw: Math.random() * 6 }
+      : { x: Math.random() * W, y: -20 - Math.random() * H * .6, vx: -.4 + Math.random() * .8, vy: 1 + Math.random() * 2, s: 2 + Math.random() * 3.5, c: cols[Math.floor(Math.random() * cols.length)], star: Math.random() < .35, life: 1, tw: Math.random() * 6 };
+  });
+  const star = (x, y, r) => { ctx.beginPath(); for (let i = 0; i < 8; i++) { const rr = i % 2 ? r * .4 : r * 1.6, a = i * Math.PI / 4; ctx.lineTo(x + Math.cos(a) * rr, y + Math.sin(a) * rr); } ctx.closePath(); ctx.fill(); };
+  const t0 = performance.now();
+  (function f(now) {
+    const t = now - t0; ctx.clearRect(0, 0, W, H);
+    ps.forEach(p => {
+      p.x += p.vx; p.y += p.vy; p.vy += mode === "burst" ? .12 : .01; p.vx *= .99; p.tw += .25;
+      if (t > (mode === "burst" ? 1200 : 2600)) p.life -= .02;
+      ctx.globalAlpha = Math.max(0, p.life) * (.6 + .4 * Math.sin(p.tw)); ctx.fillStyle = p.c;
+      if (p.star) star(p.x, p.y, p.s); else { ctx.beginPath(); ctx.arc(p.x, p.y, p.s * .7, 0, 6.28); ctx.fill(); }
+    });
+    if (t < 4000 && !$("boxov").hidden) requestAnimationFrame(f); else ctx.clearRect(0, 0, W, H);
+  })(t0);
+}
 
 // ---- start picker ----
 function openStart() {
@@ -1025,11 +1128,11 @@ function toast(name) { toastMsg("Nice, " + (name || "that") + " is done!", "Sofi
 const chatLog = [];
 function addMsg(role, text, cls) { const m = el("div", "msg " + role + (cls ? " " + cls : ""), text); $("msgs").append(m); $("msgs").scrollTop = $("msgs").scrollHeight; return m; }
 $("chatBtn").addEventListener("click", () => {
-  $("chat").hidden = false; $("chatBtn").hidden = true;
+  $("chat").hidden = false; $("dock").hidden = true;
   if (!$("msgs").children.length) addMsg("bot", data && data.chat === false ? "The helper isn't turned on yet. Sofia needs to add the key." : "Hi! Tell me what you did, what you didn't do, or what you want to move, and I'll fix the plan.");
   $("chatIn").focus();
 });
-$("chatClose").addEventListener("click", () => { $("chat").hidden = true; $("chatBtn").hidden = false; });
+$("chatClose").addEventListener("click", () => { $("chat").hidden = true; $("dock").hidden = false; });
 $("chatForm").addEventListener("submit", async e => {
   e.preventDefault();
   const text = $("chatIn").value.trim(); if (!text || busy) return;
