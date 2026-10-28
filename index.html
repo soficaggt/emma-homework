@@ -655,7 +655,9 @@ function daySection(d, tasks) {
   tasks.forEach(t => ul.append(taskRow(t, { showDate: d.earlier })));
   if (!tasks.length) ul.append(el("li", "dropzone-empty", "Nothing planned. Drag something here or tap + Add."));
   sec.append(ul);
-  const bring = d.date ? bringFor(tasks) : [];
+  // tonight's homework, plus anything to study for a test or quiz tomorrow
+  const tomorrowTests = d.date ? live().filter(t => t.date === addDays(d.date, 1) && /test|quiz/i.test(t.title)) : [];
+  const bring = d.date ? bringFor(tasks.concat(tomorrowTests.map(t => Object.assign({}, t, { cat: "test" })))) : [];
   if (bring.length) { const b = el("div", "bring"); b.append(el("b", null, "Bring home:")); bring.forEach(x => b.append(el("span", "bchip", x))); sec.append(b); }
   makeSortable(ul);
   return sec;
@@ -715,6 +717,7 @@ function doToday(t) { local(t.id, { pile: false, date: data.today, order: 999 })
 function dueChip(t) {
   if (!t.due) return null;
   const today = data.today;
+  if (isPlan(t) && t.due === t.date) return null;   // a test or class that day: the day itself says it
   if (t.due === t.date && !t.done) return el("span", "due" + (t.due === today ? " today" : ""), "Due tonight");
   if (t.due === today) return el("span", "due today", "Due today");
   if (t.due < today && !t.done) return el("span", "due late", "Was due " + shortDay(t.due));
