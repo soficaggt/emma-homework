@@ -1,0 +1,575 @@
+// Emma's homework site: backend for the Google Sheet.
+// Lives in the sheet under Extensions > Apps Script. After pasting a new version:
+// save, then Deploy > Manage deployments > edit (pencil) > Version: New version > Deploy (same link keeps working).
+// The chat box needs an Anthropic API key in Project Settings > Script properties, named ANTHROPIC_API_KEY.
+
+const TZ = 'America/New_York';
+const NTFY_TOPIC = 'emma-hw-5e47c8b0dc56';
+const DAYS_AHEAD = 7;
+const SITE_URL = 'https://soficaggt.github.io/emma-homework/';
+const T_COLS = ['id', 'date', 'title', 'note', 'dur', 'cat', 'order', 'done', 'doneAt', 'proofText', 'proofPhoto', 'deleted', 'addedBy', 'updatedAt', 'color', 'due', 'pile'];
+const TPL_COLS = ['weekday', 'title', 'note', 'dur', 'cat', 'order'];
+const S_COLS = ['taskId', 'title', 'startedAt'];
+const D_COLS = ['date', 'bring'];
+const Q_COLS = ['id', 'date', 'kind', 'color', 'name', 'rarity', 'openedAt', 'realWeek'];
+const CATS = ['test', 'school', 'hunter', 'rsm', 'fixed', 'flex'];
+const COLORS = ['purple', 'blue', 'white', 'black', 'lavender', 'sky', 'teal', 'green', 'lime', 'yellow', 'orange', 'pink', 'red', 'brown', 'gray'];
+const WEEKDAYS = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+const CHAT_MODEL = 'claude-sonnet-5-5';
+const CHATS_PER_DAY = 80;
+
+// Squishies you can get from the mystery box. Weights: common 60, uncommon 28, rare 10, legendary 2.
+const SQUISHIES = {
+  common: ['mochi', 'cat', 'bunny', 'bear', 'frog', 'chick'],
+  uncommon: ['strawberry', 'peach', 'boba', 'dumpling', 'cloud', 'ghost'],
+  rare: ['axolotl', 'penguin', 'dino', 'avocado'],
+  legendary: ['unicorn', 'galaxycat']
+};
+const SQ_NAMES = { mochi: 'Mochi', cat: 'Kitty', bunny: 'Bunny', bear: 'Bear', frog: 'Froggy', chick: 'Chick', strawberry: 'Strawberry', peach: 'Peach',
+  boba: 'Boba Tea', dumpling: 'Dumpling', cloud: 'Cloud', ghost: 'Ghostie', axolotl: 'Axolotl', penguin: 'Penguin', dino: 'Dino', avocado: 'Avocado',
+  unicorn: 'Unicorn', galaxycat: 'Galaxy Cat' };
+const SQ_FIXED = { strawberry: 'pink', peach: 'orange', boba: 'brown', avocado: 'lime', galaxycat: 'purple', cloud: 'sky', ghost: 'lavender', chick: 'yellow', frog: 'green' };
+const SQ_COLORS = ['pink', 'lavender', 'sky', 'teal', 'yellow', 'orange', 'purple', 'lime'];
+const COLOR_WORDS = { pink: 'Strawberry Milk', red: 'Cherry', orange: 'Peachy', yellow: 'Lemon', lime: 'Matcha', green: 'Minty', teal: 'Ocean', sky: 'Cotton Cloud',
+  blue: 'Blueberry', purple: 'Grape', lavender: 'Lavender', brown: 'Cocoa', gray: 'Cozy' };
+
+// Recurring "possible homework". Edit the Template tab in the sheet to change it.
+const SCHOOL_NIGHT = [
+  ['Math homework', 'New from class today', '30 min', 'school'],
+  ['History homework', 'New from class today', '30 min', 'school'],
+  ['Dinner', 'Whenever you want', '30 min', 'flex']
+];
+const TEMPLATE = [].concat(
+  ['Sun', 'Mon', 'Tue', 'Wed', 'Thu'].flatMap(d => SCHOOL_NIGHT.map(r => [d].concat(r))),
+  [['Fri', 'Robotics', 'At home', '4 to 6', 'fixed'],
+   ['Fri', 'Hunter tutoring', 'All Hunter work done by now', '6:30 to 7:30', 'fixed']]
+);
+
+// ---------- one-time setup (only needed on a brand new sheet) ----------
+function setup() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const props = PropertiesService.getScriptProperties();
+  const tpl = sheet_(ss, 'Template', TPL_COLS);
+  ensure_();
+  if (tpl.getLastRow() < 2) {
+    const counts = {};
+    const rows = TEMPLATE.map(r => { counts[r[0]] = (counts[r[0]] || 0) + 1; return [r[0], r[1], r[2], r[3], r[4], String(counts[r[0]])]; });
+    tpl.getRange(2, 1, rows.length, TPL_COLS.length).setValues(rows);
+  }
+  if (!props.getProperty('folderId')) {
+    props.setProperty('folderId', DriveApp.createFolder('Emma homework proof').getId());
+  }
+  materialize_();
+  Logger.log('Setup done. Now: Deploy > New deployment > Web app.');
+}
+
+function sheet_(ss, name, cols) {
+  let sh = ss.getSheetByName(name);
+  if (!sh) sh = ss.insertSheet(name);
+  sh.getRange('A:Z').setNumberFormat('@');
+  sh.getRange(1, 1, 1, cols.length).setValues([cols]).setFontWeight('bold');
+  sh.setFrozenRows(1);
+  return sh;
+}
+
+// Adds new columns and tabs the first time a newer version of this script runs. Safe to run every time.
+function ensure_() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const props = PropertiesService.getScriptProperties();
+  if (props.getProperty('schema') === '2') return;
+  const t = ss.getSheetByName('Tasks');
+  if (!t || t.getLastColumn() < T_COLS.length) sheet_(ss, 'Tasks', T_COLS);
+  if (!ss.getSheetByName('Status')) sheet_(ss, 'Status', S_COLS);
+  if (!ss.getSheetByName('Days')) sheet_(ss, 'Days', D_COLS);
+  if (!ss.getSheetByName('Squishies')) sheet_(ss, 'Squishies', Q_COLS);
+  if (!props.getProperty('rewardsStart')) props.setProperty('rewardsStart', ymd_(new Date()));
+  props.setProperty('schema', '2');
+}
+
+// ---------- helpers ----------
+function ymd_(d) { return Utilities.formatDate(d, TZ, 'yyyy-MM-dd'); }
+function addDays_(s, n) { const d = new Date(s + 'T12:00:00Z'); d.setUTCDate(d.getUTCDate() + n); return Utilities.formatDate(d, 'UTC', 'yyyy-MM-dd'); }
+function weekday_(s) { return new Date(s + 'T12:00:00Z').getUTCDay(); }
+function monday_(s) { return addDays_(s, -((weekday_(s) + 6) % 7)); }
+function newId_() { return 't' + Date.now().toString(36) + Math.random().toString(36).slice(2, 7); }
+function bool_(v) { return v === true || String(v).toUpperCase() === 'TRUE'; }
+function str_(v) { return v instanceof Date ? ymd_(v) : String(v == null ? '' : v); }
+function clip_(v, n) { return String(v == null ? '' : v).slice(0, n); }
+function isDate_(s) { return /^\d{4}-\d{2}-\d{2}$/.test(String(s || '')); }
+function json_(o) { return ContentService.createTextOutput(JSON.stringify(o)).setMimeType(ContentService.MimeType.JSON); }
+function checkable_(t) { return !t.deleted && t.cat !== 'fixed'; }
+
+function readTasks_() {
+  const sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Tasks');
+  const vals = sh.getDataRange().getValues();
+  const head = vals[0];
+  return vals.slice(1).map((r, i) => {
+    const o = { _row: i + 2 };
+    head.forEach((h, j) => { o[h] = r[j]; });
+    o.id = str_(o.id); o.date = str_(o.date); o.title = str_(o.title); o.note = str_(o.note);
+    o.dur = str_(o.dur); o.cat = CATS.indexOf(str_(o.cat)) >= 0 ? str_(o.cat) : 'school';
+    o.order = Number(o.order) || 0; o.done = bool_(o.done); o.deleted = bool_(o.deleted);
+    o.doneAt = str_(o.doneAt); o.proofText = str_(o.proofText); o.proofPhoto = str_(o.proofPhoto);
+    o.addedBy = str_(o.addedBy); o.updatedAt = str_(o.updatedAt);
+    o.color = COLORS.indexOf(str_(o.color)) >= 0 ? str_(o.color) : '';
+    o.due = isDate_(str_(o.due)) ? str_(o.due) : ''; o.pile = bool_(o.pile);
+    return o;
+  }).filter(o => o.id && o.date);
+}
+function writeTask_(t) {
+  const sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Tasks');
+  t.updatedAt = new Date().toISOString();
+  const row = T_COLS.map(c => t[c] == null ? '' : t[c]);
+  if (t._row) sh.getRange(t._row, 1, 1, T_COLS.length).setValues([row]);
+  else { sh.appendRow(row); t._row = sh.getLastRow(); }
+}
+function readStatus_() {
+  const sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Status');
+  if (sh.getLastRow() < 2) return null;
+  const r = sh.getRange(2, 1, 1, 3).getValues()[0];
+  return r[0] ? { taskId: str_(r[0]), title: str_(r[1]), startedAt: str_(r[2]) } : null;
+}
+function writeStatus_(s) {
+  const sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Status');
+  sh.getRange(2, 1, 1, 3).setValues([s ? [s.taskId, s.title, s.startedAt] : ['', '', '']]);
+}
+function readRows_(name, cols) {
+  const sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(name);
+  if (!sh || sh.getLastRow() < 2) return [];
+  return sh.getRange(2, 1, sh.getLastRow() - 1, cols.length).getValues().map((r, i) => {
+    const o = { _row: i + 2 }; cols.forEach((c, j) => { o[c] = str_(r[j]); }); return o;
+  });
+}
+function writeRow_(name, cols, o) {
+  const sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(name);
+  const row = cols.map(c => o[c] == null ? '' : o[c]);
+  if (o._row) sh.getRange(o._row, 1, 1, cols.length).setValues([row]);
+  else { sh.appendRow(row); o._row = sh.getLastRow(); }
+}
+
+// Text alerts: the script emails Sofia's Verizon text address (Settings tab: textTo).
+// (ntfy alerts are sent by the website itself; Google's servers can't reach ntfy.sh.)
+function notify_(msg) {
+  try {
+    const to = settings_().textTo;
+    if (!/@/.test(to)) return;
+    const lines = String(msg).split('\n');
+    const first = lines[0], today = lines.filter(l => /^Today:/.test(l))[0], quote = lines.filter(l => /^"/.test(l))[0];
+    let text = first + (today ? '. ' + today : '') + (quote ? '. ' + quote : '');
+    if (text.length > 155) text = text.slice(0, 152) + '...';
+    MailApp.sendEmail(to, 'Emma', text);
+  } catch (e) {}
+}
+// Run this once from the editor to allow sending and get a test text.
+function testText() {
+  const to = settings_().textTo;
+  if (!/@/.test(to)) throw new Error('Put your number in the Settings tab first, like 5551234567@vtext.com');
+  MailApp.sendEmail(to, 'Emma', 'Test from Emma homework: texts work!');
+  Logger.log('Sent to ' + to);
+}
+// Run this once from the editor after adding the API key, to check the chat works.
+function testChat() {
+  Logger.log(JSON.stringify(callClaude_({ system: 'Reply with the word ok.', messages: [{ role: 'user', content: 'hi' }], max_tokens: 20 })));
+}
+function clock_() { return Utilities.formatDate(new Date(), TZ, 'h:mma').toLowerCase(); }
+
+// Adds the template's tasks for any new days in the 7-day window.
+function materialize_() {
+  const props = PropertiesService.getScriptProperties();
+  const today = ymd_(new Date());
+  const end = addDays_(today, DAYS_AHEAD - 1);
+  let from = props.getProperty('materializedThrough');
+  from = from ? addDays_(from, 1) : today;
+  if (from < today) from = today;
+  if (from > end) return;
+  const tsh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Template');
+  const tpl = tsh.getLastRow() < 2 ? [] : tsh.getRange(2, 1, tsh.getLastRow() - 1, TPL_COLS.length).getValues();
+  const now = new Date().toISOString(), rows = [];
+  for (let d = from; d <= end; d = addDays_(d, 1)) {
+    const wd = weekday_(d);
+    tpl.forEach(r => {
+      if (WEEKDAYS.indexOf(String(r[0]).trim().slice(0, 3).toLowerCase()) !== wd || !String(r[1]).trim()) return;
+      const cat = CATS.indexOf(String(r[4]).trim()) >= 0 ? String(r[4]).trim() : 'school';
+      rows.push([newId_(), d, String(r[1]), String(r[2]), String(r[3]), cat, String(Number(r[5]) || 0), false, '', '', '', false, 'template', now, '', '', false]);
+    });
+  }
+  if (rows.length) {
+    const sh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Tasks');
+    sh.getRange(sh.getLastRow() + 1, 1, rows.length, T_COLS.length).setValues(rows);
+  }
+  props.setProperty('materializedThrough', end);
+}
+
+// ---------- rewards ----------
+// A day is cleared when it has something to check off and every item is done or in the "not today" pile.
+function cleared_(all, d) {
+  const list = all.filter(t => checkable_(t) && t.date === d);
+  return list.length > 0 && list.every(t => t.done || t.pile);
+}
+function boxDates_(all, squishies) {
+  const today = ymd_(new Date()), start = PropertiesService.getScriptProperties().getProperty('rewardsStart') || today;
+  const have = {}; squishies.forEach(s => { have[s.date] = true; });
+  return [addDays_(today, -1), today].filter(d => d >= start && !have[d] && cleared_(all, d));
+}
+// Weeks (Monday to Sunday) where every day that had homework earned a squishy.
+function tokens_(all, squishies) {
+  const today = ymd_(new Date()), start = PropertiesService.getScriptProperties().getProperty('rewardsStart') || today;
+  const have = {}, used = {};
+  squishies.forEach(s => { have[s.date] = true; if (s.realWeek) used[s.realWeek] = true; });
+  const out = [];
+  for (let w = monday_(start); w <= monday_(today); w = addDays_(w, 7)) {
+    const sun = addDays_(w, 6);
+    if (today < sun || used[w]) continue;
+    let any = false, ok = true;
+    for (let d = w; d <= sun; d = addDays_(d, 1)) {
+      if (d < start) continue;
+      if (have[d]) { any = true; continue; }
+      if (all.some(t => checkable_(t) && t.date === d)) { if (d === today && cleared_(all, d)) continue; ok = false; }
+    }
+    if (any && ok) out.push(w);
+  }
+  return out;
+}
+function pick_(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+function rollSquishy_() {
+  const r = Math.random() * 100;
+  const rarity = r < 2 ? 'legendary' : r < 12 ? 'rare' : r < 40 ? 'uncommon' : 'common';
+  const kind = pick_(SQUISHIES[rarity]);
+  const color = SQ_FIXED[kind] || pick_(SQ_COLORS);
+  // kinds that always look the same get a fun word instead of a color word
+  const word = ['mochi', 'cat', 'bunny', 'bear', 'axolotl', 'dino'].indexOf(kind) >= 0 ? COLOR_WORDS[color]
+    : kind === 'galaxycat' || kind === 'unicorn' ? 'Sparkle' : pick_(['Sleepy', 'Happy', 'Tiny', 'Bouncy', 'Cozy', 'Sweet', 'Giggly']);
+  const name = word + ' ' + SQ_NAMES[kind];
+  return { kind: kind, color: color, name: name, rarity: rarity };
+}
+
+function snapshot_() {
+  const today = ymd_(new Date());
+  const since = addDays_(today, -14);
+  const all = readTasks_();
+  const squishies = readRows_('Squishies', Q_COLS);
+  const tasks = all.filter(t => !t.deleted && (t.date >= since || t.pile || (t.due && t.due >= since)))
+    .map(t => { const c = Object.assign({}, t); delete c._row; return c; });
+  const bring = {};
+  readRows_('Days', D_COLS).forEach(r => { if (r.date >= since && r.bring) bring[r.date] = r.bring; });
+  return { ok: true, today: today, days: DAYS_AHEAD, tasks: tasks, status: readStatus_(), bring: bring,
+    squishies: squishies.map(s => { const c = Object.assign({}, s); delete c._row; return c; }),
+    boxes: boxDates_(all, squishies), tokens: tokens_(all, squishies),
+    chat: !!PropertiesService.getScriptProperties().getProperty('ANTHROPIC_API_KEY') };
+}
+
+// ---------- Settings tab (Claude can change these in the sheet) ----------
+function settings_() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sh = ss.getSheetByName('Settings');
+  if (!sh) {
+    sh = ss.insertSheet('Settings');
+    sh.getRange('A:B').setNumberFormat('@');
+    sh.getRange(1, 1, 5, 2).setValues([
+      ['setting', 'value'],
+      ['noProofTypes', 'flex, fixed'],
+      ['noAlertTypes', 'flex'],
+      ['sofiaKey', Utilities.getUuid().replace(/-/g, '').slice(0, 20)],
+      ['note', 'Types: test, school, hunter, rsm, fixed (Plans), flex (Dinner/Breaks). sofiaKey unlocks the photo page; keep it private.']
+    ]);
+    sh.getRange(1, 1, 1, 2).setFontWeight('bold');
+    sh.setFrozenRows(1);
+  }
+  const out = {};
+  sh.getDataRange().getValues().slice(1).forEach(r => { out[String(r[0]).trim()] = String(r[1]).trim(); });
+  const list = s => String(s || '').split(',').map(x => x.trim()).filter(Boolean);
+  return { noProof: list(out.noProofTypes), noAlert: list(out.noAlertTypes), sofiaKey: out.sofiaKey || '', textTo: out.textTo || '' };
+}
+function photoId_(url) { const m = String(url).match(/[-\w]{25,}/); return m ? m[0] : ''; }
+
+// ---------- web app ----------
+function doGet(e) {
+  const p = (e && e.parameter) || {};
+  const lock = LockService.getScriptLock();
+  lock.waitLock(20000);
+  try {
+    ensure_();
+    const cfg = settings_();
+    if (p.review || p.photo) {
+      if (!cfg.sofiaKey || p.key !== cfg.sofiaKey) return json_({ ok: false, error: 'not allowed' });
+      const tasks = readTasks_().filter(t => !t.deleted);
+      if (p.photo) {
+        if (!tasks.some(t => photoId_(t.proofPhoto) === p.photo)) return json_({ ok: false, error: 'not found' });
+        const blob = DriveApp.getFileById(p.photo).getBlob();
+        return json_({ ok: true, type: blob.getContentType(), data: Utilities.base64Encode(blob.getBytes()) });
+      }
+      const since = addDays_(ymd_(new Date()), -60);
+      const done = tasks.filter(t => t.date >= since && t.date <= ymd_(new Date())).map(t => {
+        delete t._row; t.photoId = photoId_(t.proofPhoto); return t;
+      });
+      return json_({ ok: true, today: ymd_(new Date()), tasks: done, noProof: cfg.noProof });
+    }
+    materialize_();
+    const snap = snapshot_();
+    snap.noProof = cfg.noProof;
+    snap.noAlert = cfg.noAlert;
+    return json_(snap);
+  }
+  catch (err) { return json_({ ok: false, error: String(err) }); }
+  finally { lock.releaseLock(); }
+}
+
+// Changes one task's fields. Used by the site and by the chat box.
+function applyFields_(t, f) {
+  if ('title' in f) t.title = clip_(f.title, 120).trim() || 'Untitled';
+  if ('note' in f) t.note = clip_(f.note, 300);
+  if ('dur' in f) t.dur = clip_(f.dur, 40);
+  if ('cat' in f && CATS.indexOf(f.cat) >= 0) t.cat = f.cat;
+  if ('color' in f && (f.color === '' || COLORS.indexOf(f.color) >= 0)) t.color = f.color;
+  if ('due' in f && (f.due === '' || isDate_(f.due))) t.due = f.due;
+  if ('date' in f && isDate_(f.date)) t.date = f.date;
+  if ('order' in f) t.order = String(Number(f.order) || 0);
+  if ('pile' in f) t.pile = !!f.pile;
+  if ('deleted' in f) t.deleted = !!f.deleted;
+}
+function addTask_(f, by) {
+  const date = clip_(f.date, 10);
+  if (!isDate_(date)) throw new Error('bad date');
+  const t = { id: newId_(), date: date, title: 'New homework', note: '', dur: '30 min', cat: 'school', order: '999', done: false, doneAt: '',
+    proofText: '', proofPhoto: '', deleted: false, addedBy: by || 'emma', color: '', due: '', pile: false };
+  applyFields_(t, { title: f.title || 'New homework', note: f.note || '', dur: f.dur || '30 min', cat: f.cat || 'school', color: f.color || '', due: f.due || '', order: f.order == null ? 999 : f.order });
+  writeTask_(t);
+  return t;
+}
+function todayLine_() {
+  const today = ymd_(new Date());
+  const todays = readTasks_().filter(x => checkable_(x) && x.date === today);
+  return '\nToday: ' + todays.filter(x => x.done).length + ' of ' + todays.length + ' done';
+}
+function setBring_(date, text) {
+  if (!isDate_(date)) throw new Error('bad date');
+  const rows = readRows_('Days', D_COLS);
+  const r = rows.find(x => x.date === date) || { date: date };
+  r.bring = clip_(text, 300);
+  writeRow_('Days', D_COLS, r);
+}
+
+function doPost(e) {
+  const lock = LockService.getScriptLock();
+  lock.waitLock(20000);
+  let req;
+  try {
+    req = JSON.parse(e.postData.contents);
+    ensure_();
+    if (req.action === 'chat') { lock.releaseLock(); return json_(chat_(req)); }
+    const all = readTasks_();
+    const find = id => all.find(t => t.id === String(id));
+    const a = req.action;
+    const extra = {};
+
+    if (a === 'add') {
+      extra.added = addTask_(req, 'emma').id;
+    } else if (a === 'edit') {
+      const t = find(req.id); if (!t) throw new Error('not found');
+      const f = req.fields || {};
+      const wasPile = t.pile;
+      applyFields_(t, f);
+      writeTask_(t);
+      if (f.pile && !wasPile && settings_().noAlert.indexOf(t.cat) < 0) notify_('Emma put "' + t.title + '" in Not today, ' + clock_());
+    } else if (a === 'arrange') {
+      // drag and drop: new day, order and pile for a group of tasks
+      (req.items || []).slice(0, 80).forEach(it => {
+        const t = find(it.id); if (!t) return;
+        const f = { order: it.order };
+        if (isDate_(it.date)) f.date = it.date;
+        if ('pile' in it) f.pile = !!it.pile;
+        if (t.date !== f.date || t.pile !== !!f.pile || Number(t.order) !== Number(f.order)) { applyFields_(t, f); writeTask_(t); }
+      });
+    } else if (a === 'bring') {
+      setBring_(req.date, req.text);
+    } else if (a === 'complete') {
+      const t = find(req.id); if (!t) throw new Error('not found');
+      const cfg = settings_();
+      const needsProof = cfg.noProof.indexOf(t.cat) < 0;
+      const text = clip_(req.proofText, 2000).trim();
+      let photoUrl = '';
+      if (req.photo && req.photo.data) {
+        const folder = DriveApp.getFolderById(PropertiesService.getScriptProperties().getProperty('folderId'));
+        const name = t.date + ' ' + t.title.replace(/[\\/:*?"<>|]/g, '') + '.jpg';
+        photoUrl = folder.createFile(Utilities.newBlob(Utilities.base64Decode(req.photo.data), 'image/jpeg', name)).getUrl();
+      }
+      if (needsProof && !photoUrl && text.length < 3) throw new Error('proof needed');
+      t.done = true; t.doneAt = new Date().toISOString(); t.proofText = text; t.proofPhoto = photoUrl; t.pile = false;
+      writeTask_(t);
+      const st = readStatus_(); if (st && st.taskId === t.id) writeStatus_(null);
+      if (cfg.noAlert.indexOf(t.cat) < 0) {
+        const proof = !needsProof ? '' : photoUrl && text ? ' (photo + note)' : photoUrl ? ' (photo)' : ' (note only)';
+        notify_('Emma finished: ' + t.title + ', ' + clock_() + proof + (text ? '\n"' + text.slice(0, 200) + '"' : '') + todayLine_());
+      }
+    } else if (a === 'uncomplete') {
+      const t = find(req.id); if (!t) throw new Error('not found');
+      const wasDone = t.done;
+      t.done = false; t.doneAt = '';
+      writeTask_(t);
+      if (wasDone && settings_().noAlert.indexOf(t.cat) < 0) notify_('Heads up: Emma UNCHECKED ' + t.title + ', ' + clock_() + '. It was marked done before.');
+    } else if (a === 'start') {
+      const t = find(req.id); if (!t) throw new Error('not found');
+      writeStatus_({ taskId: t.id, title: t.title, startedAt: new Date().toISOString() });
+      notify_('Emma started: ' + t.title + ', ' + clock_());
+    } else if (a === 'stop') {
+      const st = readStatus_();
+      writeStatus_(null);
+      if (st) notify_('Emma stopped working on ' + st.title + ' (not checked off), ' + clock_());
+    } else if (a === 'openBox') {
+      const squishies = readRows_('Squishies', Q_COLS);
+      if (boxDates_(all, squishies).indexOf(req.date) < 0) throw new Error('no box');
+      const s = rollSquishy_();
+      s.id = 'q' + newId_(); s.date = req.date; s.openedAt = new Date().toISOString(); s.realWeek = '';
+      writeRow_('Squishies', Q_COLS, s);
+      extra.opened = s.id;
+    } else if (a === 'pickReal') {
+      const squishies = readRows_('Squishies', Q_COLS);
+      if (tokens_(all, squishies).indexOf(req.week) < 0) throw new Error('no token');
+      const s = squishies.find(x => x.id === req.id); if (!s) throw new Error('not found');
+      s.realWeek = req.week;
+      writeRow_('Squishies', Q_COLS, s);
+      notify_('Emma earned a real squishy for the week of ' + req.week + '! She picked: ' + s.name + '. Time to order it.');
+    } else {
+      throw new Error('unknown action');
+    }
+    return json_(Object.assign(snapshot_(), extra));
+  } catch (err) {
+    return json_({ ok: false, error: String(err && err.message || err) });
+  } finally {
+    try { lock.releaseLock(); } catch (e) {}
+  }
+}
+
+// ---------- chat box ----------
+function callClaude_(body) {
+  const key = PropertiesService.getScriptProperties().getProperty('ANTHROPIC_API_KEY');
+  if (!key) throw new Error('no key');
+  body.model = CHAT_MODEL;
+  const r = UrlFetchApp.fetch('https://api.anthropic.com/v1/messages', {
+    method: 'post', contentType: 'application/json', muteHttpExceptions: true,
+    headers: { 'x-api-key': key, 'anthropic-version': '2023-06-01' }, payload: JSON.stringify(body)
+  });
+  const j = JSON.parse(r.getContentText());
+  if (r.getResponseCode() !== 200) throw new Error('chat error: ' + (j.error && j.error.message || r.getResponseCode()));
+  return j;
+}
+
+const CHAT_TOOL = {
+  name: 'update_plan',
+  description: 'Change Emma\'s homework plan. Send every change in one call. Only use ids from the plan.',
+  input_schema: {
+    type: 'object',
+    properties: {
+      ops: {
+        type: 'array',
+        items: {
+          type: 'object',
+          properties: {
+            op: { type: 'string', enum: ['add', 'edit', 'move', 'not_today', 'back_from_pile', 'done', 'undone', 'delete', 'bring'],
+              description: 'add: new task (needs date, title). edit: change fields of id. move: change id to date. not_today: put id in the Not today pile. back_from_pile: put id on date. done: check off id. undone: uncheck id. delete: remove id. bring: set the bring-home list for date to text.' },
+            id: { type: 'string' },
+            date: { type: 'string', description: 'yyyy-mm-dd' },
+            title: { type: 'string' },
+            note: { type: 'string' },
+            dur: { type: 'string', description: 'like 30 min or 1.5 hrs' },
+            tag: { type: 'string', enum: CATS, description: 'test = test or quiz prep, school = school homework, hunter, rsm, fixed = a plan or class that just happens, flex = dinner or breaks' },
+            color: { type: 'string', enum: COLORS },
+            due: { type: 'string', description: 'yyyy-mm-dd or empty to clear' },
+            text: { type: 'string' }
+          },
+          required: ['op']
+        }
+      }
+    },
+    required: ['ops']
+  }
+};
+
+function planText_(all) {
+  const today = ymd_(new Date()), from = addDays_(today, -7), to = addDays_(today, 30);
+  const bring = {}; readRows_('Days', D_COLS).forEach(r => { bring[r.date] = r.bring; });
+  const dn = d => Utilities.formatDate(new Date(d + 'T12:00:00Z'), 'UTC', 'EEE MMM d');
+  const lines = [];
+  const live = all.filter(t => !t.deleted && ((t.date >= from && t.date <= to) || t.pile || (t.due && t.due >= today)))
+    .sort((a, b) => a.date.localeCompare(b.date) || a.order - b.order);
+  const days = {};
+  live.forEach(t => { (days[t.pile ? 'pile' : t.date] = days[t.pile ? 'pile' : t.date] || []).push(t); });
+  const fmt = t => '  ' + t.id + ' | ' + t.title + (t.note ? ' (' + t.note + ')' : '') + ' | ' + t.dur + ' | tag ' + t.cat +
+    (t.color ? ' | color ' + t.color : '') + (t.due ? ' | due ' + t.due : '') + (t.done ? ' | DONE' : '') + (t.pile ? ' | from ' + t.date : '');
+  Object.keys(days).filter(k => k !== 'pile').sort().forEach(d => {
+    lines.push(d + ' (' + dn(d) + ')' + (d === today ? ' TODAY' : '') + (bring[d] ? ' | bring home: ' + bring[d] : ''));
+    days[d].forEach(t => lines.push(fmt(t)));
+  });
+  if (days.pile) { lines.push('Not today pile:'); days.pile.forEach(t => lines.push(fmt(t))); }
+  return lines.join('\n');
+}
+
+function applyOps_(ops) {
+  const all = readTasks_();
+  const find = id => all.find(t => t.id === String(id) && !t.deleted);
+  const done = [], notes = [], cfg = settings_();
+  (ops || []).slice(0, 40).forEach(o => {
+    try {
+      const t = o.id ? find(o.id) : null;
+      const f = {};
+      ['title', 'note', 'dur', 'color', 'due'].forEach(k => { if (o[k] != null) f[k] = o[k]; });
+      if (o.tag) f.cat = o.tag;
+      if (o.op === 'add') { addTask_(Object.assign({ date: o.date }, f), 'chat'); notes.push('added ' + (o.title || 'task')); return; }
+      if (o.op === 'bring') { setBring_(o.date, o.text || ''); notes.push('bring list ' + o.date); return; }
+      if (!t) { notes.push('could not find ' + o.id); return; }
+      if (o.op === 'edit') applyFields_(t, f);
+      else if (o.op === 'move' || o.op === 'back_from_pile') applyFields_(t, { date: o.date || t.date, pile: false, order: 999 });
+      else if (o.op === 'not_today') applyFields_(t, { pile: true });
+      else if (o.op === 'delete') applyFields_(t, { deleted: true });
+      else if (o.op === 'done') {
+        if (t.cat === 'fixed') { notes.push(t.title + ' is a plan, nothing to check'); return; }
+        t.done = true; t.doneAt = new Date().toISOString(); t.pile = false; t.proofText = 'Checked off in the chat box'; done.push(t.id);
+        if (cfg.noAlert.indexOf(t.cat) < 0) notify_('Emma finished (chat box): ' + t.title + ', ' + clock_());
+      } else if (o.op === 'undone') { t.done = false; t.doneAt = ''; }
+      writeTask_(t);
+      notes.push(o.op + ' ' + t.title);
+    } catch (err) { notes.push('error: ' + err.message); }
+  });
+  return { done: done, notes: notes };
+}
+
+function chat_(req) {
+  const props = PropertiesService.getScriptProperties();
+  if (!props.getProperty('ANTHROPIC_API_KEY')) return Object.assign(snapshot_(), { reply: 'The chat box isn\'t turned on yet. Sofia needs to add the key.' });
+  const dayKey = 'chats-' + ymd_(new Date());
+  const used = Number(props.getProperty(dayKey) || 0);
+  if (used >= CHATS_PER_DAY) return Object.assign(snapshot_(), { reply: 'That\'s enough chatting for today. You can still drag and edit things yourself.' });
+  props.setProperty(dayKey, String(used + 1));
+
+  const today = ymd_(new Date());
+  const system = 'You are the little helper inside Emma\'s homework checklist. Emma is 10 and her babysitter Sofia helps her plan. ' +
+    'Today is ' + Utilities.formatDate(new Date(), TZ, 'EEEE, MMMM d, yyyy') + ' (' + today + '). ' +
+    'When they tell you what is done, not done, wanted or not wanted, change the plan with update_plan. ' +
+    '"Not doing it today" or "skip" means not_today, which still counts as handled for the day. ' +
+    'Only check something off (done) when they say it is actually finished. Plans (tag fixed) cannot be checked off. ' +
+    'If a request is unclear (which task, which day), ask one short question instead of guessing. ' +
+    'After changing things, reply in one or two short, friendly sentences saying what changed. No emojis. ' +
+    'Always give a due date when you know one, because the site colors tasks by how soon they are due (purple = must do today, blue = 2 days, white = 3 to 4 days, black = later, gray = no deadline). Don\'t set color unless they ask for a specific color. ' +
+    'Durations look like "30 min" or "1.5 hrs". Dates are yyyy-mm-dd.\n\nThe plan right now:\n' + planText_(readTasks_());
+
+  const msgs = (req.history || []).slice(-10).filter(m => m && m.text).map(m => ({ role: m.role === 'bot' ? 'assistant' : 'user', content: clip_(m.text, 1000) }));
+  msgs.push({ role: 'user', content: clip_(req.message, 1500) });
+  while (msgs.length && msgs[0].role !== 'user') msgs.shift();
+
+  let reply = '', completed = [], changed = false;
+  for (let i = 0; i < 3; i++) {
+    const res = callClaude_({ system: system, messages: msgs, tools: [CHAT_TOOL], max_tokens: 1500 });
+    const text = res.content.filter(b => b.type === 'text').map(b => b.text).join(' ').trim();
+    if (text) reply = text;
+    const uses = res.content.filter(b => b.type === 'tool_use');
+    if (res.stop_reason !== 'tool_use' || !uses.length) break;
+    msgs.push({ role: 'assistant', content: res.content });
+    const results = uses.map(u => {
+      const lock = LockService.getScriptLock(); lock.waitLock(20000);
+      try { const r = applyOps_(u.input && u.input.ops); completed = completed.concat(r.done); changed = true; return { type: 'tool_result', tool_use_id: u.id, content: r.notes.join('; ') || 'nothing changed' }; }
+      finally { lock.releaseLock(); }
+    });
+    msgs.push({ role: 'user', content: results });
+  }
+  return Object.assign(snapshot_(), { reply: reply || (changed ? 'Done!' : 'Hmm, can you say that another way?'), completed: completed });
+}
