@@ -14,7 +14,7 @@
 :root {
   --bg: #f4efff; --bg2: #ffeef6; --card: #ffffff; --fg: #2b2440; --muted: #7a7192; --line: #ebe4f7;
   --accent: #9b6bff; --good: #2fbf8f; --bad: #ff5c7c; --shadow: 0 6px 0 #e4dbf6;
-  --tl: 92%; --ts: 85%; --al: 52%; --as: 70%;
+  --tl: 92%; --ts: 85%; --al: 52%; --as: 70%; --dlk: 1;
   --display: "Fredoka", "Trebuchet MS", system-ui, sans-serif;
   --body: "Nunito", system-ui, -apple-system, sans-serif;
   color-scheme: light;
@@ -22,7 +22,7 @@
 @media (prefers-color-scheme: dark) { :root {
   --bg: #17132a; --bg2: #24152b; --card: #211c36; --fg: #f3efff; --muted: #a89fc4; --line: #322b4d;
   --accent: #b996ff; --good: #4fdcaa; --bad: #ff8aa3; --shadow: 0 6px 0 #0f0c1e;
-  --tl: 24%; --ts: 38%; --al: 68%; --as: 80%; color-scheme: dark } }
+  --tl: 24%; --ts: 38%; --al: 68%; --as: 80%; --dlk: -.6; color-scheme: dark } }
 * { box-sizing: border-box; }
 body { margin: 0; background: var(--bg); background-image: radial-gradient(circle at 10% 0%, var(--bg2) 0, transparent 45%), radial-gradient(circle at 100% 30%, var(--bg2) 0, transparent 40%); background-attachment: fixed; color: var(--fg); font-family: var(--body); font-size: 16px; line-height: 1.45; }
 button { font: inherit; color: inherit; }
@@ -42,7 +42,7 @@ h1 { font-family: var(--display); font-weight: 700; font-size: clamp(2.2rem, 8vw
 .bar span { display: block; height: 100%; width: 0; border-radius: 99px; background: linear-gradient(90deg, #ff6b8a, #9b6bff, #3d8bff, #2fbf8f); transition: width .4s ease; }
 
 /* colors: each task gets a hue; tags no longer decide it */
-.hue { --h: 265; --sat: 1; --so: 0; --dl: 0%; --hh: calc(var(--h) + var(--so)); --cb: hsl(var(--hh) calc(var(--ts) * var(--sat)) calc(var(--tl) + var(--dl) * .6)); --c: hsl(var(--hh) calc(var(--as) * var(--sat)) calc(var(--al) + var(--dl))); }
+.hue { --h: 265; --sat: 1; --so: 0; --dl: 0%; --hh: calc(var(--h) + var(--so)); --cb: hsl(var(--hh) calc(var(--ts) * var(--sat)) calc(var(--tl) + var(--dl) * var(--dlk))); --c: hsl(var(--hh) calc(var(--as) * var(--sat)) calc(var(--al) + var(--dl))); }
 .h-pink { --h: 340; } .h-red { --h: 2; } .h-orange { --h: 24; } .h-yellow { --h: 46; } .h-lime { --h: 84; } .h-green { --h: 148; }
 .h-white { --h: 250; --sat: .05; } .h-black { --h: 250; --sat: .15; }
 .h-teal { --h: 176; } .h-sky { --h: 198; } .h-blue { --h: 218; } .h-purple { --h: 276; } .h-lavender { --h: 286; } .h-brown { --h: 26; --sat: .45; } .h-gray { --h: 250; --sat: .12; }
@@ -53,7 +53,7 @@ h1 { font-family: var(--display); font-weight: 700; font-size: clamp(2.2rem, 8vw
 .tab:focus-visible, .ib:focus-visible, .btn:focus-visible, .sw:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
 
 .layout { display: grid; gap: 20px; align-items: start; }
-@media (min-width: 980px) { .layout { grid-template-columns: minmax(0, 1fr) 340px; } .side { position: sticky; top: 16px; } }
+.layout { max-width: 760px; }
 @media (max-width: 979px) { .side { order: -1; } }
 .col { display: grid; gap: 20px; min-width: 0; }
 .side { display: grid; gap: 16px; min-width: 0; }
@@ -71,7 +71,8 @@ h1 { font-family: var(--display); font-weight: 700; font-size: clamp(2.2rem, 8vw
 .daybtn[aria-pressed="true"] { background: var(--good); border-color: var(--good); color: #fff; }
 .meta { color: var(--muted); font-size: .9rem; margin: 0; }
 .day .bar { height: 8px; }
-.bring { display: flex; gap: 8px; align-items: center; background: var(--line); border-radius: 14px; padding: 8px 12px; font-size: .92rem; }
+.bring { display: flex; gap: 6px 8px; align-items: center; flex-wrap: wrap; border-top: 2px dashed var(--line); padding: 10px 2px 0; font-size: .9rem; }
+.bchip { background: var(--line); border-radius: 99px; padding: 3px 11px; font-weight: 700; }
 .bring b { font-family: var(--display); font-weight: 600; white-space: nowrap; }
 .bring .in { flex: 1; }
 
@@ -118,16 +119,16 @@ label.lbl { display: grid; gap: 2px; font-size: .75rem; font-weight: 800; color:
 .sortable-chosen { box-shadow: 0 10px 24px rgba(60, 30, 120, .25); }
 .dropzone-empty { color: var(--muted); font-size: .9rem; padding: 10px; border: 2px dashed var(--line); border-radius: 14px; text-align: center; list-style: none; }
 
-.task.h-white { --cb: hsl(var(--sh, 250) 70% 97%); --c: hsl(var(--sh, 250) 45% 55%); box-shadow: inset 0 0 0 2px hsl(var(--sh, 250) 45% 86%); color: #2b2440; }
+.task.h-white { --cb: #ffffff; --c: #8f86ad; box-shadow: 0 2px 10px rgba(120, 90, 180, .12); color: #2b2440; }
 .task.h-black { --cb: hsl(var(--sh, 250) 40% 90%); --c: hsl(var(--sh, 250) 45% 45%); }
 .task.h-black .tag, .task.h-black .dur, .task.h-black .ib, .task.h-black .due:not(.today):not(.late) { background: hsl(var(--sh, 250) 22% 27%); }
-.task.h-white .tag, .task.h-white .dur, .task.h-white .ib, .task.h-white .due:not(.today):not(.late) { background: hsl(var(--sh, 250) 50% 92%); color: #2b2440; }
+.task.h-white .tag, .task.h-white .dur, .task.h-white .ib, .task.h-white .due:not(.today):not(.late) { background: #f3effa; color: #2b2440; }
 .task.h-black .chips, .task.h-white .chips { color: inherit; opacity: .85; }
 .sw.h-white { background: #fff; box-shadow: 0 0 0 2px #cfc6e4; } .sw.h-black { background: #2b2440; }
-.cell .it.h-white { background: hsl(var(--sh, 250) 70% 97%); border-left-color: hsl(var(--sh, 250) 45% 70%); color: #2b2440; } .cell .it.h-black { background: hsl(var(--sh, 250) 28% 15%); border-left-color: hsl(var(--sh, 250) 80% 76%); color: #fff; }
-.picker button.h-white { background: hsl(var(--sh, 250) 70% 97%); box-shadow: inset 0 0 0 2px hsl(var(--sh, 250) 45% 86%); color: #2b2440; } .picker button.h-black { background: hsl(var(--sh, 250) 28% 15%); color: #fff; }
+.cell .it.h-white { background: #fff; border-left-color: #c9c1de; color: #2b2440; } .cell .it.h-black { background: hsl(var(--sh, 250) 28% 15%); border-left-color: hsl(var(--sh, 250) 80% 76%); color: #fff; }
+.picker button.h-white { background: #fff; box-shadow: 0 2px 8px rgba(120,90,180,.15); color: #2b2440; } .picker button.h-black { background: hsl(var(--sh, 250) 28% 15%); color: #fff; }
 .swlbl { grid-column: 1 / -1; font-size: .78rem; font-weight: 800; color: var(--muted); margin-top: 4px; }
-@media (prefers-color-scheme: dark) { .task.h-white { box-shadow: none; } }
+@media (prefers-color-scheme: dark) { .task.h-white { --cb: #f1eef8; box-shadow: none; } }
 
 
 [hidden] { display: none !important; }
@@ -160,9 +161,15 @@ label.lbl { display: grid; gap: 2px; font-size: .75rem; font-weight: 800; color:
 .sw.auto svg { fill: url(#rainbow); }
 
 /* not today pile */
-.pile { background: var(--card); border-radius: 24px; padding: 16px; box-shadow: var(--shadow); display: grid; gap: 10px; border: 2.5px dashed var(--line); }
-.pile h3 { font-family: var(--display); margin: 0; font-size: 1.25rem; }
-.pile p { margin: 0; color: var(--muted); font-size: .88rem; }
+.pile { background: var(--card); border-radius: 18px; box-shadow: 0 4px 0 var(--line); display: grid; }
+.pilehead { border: 0; background: none; cursor: pointer; display: flex; align-items: center; gap: 10px; padding: 11px 16px; text-align: left; color: var(--muted); }
+.pilehead b { font-family: var(--display); font-weight: 600; font-size: 1rem; color: var(--fg); }
+.pcount { background: var(--line); border-radius: 99px; padding: 1px 9px; font-weight: 800; font-size: .85rem; }
+.pmore { margin-left: auto; font-weight: 700; font-size: .85rem; }
+.pile .tasks { padding: 0 12px; min-height: 6px; }
+.pile.open .tasks { padding: 0 12px 12px; }
+.pile:not(.open) .tasks .task { display: none; }
+.todaybtn { font-size: .78rem; padding: 3px 10px; background: var(--card); }
 
 /* reward cards */
 .reward { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; background: linear-gradient(120deg, #ffe1ec, #e9ddff, #dbeeff); color: #2b2440; border-radius: 22px; padding: 14px 18px; box-shadow: var(--shadow); }
@@ -395,8 +402,8 @@ textarea.in { min-height: 90px; resize: vertical; }
 <script>
 const CATS = [["test", "Test prep"], ["school", "School homework"], ["hunter", "Hunter"], ["rsm", "RSM"], ["fixed", "Plan"], ["flex", "Break"]];
 const CAT_NAME = Object.fromEntries(CATS);
-const LADDER = ["purple", "blue", "white", "red", "orange", "yellow", "green", "gray"];
-const LADDER_LABEL = { purple: "Must do today", blue: "Really should", white: "Should do", red: "Good to do", orange: "If there\u2019s time", yellow: "Could wait", green: "Can wait", gray: "Optional" };
+const LADDER = ["purple", "blue", "white", "pink", "orange", "yellow", "green", "gray"];
+const LADDER_LABEL = { purple: "Must do today", blue: "Really should", white: "Should do", pink: "Good to do", orange: "If there\u2019s time", yellow: "Could wait", green: "Can wait", gray: "Optional" };
 const COLORS = LADDER;
 const CAT_COLOR = { test: "pink", school: "green", hunter: "purple", rsm: "blue", fixed: "gray", flex: "yellow" };
 const CFG_KEY = "emma-hw-api";
@@ -465,36 +472,30 @@ function finishedAlert(id) {
 // The helper sets these; with no color picked, the site guesses from the due date.
 // Within one color, each subject gets its own shade (a little warmer/cooler, lighter/deeper),
 // so two equally important things still look different, and a subject keeps the same shade everywhere.
+// [pattern, hue for white/tints, hue shift, lightness shift]: neighbors in a day get far-apart shades
 const SUBJECTS = [
-  [/latin/, 350], [/hist/, 28], [/rsm|algebra|geometry|\bgeo\b/, 205], [/math|quiz/, 220], [/english|vocab|hobbit|grammar|reading|essay|book/, 150],
-  [/bio|science/, 110], [/physics|chem/, 185], [/hunter/, 290], [/robot|canva/, 50], [/dinner|break|snack/, 40]
+  [/latin/,                                             350,  12,  -6],
+  [/hist/,                                               28,   0, -13],
+  [/rsm|algebra|geometry|\bgeo\b/,                        205, -24, -13],
+  [/math|quiz/,                                         220, -24,   2],
+  [/hunter/,                                            290,  12, -13],
+  [/english|vocab|hobbit|grammar|reading|essay|book/,   150,   0,   2],
+  [/bio|science/,                                       110,  12,   2],
+  [/physics|chem/,                                      185, -12,  -6],
+  [/robot|canva/,                                        50, -12,   2],
+  [/dinner|break|snack/,                                 40,   0,  -6]
 ];
-const SHADES = [[-20, 4], [0, -4], [20, 2], [-10, -9], [12, 7], [-28, -2], [28, -6], [-4, 9], [6, -12], [0, 4]];  // [hue shift, lightness shift]
 function subjectIndex(t) { const s = (t.title + " " + t.note).toLowerCase(); return SUBJECTS.findIndex(([re]) => re.test(s)); }
-function subjectHue(t) { const i = subjectIndex(t); return i < 0 ? null : SUBJECTS[i][1]; }
 function colorVars(t, c) {
-  const i = subjectIndex(t); if (i < 0) return "";
-  if (c === "white") return "--sh:" + SUBJECTS[i][1];
-  if (c === "gray") return "";
-  const [dh, dl] = SHADES[i % SHADES.length];
-  const k = c === "red" || c === "orange" || c === "yellow" ? .45 : 1;   // warm colors sit close together, so shift them less
-  const shift = c === "purple" ? Math.max(-24, Math.min(6, dh)) : Math.round(dh * k);  // purple stays purple, never pink
+  const i = subjectIndex(t); if (i < 0 || c === "gray" || c === "white") return "";
+  const [, , dh, dl] = SUBJECTS[i];
+  const k = c === "orange" || c === "yellow" || c === "pink" ? .5 : 1;   // warm colors sit close together, so shift their hue less
+  const shift = c === "purple" ? Math.max(-24, Math.min(10, dh)) : Math.round(dh * k);
   return "--so:" + shift + ";--dl:" + dl + "%";
 }
 function paint(node, t) { const c = colorOf(t); node.classList.add("hue", "h-" + c); const v = colorVars(t, c); if (v) node.setAttribute("style", (node.getAttribute("style") || "") + ";" + v); return node; }
 const WEEKDAY_WORDS = [["sun"], ["mon"], ["tue", "tues"], ["wed", "weds", "wens"], ["thu", "thur", "thurs"], ["fri"], ["sat"]];
-function dueOf(t) {
-  if (t.due) return t.due;
-  const txt = (t.note + " " + t.title).toLowerCase();
-  const m = txt.match(/\b(?:due|for|by|before)\s+(?:on\s+)?(?:this\s+|next\s+)?([a-z]+)/) || txt.match(/\b([a-z]+day)'s\s+(?:test|quiz|discussion|class)/);
-  if (!m) return "";
-  const w = m[1].replace(/day$|nesday$|rsday$|sday$/, "");
-  const wd = WEEKDAY_WORDS.findIndex(list => list.some(x => w.startsWith(x) || x.startsWith(w) && w.length >= 3));
-  if (wd < 0) return "";
-  let d = addDays(t.date, 1);
-  while (new Date(d + "T12:00:00Z").getUTCDay() !== wd) d = addDays(d, 1);
-  return d;
-}
+function dueOf(t) { return t.due || ""; }
 function priorityColor(t) {
   const ref = data && t.date < data.today ? data.today : t.date;
   if (isPlan(t)) return "purple";                    // a class or test that day just happens
@@ -502,7 +503,7 @@ function priorityColor(t) {
   const due = dueOf(t);
   if (!due) return t.cat === "test" ? "blue" : "white";
   const gap = Math.round((new Date(due + "T12:00:00Z") - new Date(ref + "T12:00:00Z")) / 864e5);
-  return gap <= 1 ? "purple" : gap === 2 ? "blue" : gap === 3 ? "white" : gap === 4 ? "red" : gap === 5 ? "orange" : gap === 6 ? "yellow" : "green";
+  return gap <= 1 ? "purple" : gap === 2 ? "blue" : gap === 3 ? "white" : gap === 4 ? "pink" : gap === 5 ? "orange" : gap === 6 ? "yellow" : "green";
 }
 function buildSubjectColors() {}
 function colorOf(t) { return t.color || priorityColor(t); }
@@ -628,8 +629,8 @@ function renderDays(root) {
   for (let d = today; d <= end; d = addDays(d, 1)) {
     col.append(daySection({ date: d, title: dayName(d), sub: shortDate(d), isToday: d === today }, all.filter(t => t.date === d && !t.pile).sort(byOrder)));
   }
-  side.append(pileSection(all.filter(t => t.pile && !t.done).sort((a, b) => a.date.localeCompare(b.date) || byOrder(a, b))));
-  lay.append(col, side); root.append(lay);
+  col.prepend(pileSection(all.filter(t => t.pile && !t.done).sort((a, b) => a.date.localeCompare(b.date) || byOrder(a, b))));
+  lay.append(col); root.append(lay);
 }
 
 function daySection(d, tasks) {
@@ -646,16 +647,6 @@ function daySection(d, tasks) {
     const span = j && j.added && document.querySelector(`[data-id="${j.added}"] .title`); if (span) span.click();
   }), "Add homework to " + d.title));
   row.append(h2, right); head.append(row);
-  // things to bring home from school for this day: tap to change
-  if (d.date) {
-    const bring = (data.bring || {})[d.date] || "";
-    const b = el("div", "bring" + (bring ? "" : " empty")); b.tabIndex = 0; b.setAttribute("role", "button");
-    const txt = el("span", null, bring || "tap to add");
-    b.append(el("b", null, "Bring home:"), txt);
-    const open = () => inlineEdit(txt, { value: bring, placeholder: "Hobbit book, bio textbook…", save: v => { data.bring = data.bring || {}; data.bring[d.date] = v; render(); post({ action: "bring", date: d.date, text: v }); } });
-    b.addEventListener("click", open); b.addEventListener("keydown", e => { if (e.key === "Enter") open(); });
-    if (bring || d.isToday || d.date === addDays(data.today, 1)) head.append(b);
-  }
   const total = tasks.reduce((s, t) => s + minutes(t.dur), 0);
   if (total) head.append(el("p", "meta", fmtTotal(total)));
   if (checkable.length) { const bar = el("div", "bar"), fill = el("span"); fill.style.width = (checkable.filter(t => t.done || t.pile).length / checkable.length * 100) + "%"; bar.append(fill); head.append(bar); }
@@ -664,10 +655,24 @@ function daySection(d, tasks) {
   tasks.forEach(t => ul.append(taskRow(t, { showDate: d.earlier })));
   if (!tasks.length) ul.append(el("li", "dropzone-empty", "Nothing planned. Drag something here or tap + Add."));
   sec.append(ul);
+  const bring = d.date ? bringFor(tasks) : [];
+  if (bring.length) { const b = el("div", "bring"); b.append(el("b", null, "Bring home:")); bring.forEach(x => b.append(el("span", "bchip", x))); sec.append(b); }
   makeSortable(ul);
   return sec;
 }
 
+// what to bring home from school, worked out from that day's homework.
+// Sofia can change the rules in the sheet's Settings tab (bringRules: "vocab=Vocab book; hobbit|reading=Hobbit book").
+const DEFAULT_BRING = "vocab=Vocab book; hobbit|reading=Hobbit book; bio=Bio textbook";
+function bringRules() {
+  return String(data.bringRules || DEFAULT_BRING).split(";").map(x => x.split("=")).filter(x => x.length === 2 && x[0].trim() && x[1].trim())
+    .map(([k, v]) => { try { return [new RegExp(k.trim(), "i"), v.trim()]; } catch (e) { return null; } }).filter(Boolean);
+}
+function bringFor(tasks) {
+  const out = [];
+  tasks.filter(t => !isPlan(t) && t.cat !== "flex").forEach(t => bringRules().forEach(([re, item]) => { if (re.test(t.title + " " + t.note) && !out.includes(item)) out.push(item); }));
+  return out;
+}
 // tap-to-edit: swaps a bit of text for an input, saves on Enter or when you tap away
 function inlineEdit(span, o) {
   if (span.dataset.editing) return;
@@ -691,19 +696,26 @@ function tapEdit(node, label, fn) {
   node.addEventListener("keydown", e => { if (e.key === "Enter") fn(); });
   return node;
 }
+let pileOpen = false;
 function pileSection(tasks) {
-  const box = el("section", "pile");
-  box.append(el("h3", null, "Not today"), el("p", null, "Tap the arrow on a task or drag it here. It still counts for your squishy. Drag it back onto a day when you're ready, or X it."));
+  const box = el("section", "pile" + (pileOpen ? " open" : ""));
+  const head = btn("pilehead", "", () => { pileOpen = !pileOpen; render(); }, pileOpen ? "Close Not today" : "Open Not today");
+  head.append(el("b", null, "Not today"), el("span", "pcount", String(tasks.length)), el("span", "pmore", pileOpen ? "Close" : tasks.length ? "Open" : "Drop things here"));
+  box.append(head);
   const ul = el("ul", "tasks"); ul.dataset.pile = "1";
-  tasks.forEach(t => ul.append(taskRow(t, { fromDay: true })));
-  if (!tasks.length) ul.append(el("li", "dropzone-empty", "Empty"));
+  if (pileOpen) {
+    tasks.forEach(t => ul.append(taskRow(t, { fromDay: true })));
+    if (!tasks.length) ul.append(el("li", "dropzone-empty", "Nothing here. Tap the arrow on a task to put it here."));
+  }
   box.append(ul); makeSortable(ul);
   return box;
 }
+function doToday(t) { local(t.id, { pile: false, date: data.today, order: 999 }); render(); post({ action: "arrange", items: [{ id: t.id, date: data.today, order: 999, pile: false }] }); }
 
 function dueChip(t) {
   if (!t.due) return null;
   const today = data.today;
+  if (t.due === t.date && !t.done) return el("span", "due" + (t.due === today ? " today" : ""), "Due tonight");
   if (t.due === today) return el("span", "due today", "Due today");
   if (t.due < today && !t.done) return el("span", "due late", "Was due " + shortDay(t.due));
   const days = (new Date(t.due) - new Date(today)) / 864e5;
@@ -749,6 +761,7 @@ function taskRow(t, o) {
   tapEdit(dur, "Change how long", () => inlineEdit(dur, { value: t.dur, placeholder: "45 min", cls: "small dur-in", save: v => edit(t, { dur: v }) }));
   const heart = btn("heart", "", () => pickColor(t), "Color and due date"); heart.innerHTML = HEART;
   tools.append(dur, heart);
+  if (t.pile && !t.done) { const back = btn("daybtn todaybtn", "Do today", () => doToday(t), "Do " + t.title + " today"); tools.append(back); }
   const x = btn("corner-x", "", () => askDelete(t), "Delete"); x.innerHTML = ICON.x;
   li.append(left, info, tools, x);
   return li;
@@ -790,7 +803,7 @@ function pickColor(t) {
     b.setAttribute("aria-pressed", c === cur ? "true" : "false"); sw.append(b);
   });
   $("colorTitle").textContent = t.title;
-  $("colorMsg").textContent = "How important is it to get this done today? Most important first.";
+  $("colorMsg").textContent = "";
   $("autoColor").textContent = cur ? "Let it pick for me" : "Right now it picks for you from the due date";
   $("autoColor").disabled = !cur;
   $("autoColor").onclick = () => { $("colorDlg").close(); if (cur) edit(t, { color: "" }); };

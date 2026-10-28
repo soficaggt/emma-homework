@@ -8,7 +8,7 @@ const NTFY_TOPIC = 'emma-hw-5e47c8b0dc56';
 const DAYS_AHEAD = 7;
 const SITE_URL = 'https://soficaggt.github.io/emma-homework/';
 const T_COLS = ['id', 'date', 'title', 'note', 'dur', 'cat', 'order', 'done', 'doneAt', 'proofText', 'proofPhoto', 'deleted', 'addedBy', 'updatedAt', 'color', 'due', 'pile'];
-const TPL_COLS = ['weekday', 'title', 'note', 'dur', 'cat', 'order'];
+const TPL_COLS = ['weekday', 'title', 'note', 'dur', 'cat', 'order', 'dueInDays'];
 const S_COLS = ['taskId', 'title', 'startedAt'];
 const D_COLS = ['date', 'bring'];
 const Q_COLS = ['id', 'date', 'kind', 'color', 'name', 'rarity', 'openedAt', 'realWeek'];
@@ -209,13 +209,16 @@ function materialize_() {
   if (from > end) return;
   const tsh = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Template');
   const tpl = tsh.getLastRow() < 2 ? [] : tsh.getRange(2, 1, tsh.getLastRow() - 1, TPL_COLS.length).getValues();
+  // dueInDays: 0 = due that night, 1 = due the next morning, blank = no due date
   const now = new Date().toISOString(), rows = [];
   for (let d = from; d <= end; d = addDays_(d, 1)) {
     const wd = weekday_(d);
     tpl.forEach(r => {
       if (WEEKDAYS.indexOf(String(r[0]).trim().slice(0, 3).toLowerCase()) !== wd || !String(r[1]).trim()) return;
       const cat = CATS.indexOf(String(r[4]).trim()) >= 0 ? String(r[4]).trim() : 'school';
-      rows.push([newId_(), d, String(r[1]), String(r[2]), String(r[3]), cat, String(Number(r[5]) || 0), false, '', '', '', false, 'template', now, '', '', false]);
+      const dueIn = String(r[6] == null ? '' : r[6]).trim();
+      const due = dueIn === '' || isNaN(Number(dueIn)) ? '' : addDays_(d, Number(dueIn));
+      rows.push([newId_(), d, String(r[1]), String(r[2]), String(r[3]), cat, String(Number(r[5]) || 0), false, '', '', '', false, 'template', now, '', due, false]);
     });
   }
   if (rows.length) {
@@ -315,7 +318,7 @@ function settings_() {
   const out = {};
   sh.getDataRange().getValues().slice(1).forEach(r => { out[String(r[0]).trim()] = String(r[1]).trim(); });
   const list = s => String(s || '').split(',').map(x => x.trim()).filter(Boolean);
-  return { noProof: list(out.noProofTypes), noAlert: list(out.noAlertTypes), sofiaKey: out.sofiaKey || '', textTo: out.textTo || '' };
+  return { noProof: list(out.noProofTypes), noAlert: list(out.noAlertTypes), sofiaKey: out.sofiaKey || '', textTo: out.textTo || '', bringRules: out.bringRules || '' };
 }
 function photoId_(url) { const m = String(url).match(/[-\w]{25,}/); return m ? m[0] : ''; }
 
@@ -345,6 +348,7 @@ function doGet(e) {
     const snap = snapshot_();
     snap.noProof = cfg.noProof;
     snap.noAlert = cfg.noAlert;
+    snap.bringRules = cfg.bringRules;
     return json_(snap);
   }
   catch (err) { return json_({ ok: false, error: String(err) }); }
@@ -585,6 +589,8 @@ function chat_(req) {
     'Today is ' + Utilities.formatDate(new Date(), TZ, 'EEEE, MMMM d, yyyy') + ' (' + today + '). ' +
     'When they tell you what is done, not done, wanted or not wanted, change the plan with update_plan. ' +
     '"Not doing it today" or "skip" means not_today, which still counts as handled for the day. ' +
+    'Due dates always go in the due field, never in the note or title. History homework is due at night (due that same date); school homework like math, Latin and English is due the next morning in class. ' +
+    'Look at the Not today pile every time: when she says what she has done and how much time is left, suggest moving pile items back onto a day where they fit before their due date (use back_from_pile). ' +
     'Only check something off (done) when they say it is actually finished. Plans (tag fixed) cannot be checked off. ' +
     'If a request is unclear (which task, which day), ask one short question instead of guessing. ' +
     'After changing things, reply in one or two short, friendly sentences saying what changed. No emojis. ' +
