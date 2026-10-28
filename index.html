@@ -45,7 +45,7 @@ h1 { font-family: var(--display); font-weight: 700; font-size: clamp(2.2rem, 8vw
 .hue { --h: 265; --sat: 1; --so: 0; --hh: calc(var(--h) + var(--so)); --cb: hsl(var(--hh) calc(var(--ts) * var(--sat)) var(--tl)); --c: hsl(var(--hh) calc(var(--as) * var(--sat)) var(--al)); }
 .h-pink { --h: 340; } .h-red { --h: 2; } .h-orange { --h: 24; } .h-yellow { --h: 46; } .h-lime { --h: 84; } .h-green { --h: 148; }
 .h-white { --h: 250; --sat: .05; } .h-black { --h: 250; --sat: .15; }
-.h-teal { --h: 176; } .h-sky { --h: 198; } .h-blue { --h: 222; } .h-purple { --h: 262; } .h-lavender { --h: 286; } .h-brown { --h: 26; --sat: .45; } .h-gray { --h: 250; --sat: .12; }
+.h-teal { --h: 176; } .h-sky { --h: 198; } .h-blue { --h: 218; } .h-purple { --h: 276; } .h-lavender { --h: 286; } .h-brown { --h: 26; --sat: .45; } .h-gray { --h: 250; --sat: .12; }
 
 .tabs { display: flex; gap: 6px; flex-wrap: wrap; }
 .tab { border: 0; cursor: pointer; background: var(--card); border-radius: 99px; padding: 9px 16px; font-family: var(--display); font-weight: 600; box-shadow: 0 4px 0 var(--line); }
@@ -76,7 +76,7 @@ h1 { font-family: var(--display); font-weight: 700; font-size: clamp(2.2rem, 8vw
 .bring .in { flex: 1; }
 
 .tasks { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; min-height: 12px; }
-.task { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 12px; background: var(--cb); border-radius: 16px; padding: 10px 12px 10px 14px; touch-action: manipulation; user-select: none; -webkit-user-select: none; cursor: grab; }
+.task { position: relative; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 12px; background: var(--cb); border-radius: 16px; padding: 12px 30px 12px 14px; touch-action: manipulation; user-select: none; -webkit-user-select: none; cursor: grab; }
 .task.plan { opacity: .9; }
 .check { appearance: none; -webkit-appearance: none; width: 26px; height: 26px; margin: 0; border-radius: 9px; border: 2.5px solid var(--c); background: var(--card); cursor: pointer; display: grid; place-items: center; transition: transform .15s ease, background .15s ease; }
 .check::after { content: ""; width: 7px; height: 13px; border: solid #fff; border-width: 0 3px 3px 0; transform: rotate(45deg) translate(-1px, -1px) scale(0); transition: transform .15s ease; }
@@ -128,6 +128,35 @@ label.lbl { display: grid; gap: 2px; font-size: .75rem; font-weight: 800; color:
 .picker button.h-white { background: hsl(var(--sh, 250) 70% 97%); box-shadow: inset 0 0 0 2px hsl(var(--sh, 250) 45% 86%); color: #2b2440; } .picker button.h-black { background: hsl(var(--sh, 250) 28% 15%); color: #fff; }
 .swlbl { grid-column: 1 / -1; font-size: .78rem; font-weight: 800; color: var(--muted); margin-top: 4px; }
 @media (prefers-color-scheme: dark) { .task.h-white { box-shadow: none; } }
+
+
+[hidden] { display: none !important; }
+.task .left { display: grid; justify-items: center; gap: 6px; }
+.later { border: 0; background: none; padding: 2px; width: 26px; height: 20px; display: grid; place-items: center; cursor: pointer; color: var(--c); opacity: .75; border-radius: 6px; }
+.later svg { width: 16px; height: 16px; }
+.later:hover, .later:focus-visible { opacity: 1; background: var(--card); }
+.corner-x { position: absolute; top: 5px; right: 5px; width: 22px; height: 22px; border: 0; background: none; border-radius: 50%; display: grid; place-items: center; cursor: pointer; color: currentColor; opacity: .35; padding: 0; }
+.corner-x svg { width: 11px; height: 11px; }
+.corner-x:hover, .corner-x:focus-visible { opacity: 1; color: var(--bad); background: var(--card); }
+.heart { border: 0; background: none; padding: 0; width: 30px; height: 28px; cursor: pointer; display: grid; place-items: center; }
+.heart svg, .sw svg { width: 26px; height: 26px; fill: var(--hc); stroke: var(--hs, transparent); stroke-width: 1.5; filter: drop-shadow(0 1px 0 rgba(0,0,0,.12)); transition: transform .15s ease; }
+.heart:hover svg, .heart:focus-visible svg { transform: scale(1.15); }
+.hue { --hc: hsl(var(--hh) 90% 60%); }
+.h-white { --hc: #ffffff; --hs: #b9b1cf; } .h-black { --hc: #17131f; --hs: #f6f2ff; } .h-gray { --hc: #aaa5b8; }
+.tap { cursor: pointer; }
+.chips .note.tap:hover, .dur.tap:hover, .tag.tap:hover { box-shadow: 0 0 0 2px var(--c); border-radius: 99px; }
+.addnote { opacity: 0; font-weight: 800; transition: opacity .15s; }
+.task:hover .addnote, .addnote:focus { opacity: .6; }
+@media (hover: none) { .addnote { display: none; } }
+.title-in.small { font-size: .85rem; font-weight: 700; padding: 1px 8px; width: auto; min-width: 7em; }
+.title-in.dur-in { width: 6.5em; min-width: 0; }
+.bring { cursor: pointer; }
+.bring.empty { background: none; border: 2px dashed var(--line); color: var(--muted); padding: 5px 12px; font-size: .85rem; }
+.cell .it.done { text-decoration: line-through; opacity: .55; }
+.sw { display: grid; place-items: center; background: none !important; box-shadow: none !important; border: 0; width: 100%; aspect-ratio: 1; padding: 0; cursor: pointer; border-radius: 12px; }
+.sw svg { width: 80%; height: 80%; }
+.sw[aria-pressed="true"] { outline: 3px solid var(--fg); outline-offset: -2px; }
+.sw.auto svg { fill: url(#rainbow); }
 
 /* not today pile */
 .pile { background: var(--card); border-radius: 24px; padding: 16px; box-shadow: var(--shadow); display: grid; gap: 10px; border: 2.5px dashed var(--line); }
@@ -227,9 +256,6 @@ textarea.in { min-height: 90px; resize: vertical; }
 .actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
 .err { color: var(--bad); font-weight: 700; font-size: .9rem; margin-top: 8px; min-height: 1em; }
 .swatches { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin: 6px 0 4px; }
-.sw { width: 100%; aspect-ratio: 1; border-radius: 50%; border: 3px solid var(--card); background: var(--c); cursor: pointer; box-shadow: 0 0 0 2px var(--line); }
-.sw[aria-pressed="true"] { box-shadow: 0 0 0 3px var(--fg); }
-.sw.auto { background: conic-gradient(#ff8fb1, #ffd36b, #8fe3b4, #8fc3ff, #c3a2ff, #ff8fb1); }
 .setup { display: grid; gap: 10px; }
 .loading { text-align: center; color: var(--muted); padding: 30px 0; }
 .status { font-size: .85rem; color: var(--muted); text-align: center; margin: 0; }
@@ -240,6 +266,7 @@ textarea.in { min-height: 90px; resize: vertical; }
 </style>
 </head>
 <body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true"><defs><linearGradient id="rainbow" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#b57bff"/><stop offset=".3" stop-color="#5b9bff"/><stop offset=".55" stop-color="#4fd69c"/><stop offset=".8" stop-color="#ffd34d"/><stop offset="1" stop-color="#ff6b8a"/></linearGradient></defs></svg>
 <div class="wrap">
   <header>
     <span class="kicker" id="range">Next 7 days</span>
@@ -311,9 +338,10 @@ textarea.in { min-height: 90px; resize: vertical; }
 </dialog>
 
 <dialog id="colorDlg">
-  <h3>Pick a color</h3>
+  <h3 id="colorTitle">Pick a color</h3>
   <p id="colorMsg"></p>
   <div class="swatches" id="swatches"></div>
+  <label class="lbl" style="margin-top:14px">Due date<span class="editline"><input class="in in-sm" type="date" id="dueIn"><button class="btn ghost" type="button" id="dueClear">No due date</button></span></label>
   <div class="actions"><button class="btn ghost" type="button" data-close>Close</button></div>
 </dialog>
 
@@ -343,7 +371,6 @@ const CFG_KEY = "emma-hw-api";
 const NTFY_TOPIC = "emma-hw-5e47c8b0dc56";
 let API = null;
 let data = null, busy = 0, pendingRender = false, dragging = false, view = "days";
-const editingDays = new Set();
 let calMonth = null, pickWeek = null, sortables = [];
 
 // ---- config: the Google script link comes in the URL once (#api=...) and is remembered ----
@@ -410,13 +437,14 @@ const SUBJECTS = [
   [/bio|science/, 110], [/physics|chem/, 185], [/hunter/, 290], [/robot|canva/, 50], [/dinner|break|snack/, 40]
 ];
 function subjectHue(t) { const s = (t.title + " " + t.note).toLowerCase(); const m = SUBJECTS.find(([re]) => re.test(s)); return m ? m[1] : null; }
-const BASE_HUE = { purple: 262, blue: 222, red: 2, orange: 24, yellow: 46, green: 148, pink: 340, lavender: 286, sky: 198, teal: 176, lime: 84, brown: 26, gray: 250 };
+const BASE_HUE = { purple: 276, blue: 218, red: 2, orange: 24, yellow: 46, green: 148, pink: 340, lavender: 286, sky: 198, teal: 176, lime: 84, brown: 26, gray: 250 };
 function colorVars(t, c) {
   const sh = subjectHue(t); if (sh == null) return "";
   if (c === "white" || c === "black") return "--sh:" + sh;
   const b = BASE_HUE[c]; if (b == null || c === "gray") return "";
   let d = ((sh - b + 540) % 360) - 180;             // shortest way around the color wheel
-  d = Math.max(-16, Math.min(16, d * 0.35));          // nudge, but stay clearly the same color
+  const lim = c === "purple" || c === "blue" ? 7 : 16;  // purple and blue sit close together, so nudge them less
+  d = Math.max(-lim, Math.min(lim, d * 0.35));       // nudge, but stay clearly the same color
   return "--so:" + Math.round(d);
 }
 function paint(node, t) { const c = colorOf(t); node.classList.add("hue", "h-" + c); const v = colorVars(t, c); if (v) node.setAttribute("style", (node.getAttribute("style") || "") + ";" + v); return node; }
@@ -438,7 +466,7 @@ function priorityColor(t) {
   if (isPlan(t)) return "purple";                    // a class or test that day just happens
   if (t.cat === "flex") return "yellow";
   const due = dueOf(t);
-  if (!due) return t.cat === "test" ? "blue" : "black";
+  if (!due) return t.cat === "test" ? "blue" : "white";
   const gap = Math.round((new Date(due + "T12:00:00Z") - new Date(ref + "T12:00:00Z")) / 864e5);
   return gap <= 1 ? "purple" : gap === 2 ? "blue" : gap === 3 ? "white" : gap === 4 ? "black" : gap === 5 ? "red" : gap === 6 ? "orange" : gap === 7 ? "yellow" : "green";
 }
@@ -569,7 +597,6 @@ function renderDays(root) {
 }
 
 function daySection(d, tasks) {
-  const ed = d.date && editingDays.has(d.date);
   const sec = el("section", "day" + (d.earlier ? " earlier" : ""));
   const head = el("div", "dayhead"), row = el("div", "dayrow");
   const h2 = el("h2", null, d.title);
@@ -579,35 +606,55 @@ function daySection(d, tasks) {
   const done = checkable.filter(t => t.done).length;
   const right = el("div", "right");
   if (checkable.length) right.append(el("span", "count", `${done} of ${checkable.length}`));
-  if (d.date) { const eb = btn("daybtn", ed ? "Done" : "Edit", () => { ed ? editingDays.delete(d.date) : editingDays.add(d.date); render(); }); eb.setAttribute("aria-pressed", ed ? "true" : "false"); right.append(eb); }
+  if (d.date) right.append(btn("daybtn", "+ Add", () => post({ action: "add", date: d.date, title: "New homework", dur: "30 min", cat: "school", order: 999 }).then(j => {
+    const span = j && j.added && document.querySelector(`[data-id="${j.added}"] .title`); if (span) span.click();
+  }), "Add homework to " + d.title));
   row.append(h2, right); head.append(row);
-  // things to bring home from school for this day
+  // things to bring home from school for this day: tap to change
   if (d.date) {
     const bring = (data.bring || {})[d.date] || "";
-    if (ed) {
-      const b = el("label", "bring"); b.append(el("b", null, "Bring home:"));
-      const inp = el("input", "in"); inp.value = bring; inp.placeholder = "Hobbit book, bio textbook…";
-      inp.addEventListener("change", () => { data.bring = data.bring || {}; data.bring[d.date] = inp.value.trim(); post({ action: "bring", date: d.date, text: inp.value.trim() }); });
-      b.append(inp); head.append(b);
-    } else if (bring) { const b = el("div", "bring"); b.append(el("b", null, "Bring home:"), el("span", null, bring)); head.append(b); }
+    const b = el("div", "bring" + (bring ? "" : " empty")); b.tabIndex = 0; b.setAttribute("role", "button");
+    const txt = el("span", null, bring || "tap to add");
+    b.append(el("b", null, "Bring home:"), txt);
+    const open = () => inlineEdit(txt, { value: bring, placeholder: "Hobbit book, bio textbook…", save: v => { data.bring = data.bring || {}; data.bring[d.date] = v; render(); post({ action: "bring", date: d.date, text: v }); } });
+    b.addEventListener("click", open); b.addEventListener("keydown", e => { if (e.key === "Enter") open(); });
+    if (bring || d.isToday || d.date === addDays(data.today, 1)) head.append(b);
   }
   const total = tasks.reduce((s, t) => s + minutes(t.dur), 0);
   if (total) head.append(el("p", "meta", fmtTotal(total)));
   if (checkable.length) { const bar = el("div", "bar"), fill = el("span"); fill.style.width = (checkable.filter(t => t.done || t.pile).length / checkable.length * 100) + "%"; bar.append(fill); head.append(bar); }
   sec.append(head);
   const ul = el("ul", "tasks"); ul.dataset.date = d.date || ""; if (d.earlier) ul.dataset.earlier = "1";
-  tasks.forEach(t => ul.append(taskRow(t, { showDate: d.earlier, editing: ed })));
-  if (!tasks.length) ul.append(el("li", "dropzone-empty", "Nothing planned. Drag something here."));
+  tasks.forEach(t => ul.append(taskRow(t, { showDate: d.earlier })));
+  if (!tasks.length) ul.append(el("li", "dropzone-empty", "Nothing planned. Drag something here or tap + Add."));
   sec.append(ul);
-  if (ed) {
-    sec.append(btn("addbtn", "+ Add homework", () => post({ action: "add", date: d.date, title: "New homework", dur: "30 min", cat: "school", order: 999 }).then(j => {
-      const inp = j && j.added && document.querySelector(`[data-id="${j.added}"] .title`); if (inp) inp.click();
-    })));
-  }
   makeSortable(ul);
   return sec;
 }
 
+// tap-to-edit: swaps a bit of text for an input, saves on Enter or when you tap away
+function inlineEdit(span, o) {
+  if (span.dataset.editing) return;
+  span.dataset.editing = "1";
+  const inp = el("input", "title-in" + (o.cls ? " " + o.cls : "")); inp.value = o.value || ""; if (o.placeholder) inp.placeholder = o.placeholder;
+  span.replaceWith(inp); inp.focus(); inp.select();
+  let finished = false;
+  const finish = save => {
+    if (finished) return; finished = true;
+    const v = inp.value.trim();
+    inp.blur();
+    if (save && v !== (o.value || "")) o.save(v); else render();
+  };
+  inp.addEventListener("keydown", e => { if (e.key === "Enter") finish(true); if (e.key === "Escape") finish(false); });
+  inp.addEventListener("blur", () => setTimeout(() => finish(true), 0));
+  inp.addEventListener("click", e => e.stopPropagation());
+}
+function tapEdit(node, label, fn) {
+  node.tabIndex = 0; node.setAttribute("role", "button"); node.setAttribute("aria-label", label); node.classList.add("tap");
+  node.addEventListener("click", e => { e.stopPropagation(); fn(); });
+  node.addEventListener("keydown", e => { if (e.key === "Enter") fn(); });
+  return node;
+}
 function pileSection(tasks) {
   const box = el("section", "pile");
   box.append(el("h3", null, "Not today"), el("p", null, "Tap the arrow on a task or drag it here. It still counts for your squishy. Drag it back onto a day when you're ready, or X it."));
@@ -627,22 +674,31 @@ function dueChip(t) {
   return el("span", "due", "Due " + (days < 7 ? shortDay(t.due) : shortDate(t.due)));
 }
 
+const HEART = '<svg viewBox="0 0 24 24"><path d="M12 21s-7.5-4.6-9.6-9.2C.9 8.4 3 4.5 6.6 4.5c2.2 0 3.9 1.3 5.4 3.2 1.5-1.9 3.2-3.2 5.4-3.2 3.6 0 5.7 3.9 4.2 7.3C19.5 16.4 12 21 12 21z"/></svg>';
 function taskRow(t, o) {
   o = o || {};
   const active = data.status && data.status.taskId === t.id;
-  const li = el("li", "task" + (t.done ? " done" : "") + (active ? " active" : "") + (isPlan(t) ? " plan" : "") + (o.editing ? " editing" : ""));
+  const li = el("li", "task" + (t.done ? " done" : "") + (active ? " active" : "") + (isPlan(t) ? " plan" : ""));
   li.dataset.id = t.id; paint(li, t);
+  // left: checkbox, with the Not today arrow tucked under it
+  const left = el("div", "left");
+  left.append(checkbox(t));
+  if (!t.done && !t.pile && !isPlan(t)) { const later = btn("later", "", () => skip(t), "Not today"); later.innerHTML = ICON.later; left.append(later); }
+  // middle: name and details, each tap-to-edit
   const info = el("div", "info");
   if (active) info.append(el("span", "tag-now", "Working on this"));
-  const title = el("span", "title", t.title); title.tabIndex = 0; title.setAttribute("role", "button"); title.setAttribute("aria-label", "Rename " + t.title);
-  title.addEventListener("click", () => renameInline(t, title));
-  title.addEventListener("keydown", e => { if (e.key === "Enter") renameInline(t, title); });
+  const title = el("span", "title", t.title);
+  tapEdit(title, "Rename " + t.title, () => inlineEdit(title, { value: t.title, save: v => edit(t, { title: v || t.title }) }));
   info.append(title);
   const chips = el("div", "chips");
-  chips.append(el("span", "tag", CAT_NAME[t.cat] || t.cat));
-  const dc = dueChip(t); if (dc) chips.append(dc);
-  if (o.showDate || o.fromDay) chips.append(el("span", null, "from " + dayName(t.date)));
-  if (t.note && !o.editing) chips.append(el("span", "note", t.note));
+  const tag = el("span", "tag", CAT_NAME[t.cat] || t.cat);
+  tapEdit(tag, "Change tag", () => pickTag(t, tag));
+  chips.append(tag);
+  const dc = dueChip(t); if (dc) chips.append(tapEdit(dc, "Change due date", () => pickColor(t)));
+  if (o.showDate || o.fromDay || t.pile) chips.append(el("span", null, "from " + dayName(t.date)));
+  const note = el("span", "note" + (t.note ? "" : " addnote"), t.note || "+ note");
+  tapEdit(note, "Edit note", () => inlineEdit(note, { value: t.note, placeholder: "Note", cls: "small", save: v => edit(t, { note: v }) }));
+  chips.append(note);
   info.append(chips);
   if (t.done && (t.proofPhoto || t.proofText)) {
     const p = el("span", "proofline");
@@ -651,48 +707,26 @@ function taskRow(t, o) {
     if (t.proofText) p.append(document.createTextNode(" · “" + t.proofText + "”"));
     info.append(p);
   }
-  if (o.editing) info.append(editFields(t));
+  // right: how long it takes, and the heart for color + due date
   const tools = el("div", "tools");
-  if (t.dur) tools.append(el("span", "dur", t.dur));
-  const ibs = el("div", "ibs");
-  ibs.append(btn("ib dot", "", () => pickColor(t), "Change color"));
-  if (!t.done && !t.pile && !isPlan(t)) { const later = btn("ib", "", () => skip(t), "Not today"); later.innerHTML = ICON.later; ibs.append(later); }
-  const x = btn("ib x", "", () => askDelete(t), "Delete"); x.innerHTML = ICON.x; ibs.append(x);
-  tools.append(ibs);
-  li.append(checkbox(t), info, tools);
+  const dur = el("span", "dur", t.dur || "time?");
+  tapEdit(dur, "Change how long", () => inlineEdit(dur, { value: t.dur, placeholder: "45 min", cls: "small dur-in", save: v => edit(t, { dur: v }) }));
+  const heart = btn("heart", "", () => pickColor(t), "Color and due date"); heart.innerHTML = HEART;
+  tools.append(dur, heart);
+  const x = btn("corner-x", "", () => askDelete(t), "Delete"); x.innerHTML = ICON.x;
+  li.append(left, info, tools, x);
   return li;
 }
 
-function editFields(t) {
-  const f = el("div", "fields");
-  const note = el("input", "in"); note.value = t.note || ""; note.placeholder = "Note (optional)"; note.setAttribute("aria-label", "Note");
-  note.addEventListener("change", () => edit(t, { note: note.value.trim() }));
-  const line = el("div", "editline");
-  const l1 = el("label", "lbl", "How long"); const dur = el("input", "in"); dur.value = t.dur || ""; dur.placeholder = "45 min"; l1.append(dur);
-  dur.addEventListener("change", () => edit(t, { dur: dur.value.trim() }));
-  const l2 = el("label", "lbl", "Tag"); const cat = el("select", "in");
-  CATS.forEach(([v, n]) => { const op = el("option", null, n); op.value = v; cat.append(op); }); cat.value = t.cat; l2.append(cat);
-  cat.addEventListener("change", () => edit(t, { cat: cat.value }));
-  const l3 = el("label", "lbl", "Due date"); const due = el("input", "in"); due.type = "date"; due.value = t.due || ""; l3.append(due);
-  due.addEventListener("change", () => edit(t, { due: due.value }));
-  line.append(l1, l2, l3);
-  f.append(note, line);
-  return f;
-}
-
-function renameInline(t, span) {
-  if (span.querySelector("input")) return;
-  const inp = el("input", "title-in"); inp.value = t.title; inp.setAttribute("aria-label", "Name");
-  span.replaceWith(inp); inp.focus(); inp.select();
-  let finished = false;
-  const finish = save => {
-    if (finished) return; finished = true;
-    const v = inp.value.trim();
-    if (save && v && v !== t.title) { inp.blur(); edit(t, { title: v }); }
-    else { inp.blur(); render(); }
-  };
-  inp.addEventListener("keydown", e => { if (e.key === "Enter") finish(true); if (e.key === "Escape") finish(false); });
-  inp.addEventListener("blur", () => setTimeout(() => finish(true), 0));
+function pickTag(t, node) {
+  const sel = el("select", "title-in small"); sel.setAttribute("aria-label", "Tag");
+  CATS.forEach(([v, n]) => { const op = el("option", null, n); op.value = v; sel.append(op); }); sel.value = t.cat;
+  node.replaceWith(sel); sel.focus();
+  try { sel.showPicker(); } catch (e) {}
+  let done = false;
+  const fin = () => { if (done) return; done = true; sel.blur(); if (sel.value !== t.cat) edit(t, { cat: sel.value }); else render(); };
+  sel.addEventListener("change", fin); sel.addEventListener("blur", () => setTimeout(fin, 0));
+  sel.addEventListener("click", e => e.stopPropagation());
 }
 
 function skip(t) {
@@ -713,15 +747,19 @@ $("confirmYes").addEventListener("click", () => { $("confirmDlg").close(); if (c
 function pickColor(t) {
   const sw = $("swatches"); sw.textContent = "";
   const cur = t.color || "";
-  const add = c => { const b = btn("sw hue h-" + c, "", () => { $("colorDlg").close(); edit(t, { color: c }); }, c); const v = colorVars(t, c); if (v) b.setAttribute("style", v); b.setAttribute("aria-pressed", c === cur ? "true" : "false"); sw.append(b); };
+  const add = c => { const b = btn("sw hue h-" + c, "", () => { $("colorDlg").close(); edit(t, { color: c }); }, c); const v = colorVars(t, c); if (v) b.setAttribute("style", v); b.innerHTML = HEART; b.setAttribute("aria-pressed", c === cur ? "true" : "false"); sw.append(b); };
   sw.append(el("span", "swlbl", "Most important first"));
   LADDER.forEach(add);
   sw.append(el("span", "swlbl", "Other colors"));
   EXTRA.forEach(add);
   const auto = btn("sw auto", "", () => { $("colorDlg").close(); edit(t, { color: "" }); }, "Automatic");
-  auto.setAttribute("aria-pressed", cur ? "false" : "true");
+  auto.innerHTML = HEART; auto.setAttribute("aria-pressed", cur ? "false" : "true");
   sw.append(auto);
-  $("colorMsg").textContent = "Purple = must do today, then blue, white, black, red, orange, yellow, green. Gray = totally optional. The rainbow circle goes back to automatic.";
+  $("colorTitle").textContent = t.title;
+  $("colorMsg").textContent = "Purple = must do today, then blue, white, black, red, orange, yellow, green. Gray = totally optional. The rainbow heart goes back to automatic.";
+  const due = $("dueIn"); due.value = t.due || "";
+  due.onchange = () => { $("colorDlg").close(); edit(t, { due: due.value }); };
+  $("dueClear").onclick = () => { $("colorDlg").close(); edit(t, { due: "" }); };
   $("colorDlg").showModal();
 }
 function checkbox(t) {
@@ -772,9 +810,10 @@ function makeSortable(ul) {
 
 // ---- calendar ----
 function calItems(d) {
-  return live().filter(t => t.due === d || (!t.due && t.date === d && (t.cat === "test" || isPlan(t))))
-    .sort((a, b) => (a.cat === "test" ? -1 : 0) - (b.cat === "test" ? -1 : 0));
+  const rank = t => isPlan(t) || t.cat === "test" ? 0 : t.due === d && t.date !== d ? 1 : 2;
+  return live().filter(t => (t.date === d && !t.pile) || t.due === d).sort((a, b) => rank(a) - rank(b) || byOrder(a, b));
 }
+function calLabel(t, d) { return (t.due === d && t.date !== d ? "Due: " : "") + t.title; }
 function renderCal(root) {
   if (!calMonth) calMonth = data.today.slice(0, 7);
   const box = el("section", "cal");
@@ -782,7 +821,7 @@ function renderCal(root) {
   const [y, m] = calMonth.split("-").map(Number);
   const shift = n => { const d = new Date(Date.UTC(y, m - 1 + n, 15)); calMonth = d.toISOString().slice(0, 7); render(); };
   head.append(btn("btn ghost", "‹", () => shift(-1), "Last month"), el("h2", null, new Date(Date.UTC(y, m - 1, 15)).toLocaleDateString("en-US", { month: "long", year: "numeric", timeZone: "UTC" })), btn("btn ghost", "›", () => shift(1), "Next month"));
-  box.append(head, el("p", "meta", "Tests and due dates. Tap a day to see it or add something."));
+  box.append(head, el("p", "meta", "Everything planned each day, plus what\u2019s due. Tap a day to see it all or add a test."));
   const g = el("div", "grid7");
   ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].forEach(w => g.append(el("div", "wd", w)));
   const first = calMonth + "-01";
@@ -793,8 +832,8 @@ function renderCal(root) {
     const c = btn("cell" + (d.slice(0, 7) !== calMonth ? " out" : "") + (d === data.today ? " today" : ""), "", () => openCalDay(d), dayName(d) + " " + shortDate(d));
     c.append(el("span", "n", String(Number(d.slice(8)))));
     const items = calItems(d);
-    items.slice(0, 3).forEach(t => c.append(paint(el("span", "it", (t.cat === "test" ? "Test: " : "") + t.title), t)));
-    if (items.length > 3) c.append(el("span", "more", "+" + (items.length - 3) + " more"));
+    items.slice(0, 4).forEach(t => c.append(paint(el("span", "it" + (t.done ? " done" : ""), calLabel(t, d)), t)));
+    if (items.length > 4) c.append(el("span", "more", "+" + (items.length - 4) + " more"));
     g.append(c);
   }
   box.append(g); root.append(box);
@@ -805,7 +844,7 @@ function openCalDay(d) {
   $("calDlgTitle").textContent = dayName(d) + ", " + shortDate(d);
   const list = $("calDlgList"); list.textContent = "";
   const items = calItems(d);
-  if (!items.length) list.append(el("p", null, "Nothing due."));
+  if (!items.length) list.append(el("p", null, "Nothing planned."));
   items.forEach(t => { const r = taskRow(t, {}); r.style.cursor = "default"; list.append(r); });
   $("calAddTitle").value = "";
   if (!$("calDlg").open) $("calDlg").showModal();
@@ -1090,7 +1129,7 @@ try { if (localStorage.getItem("emma-hw-sofia")) $("proofLink").hidden = false; 
 document.querySelectorAll(".tab[data-view]").forEach(b => b.addEventListener("click", () => { view = b.dataset.view; if (view !== "sq") pickWeek = null; render(); }));
 $("app").addEventListener("focusout", () => setTimeout(() => { if (pendingRender) render(); }, 0));
 load();
-setInterval(() => { if (!busy && !dragging && !editingDays.size && !typing() && !document.querySelector("dialog[open]") && $("boxov").hidden && !document.hidden) load(); }, 30000);
+setInterval(() => { if (!busy && !dragging && !typing() && !document.querySelector("dialog[open]") && $("boxov").hidden && !document.hidden) load(); }, 30000);
 document.addEventListener("visibilitychange", () => { if (!document.hidden && !busy) load(); });
 </script>
 </body>
