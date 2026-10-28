@@ -26,10 +26,11 @@
 * { box-sizing: border-box; }
 body { margin: 0; background: var(--bg); background-image: radial-gradient(circle at 10% 0%, var(--bg2) 0, transparent 45%), radial-gradient(circle at 100% 30%, var(--bg2) 0, transparent 40%); background-attachment: fixed; color: var(--fg); font-family: var(--body); font-size: 16px; line-height: 1.45; }
 button { font: inherit; color: inherit; }
-.wrap { max-width: 1120px; margin: 0 auto; padding-block: 28px 110px;
+.wrap { max-width: 720px; margin: 0 auto; padding-block: 28px 110px;
   padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
   display: grid; gap: 20px; }
-header { display: grid; gap: 12px; max-width: 720px; }
+header { display: grid; gap: 12px; text-align: center; justify-items: center; }
+header .overall { width: 100%; text-align: left; }
 .kicker { font-family: var(--display); font-weight: 600; font-size: .85rem; letter-spacing: .14em; text-transform: uppercase; color: var(--accent); }
 h1 { font-family: var(--display); font-weight: 700; font-size: clamp(2.2rem, 8vw, 3.2rem); line-height: 1; margin: 0; text-wrap: balance; }
 .sub { color: var(--muted); margin: 0; }
@@ -42,18 +43,25 @@ h1 { font-family: var(--display); font-weight: 700; font-size: clamp(2.2rem, 8vw
 .bar span { display: block; height: 100%; width: 0; border-radius: 99px; background: linear-gradient(90deg, #ff6b8a, #9b6bff, #3d8bff, #2fbf8f); transition: width .4s ease; }
 
 /* colors: each task gets a hue; tags no longer decide it */
-.hue { --h: 265; --sat: 1; --so: 0; --dl: 0%; --hh: calc(var(--h) + var(--so)); --cb: hsl(var(--hh) calc(var(--ts) * var(--sat)) calc(var(--tl) + var(--dl) * var(--dlk))); --c: hsl(var(--hh) calc(var(--as) * var(--sat)) calc(var(--al) + var(--dl))); }
+.hue { --h: 265; --sat: 1; --so: 0; --hh: calc(var(--h) + var(--so)); --cb: hsl(var(--hh) calc(var(--ts) * var(--sat)) var(--tl)); --c: hsl(var(--hh) calc(var(--as) * var(--sat)) var(--al)); }
 .h-pink { --h: 340; } .h-red { --h: 2; } .h-orange { --h: 24; } .h-yellow { --h: 46; } .h-lime { --h: 84; } .h-green { --h: 148; }
 .h-white { --h: 250; --sat: .05; } .h-black { --h: 250; --sat: .15; }
 .h-teal { --h: 176; } .h-sky { --h: 198; } .h-blue { --h: 218; } .h-purple { --h: 276; } .h-lavender { --h: 286; } .h-brown { --h: 26; --sat: .45; } .h-gray { --h: 250; --sat: .12; }
 
-.tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+.tabs { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; }
 .tab { border: 0; cursor: pointer; background: var(--card); border-radius: 99px; padding: 9px 16px; font-family: var(--display); font-weight: 600; box-shadow: 0 4px 0 var(--line); }
 .tab[aria-selected="true"] { background: var(--accent); color: #fff; }
 .tab:focus-visible, .ib:focus-visible, .btn:focus-visible, .sw:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
 
 .layout { display: grid; gap: 20px; align-items: start; }
-.layout { max-width: 760px; }
+.rangebar { display: flex; justify-content: center; align-items: center; gap: 8px; }
+.seg { display: inline-flex; background: var(--card); border-radius: 99px; padding: 4px; box-shadow: 0 4px 0 var(--line); }
+.segbtn { border: 0; background: none; cursor: pointer; border-radius: 99px; padding: 7px 16px; font-family: var(--display); font-weight: 600; color: var(--muted); }
+.segbtn[aria-pressed="true"] { background: var(--accent); color: #fff; }
+.timebtn { border: 0; cursor: pointer; width: 40px; height: 40px; border-radius: 50%; background: var(--card); color: var(--muted); display: grid; place-items: center; box-shadow: 0 4px 0 var(--line); }
+.timebtn svg { width: 20px; height: 20px; }
+.timebtn[aria-pressed="true"] { background: var(--accent); color: #fff; }
+.chips .dur { padding: 1px 9px; font-size: .78rem; }
 @media (max-width: 979px) { .side { order: -1; } }
 .col { display: grid; gap: 20px; min-width: 0; }
 .side { display: grid; gap: 16px; min-width: 0; }
@@ -79,6 +87,7 @@ h1 { font-family: var(--display); font-weight: 700; font-size: clamp(2.2rem, 8vw
 .tasks { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; min-height: 12px; }
 .task { position: relative; display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 12px; background: var(--cb); border-radius: 16px; padding: 12px 30px 12px 14px; touch-action: manipulation; user-select: none; -webkit-user-select: none; cursor: grab; }
 .task.plan { opacity: .9; }
+.task.locked { cursor: default; }
 .check { appearance: none; -webkit-appearance: none; width: 26px; height: 26px; margin: 0; border-radius: 9px; border: 2.5px solid var(--c); background: var(--card); cursor: pointer; display: grid; place-items: center; transition: transform .15s ease, background .15s ease; }
 .check::after { content: ""; width: 7px; height: 13px; border: solid #fff; border-width: 0 3px 3px 0; transform: rotate(45deg) translate(-1px, -1px) scale(0); transition: transform .15s ease; }
 .check:checked { background: var(--c); transform: scale(1.08); }
@@ -119,16 +128,16 @@ label.lbl { display: grid; gap: 2px; font-size: .75rem; font-weight: 800; color:
 .sortable-chosen { box-shadow: 0 10px 24px rgba(60, 30, 120, .25); }
 .dropzone-empty { color: var(--muted); font-size: .9rem; padding: 10px; border: 2px dashed var(--line); border-radius: 14px; text-align: center; list-style: none; }
 
-.task.h-white { --cb: #ffffff; --c: #8f86ad; box-shadow: 0 2px 10px rgba(120, 90, 180, .12); color: #2b2440; }
+.task.h-white { --cb: #ffffff; --c: #2b2440; box-shadow: inset 0 0 0 2px #2b2440; color: #2b2440; }
 .task.h-black { --cb: hsl(var(--sh, 250) 40% 90%); --c: hsl(var(--sh, 250) 45% 45%); }
 .task.h-black .tag, .task.h-black .dur, .task.h-black .ib, .task.h-black .due:not(.today):not(.late) { background: hsl(var(--sh, 250) 22% 27%); }
 .task.h-white .tag, .task.h-white .dur, .task.h-white .ib, .task.h-white .due:not(.today):not(.late) { background: #f3effa; color: #2b2440; }
 .task.h-black .chips, .task.h-white .chips { color: inherit; opacity: .85; }
 .sw.h-white { background: #fff; box-shadow: 0 0 0 2px #cfc6e4; } .sw.h-black { background: #2b2440; }
-.cell .it.h-white { background: #fff; border-left-color: #c9c1de; color: #2b2440; } .cell .it.h-black { background: hsl(var(--sh, 250) 28% 15%); border-left-color: hsl(var(--sh, 250) 80% 76%); color: #fff; }
+.cell .it.h-white { background: #fff; border-left-color: #2b2440; color: #2b2440; box-shadow: inset 0 0 0 1px #2b2440; } .cell .it.h-black { background: hsl(var(--sh, 250) 28% 15%); border-left-color: hsl(var(--sh, 250) 80% 76%); color: #fff; }
 .picker button.h-white { background: #fff; box-shadow: 0 2px 8px rgba(120,90,180,.15); color: #2b2440; } .picker button.h-black { background: hsl(var(--sh, 250) 28% 15%); color: #fff; }
 .swlbl { grid-column: 1 / -1; font-size: .78rem; font-weight: 800; color: var(--muted); margin-top: 4px; }
-@media (prefers-color-scheme: dark) { .task.h-white { --cb: #f1eef8; box-shadow: none; } }
+
 
 
 [hidden] { display: none !important; }
@@ -142,8 +151,8 @@ label.lbl { display: grid; gap: 2px; font-size: .75rem; font-weight: 800; color:
 .heart { border: 0; background: none; padding: 0; width: 30px; height: 28px; cursor: pointer; display: grid; place-items: center; }
 .heart svg, .sw svg { width: 26px; height: 26px; fill: var(--hc); stroke: var(--hs, transparent); stroke-width: 1.5; filter: drop-shadow(0 1px 0 rgba(0,0,0,.12)); transition: transform .15s ease; }
 .heart:hover svg, .heart:focus-visible svg { transform: scale(1.15); }
-.hue { --hc: hsl(var(--hh) 92% calc(62% + var(--dl))); }
-.h-white { --hc: #ffffff; --hs: #b9b1cf; } .h-black { --hc: #17131f; --hs: #f6f2ff; } .h-gray { --hc: #aaa5b8; }
+.hue { --hc: hsl(var(--hh) calc(85% * var(--sat)) 64%); }
+.h-white { --hc: #ffffff; --hs: #2b2440; } .h-black { --hc: #17131f; --hs: #f6f2ff; } .h-gray { --hc: #aaa5b8; }
 .tap { cursor: pointer; }
 .chips .note.tap:hover, .dur.tap:hover, .tag.tap:hover { box-shadow: 0 0 0 2px var(--c); border-radius: 99px; }
 .addnote { opacity: 0; font-weight: 800; transition: opacity .15s; }
@@ -157,7 +166,9 @@ label.lbl { display: grid; gap: 2px; font-size: .75rem; font-weight: 800; color:
 .sw { display: grid; justify-items: center; gap: 2px; background: none !important; box-shadow: none !important; border: 0; width: 100%; padding: 6px 2px; cursor: pointer; border-radius: 14px; color: var(--fg); }
 .sw svg { width: 40px; height: 40px; }
 .sw small { font-size: .72rem; font-weight: 800; line-height: 1.15; text-align: center; color: var(--muted); }
-.sw[aria-pressed="true"] { background: var(--line) !important; }
+.sw[aria-pressed="true"] { background: var(--line) !important; box-shadow: inset 0 0 0 2px var(--fg) !important; }
+.autotag { font-style: normal; font-size: .62rem; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; background: var(--fg); color: var(--card); border-radius: 99px; padding: 0 6px; }
+.details { display: grid; gap: 10px; margin-top: 14px; padding-top: 14px; border-top: 2px solid var(--line); }
 .sw.auto svg { fill: url(#rainbow); }
 
 /* not today pile */
@@ -303,7 +314,6 @@ textarea.in { min-height: 90px; resize: vertical; }
   <header>
     <span class="kicker" id="range">Next 7 days</span>
     <h1>Emma's Homework</h1>
-    <p class="sub">Check things off when they're really done. Drag things to move them. Tap a name to rename it.</p>
     <div class="card overall" id="overall" hidden>
       <div class="overall-top"><b id="overallCount"></b><span class="last" id="last"></span></div>
       <div class="bar"><span id="overallBar"></span></div>
@@ -380,7 +390,11 @@ textarea.in { min-height: 90px; resize: vertical; }
   <p id="colorMsg"></p>
   <div class="swatches" id="swatches"></div>
   <button class="linkbtn" type="button" id="autoColor">Let it pick for me</button>
-  <label class="lbl" style="margin-top:14px">Due date<span class="editline"><input class="in in-sm" type="date" id="dueIn"><button class="btn ghost" type="button" id="dueClear">No due date</button></span></label>
+  <div class="details">
+    <label class="lbl">Due<span class="editline"><input class="in in-sm" type="date" id="dueIn"><button class="btn ghost" type="button" id="dueClear">None</button></span></label>
+    <label class="lbl">Note<input class="in" id="noteIn" placeholder="Optional"></label>
+    <span class="editline"><label class="lbl">How long<input class="in" id="durIn" placeholder="45 min"></label><label class="lbl">Type<select class="in" id="catIn"></select></label></span>
+  </div>
   <div class="actions"><button class="btn ghost" type="button" data-close>Close</button></div>
 </dialog>
 
@@ -473,25 +487,26 @@ function finishedAlert(id) {
 // Within one color, each subject gets its own shade (a little warmer/cooler, lighter/deeper),
 // so two equally important things still look different, and a subject keeps the same shade everywhere.
 // [pattern, hue for white/tints, hue shift, lightness shift]: neighbors in a day get far-apart shades
+// [pattern, hue for tints, hue shift]: same saturation and lightness everywhere, subjects only shift the hue
 const SUBJECTS = [
-  [/latin/,                                             350,  12,  -6],
-  [/hist/,                                               28,   0, -13],
-  [/rsm|algebra|geometry|\bgeo\b/,                        205, -24, -13],
-  [/math|quiz/,                                         220, -24,   2],
-  [/hunter/,                                            290,  12, -13],
-  [/english|vocab|hobbit|grammar|reading|essay|book/,   150,   0,   2],
-  [/bio|science/,                                       110,  12,   2],
-  [/physics|chem/,                                      185, -12,  -6],
-  [/robot|canva/,                                        50, -12,   2],
-  [/dinner|break|snack/,                                 40,   0,  -6]
+  [/latin/,                                             350, -7],
+  [/hist/,                                               28,  14],
+  [/rsm|algebra|geometry|\bgeo\b/,                        205, 7],
+  [/math|quiz/,                                         220, -14],
+  [/hunter/,                                            290,  0],
+  [/english|vocab|hobbit|grammar|reading|essay|book/,   150,   7],
+  [/bio|science/,                                       110,  -7],
+  [/physics|chem/,                                      185,  0],
+  [/robot|canva/,                                        50, -14],
+  [/dinner|break|snack/,                                 40,   0]
 ];
 function subjectIndex(t) { const s = (t.title + " " + t.note).toLowerCase(); return SUBJECTS.findIndex(([re]) => re.test(s)); }
 function colorVars(t, c) {
   const i = subjectIndex(t); if (i < 0 || c === "gray" || c === "white") return "";
-  const [, , dh, dl] = SUBJECTS[i];
-  const k = c === "orange" || c === "yellow" || c === "pink" ? .5 : 1;   // warm colors sit close together, so shift their hue less
-  const shift = c === "purple" ? Math.max(-24, Math.min(10, dh)) : Math.round(dh * k);
-  return "--so:" + shift + ";--dl:" + dl + "%";
+  const dh = SUBJECTS[i][2];
+  const k = c === "orange" || c === "yellow" || c === "pink" ? .5 : 1;   // warm colors sit close together, so shift them less
+  const shift = Math.round(dh * k);   // every color stays itself: shades only lean a little warmer or cooler
+  return "--so:" + shift;
 }
 function paint(node, t) { const c = colorOf(t); node.classList.add("hue", "h-" + c); const v = colorVars(t, c); if (v) node.setAttribute("style", (node.getAttribute("style") || "") + ";" + v); return node; }
 const WEEKDAY_WORDS = [["sun"], ["mon"], ["tue", "tues"], ["wed", "weds", "wens"], ["thu", "thur", "thurs"], ["fri"], ["sat"]];
@@ -620,9 +635,24 @@ function renderRewards() {
 }
 
 // ---- days view ----
+let range = 7;
+try { range = Number(localStorage.getItem("emma-hw-range")) || 7; } catch (e) {}
+function rangeBar() {
+  const bar = el("div", "rangebar");
+  const seg = el("div", "seg");
+  [[1, "Today"], [3, "3 days"], [7, "Week"]].forEach(([n, label]) => {
+    const b = btn("segbtn", label, () => { range = n; try { localStorage.setItem("emma-hw-range", n); } catch (e) {} render(); });
+    b.setAttribute("aria-pressed", range === n ? "true" : "false"); seg.append(b);
+  });
+  const tt = btn("timebtn", "", () => { showTimes = !showTimes; try { localStorage.setItem("emma-hw-times", showTimes ? "1" : "0"); } catch (e) {} render(); }, showTimes ? "Hide how long things take" : "Show how long things take");
+  tt.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>';
+  tt.setAttribute("aria-pressed", showTimes ? "true" : "false");
+  bar.append(seg, tt);
+  return bar;
+}
 function renderDays(root) {
-  const lay = el("div", "layout"), col = el("div", "col"), side = el("aside", "side");
-  const today = data.today, end = addDays(today, data.days - 1);
+  const lay = el("div", "layout"), col = el("div", "col");
+  const today = data.today, end = addDays(today, Math.min(range, data.days) - 1);
   const all = live();
   const earlier = all.filter(t => t.date < today && !t.done && !t.pile && !noProof(t)).sort((a, b) => a.date.localeCompare(b.date) || byOrder(a, b));
   if (earlier.length) col.append(daySection({ title: "Still to do from earlier", earlier: true }, earlier));
@@ -630,6 +660,7 @@ function renderDays(root) {
     col.append(daySection({ date: d, title: dayName(d), sub: shortDate(d), isToday: d === today }, all.filter(t => t.date === d && !t.pile).sort(byOrder)));
   }
   col.prepend(pileSection(all.filter(t => t.pile && !t.done).sort((a, b) => a.date.localeCompare(b.date) || byOrder(a, b))));
+  col.prepend(rangeBar());
   lay.append(col); root.append(lay);
 }
 
@@ -648,7 +679,7 @@ function daySection(d, tasks) {
   }), "Add homework to " + d.title));
   row.append(h2, right); head.append(row);
   const total = tasks.reduce((s, t) => s + minutes(t.dur), 0);
-  if (total) head.append(el("p", "meta", fmtTotal(total)));
+  if (total && showTimes) head.append(el("p", "meta", fmtTotal(total)));
   if (checkable.length) { const bar = el("div", "bar"), fill = el("span"); fill.style.width = (checkable.filter(t => t.done || t.pile).length / checkable.length * 100) + "%"; bar.append(fill); head.append(bar); }
   sec.append(head);
   const ul = el("ul", "tasks"); ul.dataset.date = d.date || ""; if (d.earlier) ul.dataset.earlier = "1";
@@ -726,45 +757,32 @@ function dueChip(t) {
 }
 
 const HEART = '<svg viewBox="0 0 24 24"><path d="M12 21s-7.5-4.6-9.6-9.2C.9 8.4 3 4.5 6.6 4.5c2.2 0 3.9 1.3 5.4 3.2 1.5-1.9 3.2-3.2 5.4-3.2 3.6 0 5.7 3.9 4.2 7.3C19.5 16.4 12 21 12 21z"/></svg>';
+let showTimes = false;
+try { showTimes = localStorage.getItem("emma-hw-times") === "1"; } catch (e) {}
+const locked = t => isPlan(t) || t.cat === "flex";   // classes, tests in school and dinner stay where they are
 function taskRow(t, o) {
   o = o || {};
   const active = data.status && data.status.taskId === t.id;
-  const li = el("li", "task" + (t.done ? " done" : "") + (active ? " active" : "") + (isPlan(t) ? " plan" : ""));
+  const li = el("li", "task" + (t.done ? " done" : "") + (active ? " active" : "") + (isPlan(t) ? " plan" : "") + (locked(t) ? " locked" : ""));
   li.dataset.id = t.id; paint(li, t);
-  // left: checkbox, with the Not today arrow tucked under it
   const left = el("div", "left");
   left.append(checkbox(t));
-  if (!t.done && !t.pile && !isPlan(t)) { const later = btn("later", "", () => skip(t), "Not today"); later.innerHTML = ICON.later; left.append(later); }
-  // middle: name and details, each tap-to-edit
+  if (!t.done && !t.pile && !locked(t)) { const later = btn("later", "", () => skip(t), "Not today"); later.innerHTML = ICON.later; left.append(later); }
   const info = el("div", "info");
   if (active) info.append(el("span", "tag-now", "Working on this"));
   const title = el("span", "title", t.title);
   tapEdit(title, "Rename " + t.title, () => inlineEdit(title, { value: t.title, save: v => edit(t, { title: v || t.title }) }));
   info.append(title);
   const chips = el("div", "chips");
-  const tag = el("span", "tag", CAT_NAME[t.cat] || t.cat);
-  tapEdit(tag, "Change tag", () => pickTag(t, tag));
-  chips.append(tag);
   const dc = dueChip(t); if (dc) chips.append(tapEdit(dc, "Change due date", () => pickColor(t)));
   if (o.showDate || o.fromDay || t.pile) chips.append(el("span", null, "from " + dayName(t.date)));
-  const note = el("span", "note" + (t.note ? "" : " addnote"), t.note || "+ note");
-  tapEdit(note, "Edit note", () => inlineEdit(note, { value: t.note, placeholder: "Note", cls: "small", save: v => edit(t, { note: v }) }));
-  chips.append(note);
-  info.append(chips);
-  if (t.done && (t.proofPhoto || t.proofText)) {
-    const p = el("span", "proofline");
-    p.append(document.createTextNode("Done " + (t.doneAt ? clock(t.doneAt) : "")));
-    if (t.proofPhoto) { p.append(document.createTextNode(" · ")); const a = el("a", null, "photo"); a.href = t.proofPhoto; a.target = "_blank"; a.rel = "noopener"; p.append(a); }
-    if (t.proofText) p.append(document.createTextNode(" · “" + t.proofText + "”"));
-    info.append(p);
-  }
-  // right: how long it takes, and the heart for color + due date
+  if (t.note) { const note = el("span", "note", t.note); tapEdit(note, "Edit note", () => inlineEdit(note, { value: t.note, placeholder: "Note", cls: "small", save: v => edit(t, { note: v }) })); chips.append(note); }
+  if (showTimes && t.dur) { const dur = el("span", "dur", t.dur); tapEdit(dur, "Change how long", () => inlineEdit(dur, { value: t.dur, placeholder: "45 min", cls: "small dur-in", save: v => edit(t, { dur: v }) })); chips.append(dur); }
+  if (chips.children.length) info.append(chips);
   const tools = el("div", "tools");
-  const dur = el("span", "dur", t.dur || "time?");
-  tapEdit(dur, "Change how long", () => inlineEdit(dur, { value: t.dur, placeholder: "45 min", cls: "small dur-in", save: v => edit(t, { dur: v }) }));
-  const heart = btn("heart", "", () => pickColor(t), "Color and due date"); heart.innerHTML = HEART;
-  tools.append(dur, heart);
-  if (t.pile && !t.done) { const back = btn("daybtn todaybtn", "Do today", () => doToday(t), "Do " + t.title + " today"); tools.append(back); }
+  const heart = btn("heart", "", () => pickColor(t), "Color, due date and details"); heart.innerHTML = HEART;
+  tools.append(heart);
+  if (t.pile && !t.done) tools.append(btn("daybtn todaybtn", "Do today", () => doToday(t), "Do " + t.title + " today"));
   const x = btn("corner-x", "", () => askDelete(t), "Delete"); x.innerHTML = ICON.x;
   li.append(left, info, tools, x);
   return li;
@@ -798,21 +816,26 @@ $("confirmYes").addEventListener("click", () => { $("confirmDlg").close(); if (c
 
 function pickColor(t) {
   const sw = $("swatches"); sw.textContent = "";
-  const cur = t.color || "";
+  const cur = t.color || "", now = colorOf(t);
   LADDER.forEach((c, n) => {
     const b = btn("sw hue h-" + c, "", () => { $("colorDlg").close(); edit(t, { color: c }); }, LADDER_LABEL[c]);
     const v = colorVars(t, c); if (v) b.setAttribute("style", v);
-    b.innerHTML = HEART; b.append(el("small", null, (n + 1) + ". " + LADDER_LABEL[c]));
-    b.setAttribute("aria-pressed", c === cur ? "true" : "false"); sw.append(b);
+    b.innerHTML = HEART; b.append(el("small", null, LADDER_LABEL[c]));
+    if (c === now && !cur) b.append(el("em", "autotag", "auto"));
+    b.setAttribute("aria-pressed", c === now ? "true" : "false"); sw.append(b);
   });
   $("colorTitle").textContent = t.title;
   $("colorMsg").textContent = "";
-  $("autoColor").textContent = cur ? "Let it pick for me" : "Right now it picks for you from the due date";
+  $("autoColor").textContent = cur ? "Let it pick for me" : "It\u2019s picking for you (" + LADDER_LABEL[now].toLowerCase() + ")";
   $("autoColor").disabled = !cur;
   $("autoColor").onclick = () => { $("colorDlg").close(); if (cur) edit(t, { color: "" }); };
   const due = $("dueIn"); due.value = t.due || "";
-  due.onchange = () => { $("colorDlg").close(); edit(t, { due: due.value }); };
-  $("dueClear").onclick = () => { $("colorDlg").close(); edit(t, { due: "" }); };
+  due.onchange = () => { edit(t, { due: due.value }); };
+  $("dueClear").onclick = () => { due.value = ""; edit(t, { due: "" }); };
+  const note = $("noteIn"); note.value = t.note || ""; note.onchange = () => edit(t, { note: note.value.trim() });
+  const dur = $("durIn"); dur.value = t.dur || ""; dur.onchange = () => edit(t, { dur: dur.value.trim() });
+  const cat = $("catIn"); cat.textContent = ""; CATS.forEach(([v, n]) => { const op = el("option", null, n); op.value = v; cat.append(op); }); cat.value = t.cat;
+  cat.onchange = () => edit(t, { cat: cat.value });
   $("colorDlg").showModal();
 }
 function checkbox(t) {
@@ -839,7 +862,7 @@ function makeSortable(ul) {
     group: { name: "tasks", put: !ul.dataset.earlier },
     animation: 160, delay: 180, delayOnTouchOnly: true, touchStartThreshold: 6,
     forceFallback: true, fallbackTolerance: 4, fallbackOnBody: true, scroll: true, bubbleScroll: true,
-    filter: "input, select, textarea, button, a, .title-in, .dropzone-empty", preventOnFilter: false,
+    filter: "input, select, textarea, button, a, .title-in, .dropzone-empty, .locked", preventOnFilter: false,
     draggable: ".task",
     onStart: () => { dragging = true; },
     onEnd: ev => {
