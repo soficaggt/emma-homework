@@ -232,9 +232,13 @@ label.lbl { display: grid; gap: 2px; font-size: .75rem; font-weight: 800; color:
 /* coins */
 .coinpill { position: fixed; top: calc(12px + env(safe-area-inset-top, 0px)); right: max(14px, env(safe-area-inset-right, 0px)); z-index: 24; border: 0; cursor: pointer; display: flex; align-items: center; gap: 6px; background: var(--card); border-radius: 99px; padding: 7px 14px 7px 8px; box-shadow: 0 4px 0 var(--line); font-family: var(--display); font-size: 1.05rem; color: var(--fg); }
 .coinpill.bump { animation: bump .5s cubic-bezier(.3, 1.6, .5, 1); }
-@keyframes bump { 40% { transform: scale(1.25); } }
+@keyframes bump { 40% { transform: scale(1.22); box-shadow: 0 0 0 4px #ffe08a, 0 4px 0 var(--line); } }
 .coin { width: 22px; height: 22px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #fff6c9 0 18%, #ffd34d 19% 62%, #e6a817 63%); box-shadow: inset 0 0 0 2px #e6a817; display: inline-block; flex: none; }
 .coin.big { width: 44px; height: 44px; }
+.flycoin { position: fixed; left: 0; top: 0; z-index: 60; width: 30px; height: 30px; border-radius: 50%; pointer-events: none; background: radial-gradient(circle at 35% 30%, #fff6c9 0 18%, #ffd34d 19% 62%, #e6a817 63%); box-shadow: inset 0 0 0 2.5px #e6a817, 0 0 16px rgba(255, 211, 77, .9); }
+.spark { position: fixed; left: 0; top: 0; z-index: 61; width: 6px; height: 6px; border-radius: 50%; background: #fff3a6; box-shadow: 0 0 6px #ffd34d; pointer-events: none; }
+.coinplus { position: fixed; z-index: 61; transform: translateX(-50%); font-family: var(--display); font-weight: 700; font-size: 2rem; color: #e6a817; text-shadow: 0 2px 0 #fff, 0 0 12px rgba(255, 211, 77, .7); pointer-events: none; animation: coinplus 1.4s ease-out forwards; }
+@keyframes coinplus { 0% { opacity: 0; transform: translate(-50%, 8px) scale(.5); } 20% { opacity: 1; transform: translate(-50%, -6px) scale(1.25); } 70% { opacity: 1; transform: translate(-50%, -18px) scale(1); } 100% { opacity: 0; transform: translate(-50%, -30px) scale(1); } }
 .coinfly { position: fixed; z-index: 50; transform: translateX(-50%); font-family: var(--display); font-weight: 700; font-size: 1.3rem; color: #e6a817; text-shadow: 0 2px 0 #fff; pointer-events: none; animation: coinfly 1.3s ease-out forwards; }
 @keyframes coinfly { from { opacity: 0; transform: translate(-50%, 10px) scale(.6); } 25% { opacity: 1; transform: translate(-50%, 0) scale(1.2); } to { opacity: 0; transform: translate(-50%, -24px) scale(1); } }
 .egg { width: 30px; height: 36px; flex: none; animation: wiggle 2s ease-in-out infinite; }
@@ -640,7 +644,7 @@ function render() {
   document.querySelectorAll(".tab[data-view]").forEach(b => b.setAttribute("aria-selected", b.dataset.view === view ? "true" : "false"));
   $("sqTab").textContent = "Shelf" + ((data.squishies || []).length ? " (" + data.squishies.length + ")" : "");
 
-  $("coinPill").hidden = false; $("coinCount").textContent = String(data.coins || 0);
+  $("coinPill").hidden = false; if (!coinAnim) setCoinText(data.coins || 0);
 
   renderWorking();
   renderRewards();
@@ -906,7 +910,7 @@ function checkbox(t) {
     if (noProof(t)) {
       local(t.id, { done: true, pile: false, doneAt: new Date().toISOString() }); render(); confetti();
       if (t.cat !== "flex") toast(t.title);
-      post({ action: "complete", id: t.id, coins: coinsFor(t) }).then(j => { if (j) { finishedAlert(t.id); rewardFx(j); } }); return;
+      post({ action: "complete", id: t.id, coins: coinsFor(t) }).then(j => { if (j) { finishedAlert(t.id); rewardFx(j, document.querySelector(`[data-id="${t.id}"] .check`)); } }); return;
     }
     ev.preventDefault();
     askProof(t);
@@ -1197,7 +1201,7 @@ $("bx").addEventListener("click", async () => {
   const [j] = await Promise.all([post({ action: "openBox", date: boxDate }), new Promise(r => setTimeout(r, 1100))]);
   boxBusy = false; st.classList.remove("shake");
   if (!j) { $("boxov").hidden = true; return; }
-  coinFly(j.coinsGained);
+  coinFly(j.coinsGained, $("bx"));
   if (!j.opened) { $("boxTitle").textContent = "You've collected them all!"; $("boxSub").textContent = "Every squishy is on your shelf. +" + (j.coinsGained || 0) + " coins!"; $("boxActions").hidden = false; return; }
   const sq = (j.squishies || []).find(x => x.id === j.opened);
   st.classList.add("open"); glitter("burst");
@@ -1218,17 +1222,54 @@ function boxInfo(d) { return (data.boxInfo || []).find(x => x.date === d) || { f
 const COIN_VALUE = { purple: 5, blue: 4, white: 3, pink: 3, orange: 2, yellow: 2, green: 2, gray: 1 };
 function coinsFor(t) { return t.cat === "flex" ? 1 : (COIN_VALUE[colorOf(t)] || 3); }
 const EGG = '<svg viewBox="0 0 40 48"><path d="M20 3C10 3 4 18 4 29c0 10 7 16 16 16s16-6 16-16C36 18 30 3 20 3z" fill="#fff6dc" stroke="#e3c25c" stroke-width="2.5"/><path d="M9 26l5-4 5 5 5-5 5 4 3-2" fill="none" stroke="#ff9fbd" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="14" cy="15" r="2.2" fill="#c3a2ff"/><circle cx="26" cy="36" r="2.5" fill="#9fd0ff"/></svg>';
-function coinFly(n) {
-  if (!n) return;
-  const pill = $("coinPill").getBoundingClientRect();
-  const f = el("div", "coinfly", "+" + n);
-  f.style.left = (pill.left + pill.width / 2) + "px"; f.style.top = (pill.bottom + 6) + "px";
-  document.body.append(f); setTimeout(() => f.remove(), 1400);
-  $("coinPill").classList.remove("bump"); void $("coinPill").offsetWidth; $("coinPill").classList.add("bump");
+// coins pop out of what she finished, arc up through the air and land in the counter one by one
+let coinAnim = 0, shownCoins = null;
+function setCoinText(n) { shownCoins = n; $("coinCount").textContent = String(n); }
+function coinFly(n, from) {
+  n = Number(n) || 0; if (!n) return;
+  const pill = $("coinPill"), pr = pill.getBoundingClientRect();
+  const tx = pr.left + 18, ty = pr.top + pr.height / 2;
+  let sx = innerWidth / 2, sy = innerHeight / 2;
+  if (from && from.getBoundingClientRect) { const r = from.getBoundingClientRect(); if (r.width) { sx = r.left + r.width / 2; sy = r.top + r.height / 2; } }
+  const target = data ? (data.coins || 0) : 0;
+  const start = Math.max(0, target - n);
+  coinAnim++; setCoinText(start);
+  // the "+N" pops up where she finished it
+  const tag = el("div", "coinplus", "+" + n); tag.style.left = sx + "px"; tag.style.top = (sy - 18) + "px"; document.body.append(tag); setTimeout(() => tag.remove(), 1500);
+  const reduce = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const count = Math.min(n, 12);
+  let landed = 0;
+  for (let k = 0; k < count; k++) {
+    const c = el("div", "flycoin"); document.body.append(c);
+    const spread = (k - (count - 1) / 2) * 14, up = 70 + Math.random() * 60;
+    const midX = sx + spread * 2.2 + (tx - sx) * .25, midY = Math.min(sy, ty) - up;
+    const dur = reduce ? 10 : 720 + Math.random() * 180, delay = reduce ? 0 : 120 + k * 85;
+    const anim = c.animate([
+      { transform: `translate(${sx - 15}px, ${sy - 15}px) scale(.3) rotate(0deg)`, opacity: 0 },
+      { transform: `translate(${sx - 15 + spread}px, ${sy - 40}px) scale(1.15) rotate(90deg)`, opacity: 1, offset: .18 },
+      { transform: `translate(${midX - 15}px, ${midY - 15}px) scale(1.05) rotate(220deg)`, opacity: 1, offset: .55 },
+      { transform: `translate(${tx - 15}px, ${ty - 15}px) scale(.55) rotate(360deg)`, opacity: .9 }
+    ], { duration: dur, delay, easing: "cubic-bezier(.45, 0, .55, 1)", fill: "both" });
+    anim.onfinish = () => {
+      c.remove(); landed++;
+      // each coin that lands bumps the counter up (the last one makes it exact)
+      setCoinText(landed === count ? start + n : start + Math.round(n * landed / count));
+      pill.classList.remove("bump"); void pill.offsetWidth; pill.classList.add("bump");
+      sparkleAt(tx, ty);
+      if (landed === count) { coinAnim--; if (!coinAnim && data) setCoinText(data.coins || 0); }
+    };
+  }
 }
-function rewardFx(j) {
+function sparkleAt(x, y) {
+  for (let k = 0; k < 4; k++) {
+    const p = el("div", "spark"); document.body.append(p);
+    const a = Math.random() * 6.28, d = 14 + Math.random() * 14;
+    p.animate([{ transform: `translate(${x - 3}px, ${y - 3}px) scale(1)`, opacity: 1 }, { transform: `translate(${x - 3 + Math.cos(a) * d}px, ${y - 3 + Math.sin(a) * d}px) scale(0)`, opacity: 0 }], { duration: 420, easing: "ease-out" }).onfinish = () => p.remove();
+  }
+}
+function rewardFx(j, from) {
   if (!j) return;
-  coinFly(j.coinsGained);
+  coinFly(j.coinsGained, from);
   if (j.hatched) setTimeout(() => toastMsg("Your egg hatched!", "+3 bonus coins for starting it with the Start button."), 1600);
 }
 function maybeCelebrate(j) { if (j && j.justEarned && j.justEarned === j.today && !celebrated[j.justEarned]) setTimeout(() => celebrate(j.justEarned), 1200); }
@@ -1319,7 +1360,7 @@ $("proofSubmit").addEventListener("click", async () => {
   b.disabled = true; b.textContent = "Sending…";
   const j = await post({ action: "complete", id: t.id, coins: coinsFor(t), proofText: $("proofText").value.trim(), photo: proofPhoto ? { data: proofPhoto } : null });
   b.textContent = "Check it off";
-  if (j) { $("proofDlg").close(); confetti(); toast(t.title); finishedAlert(t.id); rewardFx(j); }
+  if (j) { $("proofDlg").close(); confetti(); toast(t.title); finishedAlert(t.id); rewardFx(j, document.querySelector(`[data-id="${t.id}"] .check`)); }
   else { $("proofErr").textContent = "That didn't send. Check your internet and try again."; updateProofBtn(); }
 });
 document.querySelectorAll("[data-close]").forEach(b => b.addEventListener("click", () => b.closest("dialog").close()));
