@@ -7,56 +7,69 @@ const TZ = 'America/New_York';
 const NTFY_TOPIC = 'emma-hw-5e47c8b0dc56';
 const DAYS_AHEAD = 7;
 const SITE_URL = 'https://soficaggt.github.io/emma-homework/';
-const T_COLS = ['id', 'date', 'title', 'note', 'dur', 'cat', 'order', 'done', 'doneAt', 'proofText', 'proofPhoto', 'deleted', 'addedBy', 'updatedAt', 'color', 'due', 'pile'];
+const T_COLS = ['id', 'date', 'title', 'note', 'dur', 'cat', 'order', 'done', 'doneAt', 'proofText', 'proofPhoto', 'deleted', 'addedBy', 'updatedAt', 'color', 'due', 'pile', 'coins'];
 const TPL_COLS = ['weekday', 'title', 'note', 'dur', 'cat', 'order', 'dueInDays'];
 const S_COLS = ['taskId', 'title', 'startedAt'];
 const D_COLS = ['date', 'bring'];
-const Q_COLS = ['id', 'date', 'kind', 'color', 'name', 'rarity', 'openedAt', 'realWeek'];
+const Q_COLS = ['id', 'date', 'kind', 'color', 'name', 'rarity', 'openedAt', 'realWeek', 'itemId', 'texture', 'price', 'cat', 'pos', 'source'];
+const L_COLS = ['id', 'date', 'kind', 'amount', 'name', 'used', 'at'];
 const CATS = ['test', 'school', 'hunter', 'rsm', 'fixed', 'flex'];
 const COLORS = ['purple', 'blue', 'white', 'black', 'lavender', 'sky', 'teal', 'green', 'lime', 'yellow', 'orange', 'pink', 'red', 'brown', 'gray'];
 const WEEKDAYS = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
 const CHAT_MODEL = 'claude-sonnet-5-5';
 const CHATS_PER_DAY = 80;
 
-// The mystery box gives real, trending squishies (names are the real ones, so Sofia can order the one Emma picks).
-// Each one can only be won once. Weights: common 60, uncommon 28, rare 10, legendary 2.
-// [id, real name, how it's drawn, color, rarity]
+// The collection: real squishies and slimes Emma loves, by brand. Names are the real products so Sofia can order the one she picks.
+// Rarity = how hard it is to actually get right now (a NeeDoh Nice Cube is rare because it sells out everywhere).
+// Prices are rough real-store prices in dollars, used to keep the weekly real pick near $40.
+// [id, real name, how it's drawn, color, rarity, texture, about $, shelf or slime]
 const CATALOG = [
-  ['nice-cube', 'NeeDoh Nice Cube', 'cube', 'sky', 'common'],
-  ['nice-ice-baby', 'NeeDoh Nice Ice Baby', 'minicube', 'lavender', 'common'],
-  ['gumdrop', 'NeeDoh Gumdrop', 'gumdrop', 'pink', 'common'],
-  ['gummy-bear', 'NeeDoh Gummy Bear', 'gummybear', 'orange', 'common'],
-  ['groovy-glob', 'NeeDoh Groovy Glob', 'glob', 'teal', 'common'],
-  ['mochi-cat', 'Mochi cat squishy', 'cat', 'pink', 'common'],
-  ['mochi-bunny', 'Mochi bunny squishy', 'bunny', 'lavender', 'common'],
-  ['mochi-hamster', 'Mochi hamster squishy', 'hamster', 'orange', 'common'],
-  ['squeezy-butter', 'Sunny Days Squeezy Butter', 'butter', 'yellow', 'common'],
-  ['pink-butter', 'Crunchy butter squishy (pink)', 'butter', 'pink', 'common'],
-  ['dumpling', 'Squeezy dumpling squishy', 'dumpling', 'white', 'common'],
-  ['donut', 'Sprinkle donut squishy', 'donut', 'pink', 'common'],
-  ['big-cheese', 'NeeDoh Big Cheese', 'cheese', 'yellow', 'uncommon'],
-  ['swiss-cheese', 'Swiss cheese squishy', 'cheese', 'yellow', 'uncommon'],
-  ['bread-loaf', 'Slow-rising bread squishy', 'bread', 'brown', 'uncommon'],
-  ['taba-chick', 'Taba squishy chick', 'chick', 'yellow', 'uncommon'],
-  ['taba-paw', 'Taba squishy cat paw', 'paw', 'pink', 'uncommon'],
-  ['taba-strawberry', 'Taba squishy strawberry', 'strawberry', 'pink', 'uncommon'],
-  ['taba-capybara', 'Taba squishy capybara', 'capybara', 'brown', 'uncommon'],
-  ['taba-cookie', 'Taba cookie squishy', 'cookie', 'brown', 'uncommon'],
-  ['bigblok', "Squeez'M BigBlok Stress Cube", 'cube', 'purple', 'uncommon'],
-  ['globbles', 'Crayola Globbles', 'ball', 'lime', 'uncommon'],
-  ['boba', 'Boba tea squishy', 'boba', 'brown', 'uncommon'],
-  ['glitter-cube', 'Glitter gel mini cube', 'minicube', 'pink', 'uncommon'],
-  ['axolotl-bubble', 'Axolotl-in-a-bubble squishy', 'axolotl', 'pink', 'rare'],
-  ['jumbo-bread', 'Kiibru Colossal English Bread Squishy', 'bread', 'orange', 'rare'],
-  ['jumbo-butter', 'ButterSquishy Jumbo (14 oz)', 'butter', 'yellow', 'rare'],
-  ['gump-loop', 'Speks Gump Jumbo Loop', 'loop', 'purple', 'rare'],
-  ['jumbo-carrot', 'Toymendous Jumbo Squishy Carrot', 'carrot', 'orange', 'rare'],
-  ['peach', 'Peach squishy', 'peach', 'orange', 'rare'],
-  ['mochi-penguin', 'Christmas mochi penguin', 'penguin', 'sky', 'rare'],
-  ['jumbo-tree', 'VUNZEU Jumbo Christmas Tree Squishy', 'tree', 'green', 'legendary'],
-  ['jumbo-burger', 'YOYI Jumbo Hamburger Squishy', 'burger', 'orange', 'legendary'],
-  ['ice-cream', 'YOYI Jumbo Ice Cream Cone Squishy', 'icecream', 'pink', 'legendary']
+  ['five-below-glitter-dumpling', 'Glitter Dumpling Mystery Squishy (Five Below)', 'dumpling', 'white', 'common', 'gel', 5, 'shelf'],
+  ['slow-rise-butter', 'Slow-Rising Butter Squishy', 'butter', 'yellow', 'common', 'foam', 9, 'shelf'],
+  ['slow-rise-bread', 'Slow-Rising Bread Squishy', 'bread', 'brown', 'common', 'foam', 9, 'shelf'],
+  ['glitter-gummee-ball', 'Glittery Gummee Ball', 'ball', 'pink', 'common', 'gel', 8, 'shelf'],
+  ['bubble-sugar-cube', 'Bubble Sugar Squisher Cube', 'cube', 'sky', 'common', 'dough', 6, 'shelf'],
+  ['axolotl-glitter', 'Axolotl Glitter Squishy', 'axolotl', 'pink', 'common', 'gel', 7, 'shelf'],
+  ['kawaii-mochi-cat', 'Kawaii Mochi Cat Squishy', 'cat', 'lavender', 'common', 'foam', 3, 'shelf'],
+  ['spiky-smoosh-ball', 'Spiky Smoosh Ball', 'spiky', 'lime', 'common', 'gel', 5, 'shelf'],
+  ['smushmart-pickle', 'RMS SmushMart Giant 15" Pickle', 'pickle', 'green', 'uncommon', 'squeeze', 20, 'shelf'],
+  ['smushmart-banana', 'RMS SmushMart Giant Banana', 'banana', 'yellow', 'uncommon', 'squeeze', 20, 'shelf'],
+  ['crazy-fun-dumpling', 'RMS Crazy Fun Mystery Dumpling', 'dumpling', 'white', 'uncommon', 'gel', 10, 'shelf'],
+  ['taba-butter-stick', 'Taba Slow-Rising Butter Stick', 'butter', 'yellow', 'uncommon', 'silicone', 10, 'shelf'],
+  ['taba-mochi-cat', 'Taba Handmade Mochi Cat', 'cat', 'pink', 'uncommon', 'silicone', 15, 'shelf'],
+  ['taba-cat-paw', 'Taba Cat Paw', 'paw', 'pink', 'uncommon', 'silicone', 12, 'shelf'],
+  ['crazy-aarons-shortcake', "Crazy Aaron's Strawberry Shortcake SCENTsory Putty", 'tin', 'pink', 'uncommon', 'putty', 15, 'shelf'],
+  ['needoh-nice-cube', 'NeeDoh Nice Cube', 'cube', 'sky', 'rare', 'dough', 6, 'shelf'],
+  ['needoh-gumdrop', 'NeeDoh Gumdrop', 'gumdrop', 'pink', 'rare', 'gel', 8, 'shelf'],
+  ['needoh-dohnut', 'NeeDoh Dohnut', 'donut', 'pink', 'rare', 'gel', 8, 'shelf'],
+  ['needoh-groovy-glob', 'NeeDoh Groovy Glob', 'glob', 'teal', 'rare', 'gel', 6, 'shelf'],
+  ['needoh-gummy-bear', 'NeeDoh Gummy Bear', 'gummybear', 'orange', 'rare', 'gel', 8, 'shelf'],
+  ['needoh-nice-cream', 'NeeDoh Nice Cream', 'icecream', 'pink', 'rare', 'dough', 8, 'shelf'],
+  ['taba-crystal', 'Taba Crystal Clear Squishy', 'ball', 'sky', 'rare', 'silicone', 25, 'shelf'],
+  ['taba-flocked-bunny', 'Taba Flocked Bunny', 'bunny', 'lavender', 'rare', 'silicone', 20, 'shelf'],
+  ['needoh-ice-baby', 'NeeDoh Nice Ice Baby', 'minicube', 'sky', 'legendary', 'dough', 10, 'shelf'],
+  ['needoh-niceberg-glow', 'NeeDoh Glitter & Glow Niceberg', 'cube', 'lavender', 'legendary', 'gel', 15, 'shelf'],
+  ['needoh-jelly-squish', 'NeeDoh Jelly Squish', 'jelly', 'pink', 'legendary', 'gel', 10, 'shelf'],
+  ['crazy-fun-diamond', 'RMS Crazy Fun Mystery Dumpling, Diamond Edition', 'dumpling', 'sky', 'legendary', 'gel', 29, 'shelf'],
+  ['dope-cloud', 'Dope Slimes Cloud Slime', 'jar', 'lavender', 'common', 'slime', 10, 'slime'],
+  ['slime-charms', 'Slime Charms Pack', 'kit', 'pink', 'common', 'slime', 8, 'slime'],
+  ['slime-kit', 'Slime Supply Kit (glue + activator)', 'kit', 'sky', 'common', 'slime', 12, 'slime'],
+  ['peachybbies-butter', 'Peachybbies Butter Slime', 'jar', 'yellow', 'uncommon', 'slime', 14, 'slime'],
+  ['snoop-cloud', 'Snoop Slimes Cloud Slime', 'jar', 'sky', 'uncommon', 'slime', 15, 'slime'],
+  ['momo-glossy', 'Momo Slimes Glossy Slime', 'jar', 'pink', 'uncommon', 'slime', 15, 'slime'],
+  ['rodem-crunchy', 'Rodem Crunchy Slime', 'jar', 'teal', 'rare', 'slime', 16, 'slime'],
+  ['glitter-bingsu', 'Glitter Slimes Bingsu Slime', 'jar', 'purple', 'rare', 'slime', 16, 'slime']
 ];
+// Shop prices in coins. Only common and uncommon things are for sale: rare and legendary only come from mystery boxes.
+const SHOP_PRICE = { common: 25, uncommon: 45 };
+const TICKETS = [
+  ['song', 'Song break (one song, dancing allowed)', 8],
+  ['call', 'Call a friend for 10 min', 12],
+  ['youtube', 'YouTube for 15 min (pick the video first)', 15],
+  ['phone', 'Phone for 15 min', 20]
+];
+const BOX_COINS = 5, EGG_COINS = 3;
+
 
 // Recurring "possible homework". Edit the Template tab in the sheet to change it.
 const SCHOOL_NIGHT = [
@@ -101,14 +114,16 @@ function sheet_(ss, name, cols) {
 function ensure_() {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const props = PropertiesService.getScriptProperties();
-  if (props.getProperty('schema') === '2') return;
+  if (props.getProperty('schema') === '3') return;
   const t = ss.getSheetByName('Tasks');
   if (!t || t.getLastColumn() < T_COLS.length) sheet_(ss, 'Tasks', T_COLS);
   if (!ss.getSheetByName('Status')) sheet_(ss, 'Status', S_COLS);
   if (!ss.getSheetByName('Days')) sheet_(ss, 'Days', D_COLS);
-  if (!ss.getSheetByName('Squishies')) sheet_(ss, 'Squishies', Q_COLS);
+  const q = ss.getSheetByName('Squishies');
+  if (!q || q.getLastColumn() < Q_COLS.length) sheet_(ss, 'Squishies', Q_COLS);
+  if (!ss.getSheetByName('Ledger')) sheet_(ss, 'Ledger', L_COLS);
   if (!props.getProperty('rewardsStart')) props.setProperty('rewardsStart', ymd_(new Date()));
-  props.setProperty('schema', '2');
+  props.setProperty('schema', '3');
 }
 
 // ---------- helpers ----------
@@ -137,7 +152,7 @@ function readTasks_() {
     o.doneAt = str_(o.doneAt); o.proofText = str_(o.proofText); o.proofPhoto = str_(o.proofPhoto);
     o.addedBy = str_(o.addedBy); o.updatedAt = str_(o.updatedAt);
     o.color = COLORS.indexOf(str_(o.color)) >= 0 ? str_(o.color) : '';
-    o.due = isDate_(str_(o.due)) ? str_(o.due) : ''; o.pile = bool_(o.pile);
+    o.due = isDate_(str_(o.due)) ? str_(o.due) : ''; o.pile = bool_(o.pile); o.coins = Number(o.coins) || 0;
     return o;
   }).filter(o => o.id && o.date);
 }
@@ -218,7 +233,7 @@ function materialize_() {
       const cat = CATS.indexOf(String(r[4]).trim()) >= 0 ? String(r[4]).trim() : 'school';
       const dueIn = String(r[6] == null ? '' : r[6]).trim();
       const due = dueIn === '' || isNaN(Number(dueIn)) ? '' : addDays_(d, Number(dueIn));
-      rows.push([newId_(), d, String(r[1]), String(r[2]), String(r[3]), cat, String(Number(r[5]) || 0), false, '', '', '', false, 'template', now, '', due, false]);
+      rows.push([newId_(), d, String(r[1]), String(r[2]), String(r[3]), cat, String(Number(r[5]) || 0), false, '', '', '', false, 'template', now, '', due, false, 0]);
     });
   }
   if (rows.length) {
@@ -269,32 +284,42 @@ function tokens_(all, squishies) {
   return out;
 }
 function pick_(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
-function rollSquishy_(squishies) {
-  const owned = {}; squishies.forEach(q => { owned[q.name] = true; });
-  const left = CATALOG.filter(c => !owned[c[1]]);
+function catalogItem_(c) { return { itemId: c[0], name: c[1], kind: c[2], color: c[3], rarity: c[4], texture: c[5], price: c[6], cat: c[7] }; }
+function rollSquishy_(squishies, sparkle) {
+  const owned = {}; squishies.forEach(q => { owned[q.itemId || q.name] = true; owned[q.name] = true; });
+  const left = CATALOG.filter(c => !owned[c[0]] && !owned[c[1]]);
   if (!left.length) return null;
   const r = Math.random() * 100;
-  const want = r < 2 ? 'legendary' : r < 12 ? 'rare' : r < 40 ? 'uncommon' : 'common';
+  // a sparkle box (3 days in a row) has much better odds
+  const want = sparkle ? (r < 15 ? 'legendary' : r < 50 ? 'rare' : r < 80 ? 'uncommon' : 'common')
+    : (r < 2 ? 'legendary' : r < 12 ? 'rare' : r < 40 ? 'uncommon' : 'common');
   const order = ['legendary', 'rare', 'uncommon', 'common'];
-  // if she already has every one of that rarity, step to the nearest rarity that has some left
   const tries = [want].concat(order.filter(x => x !== want).sort((a, b) => Math.abs(order.indexOf(a) - order.indexOf(want)) - Math.abs(order.indexOf(b) - order.indexOf(want))));
   const pool = tries.map(x => left.filter(c => c[4] === x)).find(list => list.length);
-  const c = pick_(pool);
-  return { kind: c[2], color: c[3], name: c[1], rarity: c[4] };
+  return catalogItem_(pick_(pool));
 }
+function sparkle_(date) { const e = earned_(); return e.indexOf(addDays_(date, -1)) >= 0 && e.indexOf(addDays_(date, -2)) >= 0; }
+function coins_(all, ledger) {
+  return all.filter(t => t.done && !t.deleted).reduce((n, t) => n + (Number(t.coins) || 0), 0) + ledger.reduce((n, l) => n + (Number(l.amount) || 0), 0);
+}
+function taskCoins_(t, given) { const g = Number(given); return Math.max(0, Math.min(6, isNaN(g) ? 3 : Math.round(g))); }
 
 function snapshot_() {
   const today = ymd_(new Date());
   const since = addDays_(today, -14);
   const all = readTasks_();
   const squishies = readRows_('Squishies', Q_COLS);
+  const ledger = readRows_('Ledger', L_COLS);
   const tasks = all.filter(t => !t.deleted && (t.date >= since || t.pile || (t.due && t.due >= since)))
     .map(t => { const c = Object.assign({}, t); delete c._row; return c; });
   const bring = {};
   readRows_('Days', D_COLS).forEach(r => { if (r.date >= since && r.bring) bring[r.date] = r.bring; });
   return { ok: true, today: today, days: DAYS_AHEAD, tasks: tasks, status: readStatus_(), bring: bring,
-    squishies: squishies.map(s => { const c = Object.assign({}, s); delete c._row; return c; }),
+    squishies: squishies.filter(s => s.kind !== 'none').map(s => { const c = Object.assign({}, s); delete c._row; return c; }),
     boxes: boxDates_(all, squishies), tokens: tokens_(all, squishies), catalogSize: CATALOG.length,
+    catalog: CATALOG.map(catalogItem_), shopPrice: SHOP_PRICE, ticketTypes: TICKETS.map(x => ({ id: x[0], name: x[1], price: x[2] })),
+    coins: coins_(all, ledger), tickets: ledger.filter(l => l.kind === 'ticket' && l.used !== 'yes').map(l => ({ id: l.id, name: l.name, at: l.at })),
+    sparkle: boxDates_(all, squishies).map(sparkle_),
     chat: !!PropertiesService.getScriptProperties().getProperty('ANTHROPIC_API_KEY') };
 }
 
@@ -435,9 +460,13 @@ function doPost(e) {
         photoUrl = folder.createFile(Utilities.newBlob(Utilities.base64Decode(req.photo.data), 'image/jpeg', name)).getUrl();
       }
       if (needsProof && !photoUrl && text.length < 3) throw new Error('proof needed');
+      const st = readStatus_();
+      const hatched = !!(st && st.taskId === t.id);   // she pressed Start on this one: the egg hatches
       t.done = true; t.doneAt = new Date().toISOString(); t.proofText = text; t.proofPhoto = photoUrl; t.pile = false;
+      t.coins = taskCoins_(t, req.coins) + (hatched ? EGG_COINS : 0);
       writeTask_(t);
-      const st = readStatus_(); if (st && st.taskId === t.id) writeStatus_(null);
+      if (hatched) writeStatus_(null);
+      extra.coinsGained = t.coins; extra.hatched = hatched;
       if (cfg.noAlert.indexOf(t.cat) < 0) {
         const proof = !needsProof ? '' : photoUrl && text ? ' (photo + note)' : photoUrl ? ' (photo)' : ' (note only)';
         notify_('Emma finished: ' + t.title + ', ' + clock_() + proof + (text ? '\n"' + text.slice(0, 200) + '"' : '') + todayLine_());
@@ -445,7 +474,7 @@ function doPost(e) {
     } else if (a === 'uncomplete') {
       const t = find(req.id); if (!t) throw new Error('not found');
       const wasDone = t.done;
-      t.done = false; t.doneAt = '';
+      t.done = false; t.doneAt = ''; t.coins = 0;
       writeTask_(t);
       if (wasDone && settings_().noAlert.indexOf(t.cat) < 0) notify_('Heads up: Emma UNCHECKED ' + t.title + ', ' + clock_() + '. It was marked done before.');
     } else if (a === 'start') {
@@ -459,11 +488,20 @@ function doPost(e) {
     } else if (a === 'openBox') {
       const squishies = readRows_('Squishies', Q_COLS);
       if (boxDates_(all, squishies).indexOf(req.date) < 0) throw new Error('no box');
-      const s = rollSquishy_(squishies);
-      if (!s) throw new Error('all collected');
-      s.id = 'q' + newId_(); s.date = req.date; s.openedAt = new Date().toISOString(); s.realWeek = '';
-      writeRow_('Squishies', Q_COLS, s);
-      extra.opened = s.id;
+      const sparkle = sparkle_(req.date);
+      const s = rollSquishy_(squishies, sparkle);
+      const now = new Date().toISOString();
+      writeRow_('Ledger', L_COLS, { id: 'l' + newId_(), date: req.date, kind: 'box', amount: BOX_COINS, name: 'Mystery box', used: '', at: now });
+      extra.coinsGained = BOX_COINS; extra.sparkle = sparkle;
+      if (s) {
+        Object.assign(s, { id: 'q' + newId_(), date: req.date, openedAt: now, realWeek: '', pos: '', source: sparkle ? 'sparkle box' : 'box' });
+        writeRow_('Squishies', Q_COLS, s);
+        extra.opened = s.id;
+      } else {
+        // collected everything: still mark the box opened so it doesn't stay
+        writeRow_('Squishies', Q_COLS, { id: 'q' + newId_(), date: req.date, kind: 'none', name: '', rarity: '', openedAt: now, source: 'box' });
+        extra.allCollected = true;
+      }
     } else if (a === 'pickReal') {
       const squishies = readRows_('Squishies', Q_COLS);
       if (tokens_(all, squishies).indexOf(req.week) < 0) throw new Error('no token');
@@ -471,6 +509,34 @@ function doPost(e) {
       s.realWeek = req.week;
       writeRow_('Squishies', Q_COLS, s);
       notify_('Emma earned a real squishy for the week of ' + req.week + '! She picked: ' + s.name + '. Time to order it.');
+    } else if (a === 'buy') {
+      const ledger = readRows_('Ledger', L_COLS);
+      const squishies = readRows_('Squishies', Q_COLS);
+      const balance = coins_(all, ledger);
+      const now = new Date().toISOString(), today = ymd_(new Date());
+      if (req.ticket) {
+        const tk = TICKETS.find(x => x[0] === req.ticket); if (!tk) throw new Error('not found');
+        if (balance < tk[2]) throw new Error('not enough coins');
+        writeRow_('Ledger', L_COLS, { id: 'l' + newId_(), date: today, kind: 'ticket', amount: -tk[2], name: tk[1], used: '', at: now });
+      } else {
+        const c = CATALOG.find(x => x[0] === req.itemId); if (!c) throw new Error('not found');
+        const price = SHOP_PRICE[c[4]]; if (!price) throw new Error('boxes only');
+        if (squishies.some(q => q.itemId === c[0] || q.name === c[1])) throw new Error('already have it');
+        if (balance < price) throw new Error('not enough coins');
+        writeRow_('Ledger', L_COLS, { id: 'l' + newId_(), date: today, kind: 'shop', amount: -price, name: c[1], used: '', at: now });
+        const it = catalogItem_(c);
+        writeRow_('Squishies', Q_COLS, Object.assign(it, { id: 'q' + newId_(), date: today, openedAt: now, realWeek: '', pos: '', source: 'shop' }));
+        extra.bought = c[0];
+      }
+    } else if (a === 'useTicket') {
+      const ledger = readRows_('Ledger', L_COLS);
+      const l = ledger.find(x => x.id === req.id && x.kind === 'ticket'); if (!l) throw new Error('not found');
+      if (l.used === 'yes') throw new Error('already used');
+      l.used = 'yes'; writeRow_('Ledger', L_COLS, l);
+      notify_('Emma is using a ticket: ' + l.name + ', ' + clock_());
+    } else if (a === 'shelf') {
+      const squishies = readRows_('Squishies', Q_COLS);
+      (req.order || []).slice(0, 200).forEach((id, n) => { const q = squishies.find(x => x.id === id); if (q && String(q.pos) !== String(n + 1)) { q.pos = String(n + 1); writeRow_('Squishies', Q_COLS, q); } });
     } else {
       throw new Error('unknown action');
     }
@@ -566,7 +632,7 @@ function applyOps_(ops) {
       else if (o.op === 'delete') applyFields_(t, { deleted: true });
       else if (o.op === 'done') {
         if (t.cat === 'fixed') { notes.push(t.title + ' is a plan, nothing to check'); return; }
-        t.done = true; t.doneAt = new Date().toISOString(); t.pile = false; t.proofText = 'Checked off in the chat box'; done.push(t.id);
+        t.done = true; t.doneAt = new Date().toISOString(); t.pile = false; t.proofText = 'Checked off in the chat box'; t.coins = 3; done.push(t.id);
         if (cfg.noAlert.indexOf(t.cat) < 0) notify_('Emma finished (chat box): ' + t.title + ', ' + clock_());
       } else if (o.op === 'undone') { t.done = false; t.doneAt = ''; }
       writeTask_(t);
