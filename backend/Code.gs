@@ -553,10 +553,12 @@ function doPost(e) {
 function callClaude_(body) {
   const key = PropertiesService.getScriptProperties().getProperty('ANTHROPIC_API_KEY');
   if (!key) throw new Error('no key');
+  // keys that aren't tied to a workspace need the workspace ID too (Script property ANTHROPIC_WORKSPACE_ID)
+  const ws = (PropertiesService.getScriptProperties().getProperty('ANTHROPIC_WORKSPACE_ID') || '').trim();
   body.model = CHAT_MODEL;
   const r = UrlFetchApp.fetch('https://api.anthropic.com/v1/messages', {
     method: 'post', contentType: 'application/json', muteHttpExceptions: true,
-    headers: { 'x-api-key': key, 'anthropic-version': '2023-06-01' }, payload: JSON.stringify(body)
+    headers: Object.assign({ 'x-api-key': key, 'anthropic-version': '2023-06-01' }, ws ? { 'anthropic-workspace-id': ws } : {}), payload: JSON.stringify(body)
   });
   const j = JSON.parse(r.getContentText());
   if (r.getResponseCode() !== 200) throw new Error('chat error: ' + (j.error && j.error.message || r.getResponseCode()));
