@@ -283,9 +283,12 @@ function checkEarn_(all) {
   PropertiesService.getScriptProperties().setProperty('earned', JSON.stringify(list.slice(-120)));
   return true;
 }
+// Boxes Sofia gave back by hand (testing used up the real one). Always a full box with a shelf squishy in it.
+const GIFT_BOXES = ['2026-10-28'];
 function boxDates_(all, squishies) {
   const opened = {}; squishies.forEach(s => { opened[s.date] = true; });
-  return earned_().filter(d => !opened[d]);
+  const list = earned_(); GIFT_BOXES.forEach(d => { if (list.indexOf(d) < 0) list.push(d); });
+  return list.filter(d => !opened[d]).sort();
 }
 // Weeks (Monday to Sunday) where every day that had homework earned a box.
 function tokens_(all, squishies) {
@@ -309,9 +312,10 @@ function tokens_(all, squishies) {
 }
 function pick_(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
 function catalogItem_(c) { return { itemId: c[0], name: c[1], kind: c[2], color: c[3], rarity: c[4], texture: c[5], price: c[6], cat: c[7] }; }
-function rollSquishy_(squishies, sparkle, mini) {
+function rollSquishy_(squishies, sparkle, mini, shelfOnly) {
   const owned = {}; squishies.forEach(q => { owned[q.itemId || q.name] = true; owned[q.name] = true; });
-  const left = CATALOG.filter(c => !owned[c[0]] && !owned[c[1]]);
+  let left = CATALOG.filter(c => !owned[c[0]] && !owned[c[1]]);
+  if (shelfOnly && left.some(c => c[7] === 'shelf')) left = left.filter(c => c[7] === 'shelf');
   if (!left.length) return null;
   const r = Math.random() * 100;
   // a sparkle box (3 days in a row) has much better odds
@@ -361,7 +365,7 @@ function snapshot_() {
     catalog: CATALOG.map(catalogItem_), shopPrice: SHOP_PRICE, ticketTypes: TICKETS.map(x => ({ id: x[0], name: x[1], price: x[2] })),
     coins: coins_(all, ledger), shop: shopWeek_(squishies), tickets: ledger.filter(l => l.kind === 'ticket' && l.used !== 'yes').map(l => ({ id: l.id, name: l.name, at: l.at })),
     sparkle: boxDates_(all, squishies).map(d => sparkle_(d, all)),
-    boxInfo: boxDates_(all, squishies).map(d => Object.assign({ date: d, sparkle: sparkle_(d, all) }, quality_(all, d))),
+    boxInfo: boxDates_(all, squishies).map(d => Object.assign({ date: d, sparkle: sparkle_(d, all) }, quality_(all, d), GIFT_BOXES.indexOf(d) >= 0 ? { full: true, need: 0 } : {})),
     chat: !!PropertiesService.getScriptProperties().getProperty('ANTHROPIC_API_KEY') };
 }
 
@@ -530,8 +534,9 @@ function doPost(e) {
     } else if (a === 'openBox') {
       const squishies = readRows_('Squishies', Q_COLS);
       if (boxDates_(all, squishies).indexOf(req.date) < 0) throw new Error('no box');
-      const q = quality_(all, req.date), sparkle = sparkle_(req.date, all);
-      const s = rollSquishy_(squishies, sparkle, !q.full);
+      const q = quality_(all, req.date), sparkle = sparkle_(req.date, all), gift = GIFT_BOXES.indexOf(req.date) >= 0;
+      if (gift) q.full = true;
+      const s = rollSquishy_(squishies, sparkle, !q.full, gift);
       if (q.full) { const f = fullDays_(); if (f.indexOf(req.date) < 0) { f.push(req.date); PropertiesService.getScriptProperties().setProperty('fullDays', JSON.stringify(f.slice(-60))); } }
       extra.fullBox = q.full;
       const now = new Date().toISOString();
