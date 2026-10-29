@@ -285,20 +285,37 @@ function tokens_(all, squishies) {
 }
 function pick_(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
 function catalogItem_(c) { return { itemId: c[0], name: c[1], kind: c[2], color: c[3], rarity: c[4], texture: c[5], price: c[6], cat: c[7] }; }
-function rollSquishy_(squishies, sparkle) {
+function rollSquishy_(squishies, sparkle, mini) {
   const owned = {}; squishies.forEach(q => { owned[q.itemId || q.name] = true; owned[q.name] = true; });
   const left = CATALOG.filter(c => !owned[c[0]] && !owned[c[1]]);
   if (!left.length) return null;
   const r = Math.random() * 100;
   // a sparkle box (3 days in a row) has much better odds
-  const want = sparkle ? (r < 15 ? 'legendary' : r < 50 ? 'rare' : r < 80 ? 'uncommon' : 'common')
+  const want = mini ? 'common' : sparkle ? (r < 15 ? 'legendary' : r < 50 ? 'rare' : r < 80 ? 'uncommon' : 'common')
     : (r < 2 ? 'legendary' : r < 12 ? 'rare' : r < 40 ? 'uncommon' : 'common');
   const order = ['legendary', 'rare', 'uncommon', 'common'];
   const tries = [want].concat(order.filter(x => x !== want).sort((a, b) => Math.abs(order.indexOf(a) - order.indexOf(want)) - Math.abs(order.indexOf(b) - order.indexOf(want))));
   const pool = tries.map(x => left.filter(c => c[4] === x)).find(list => list.length);
   return catalogItem_(pick_(pool));
 }
-function sparkle_(date) { const e = earned_(); return e.indexOf(addDays_(date, -1)) >= 0 && e.indexOf(addDays_(date, -2)) >= 0; }
+// Anything moved off today still counts against today, the same as Not today (no dodging work by dragging it away).
+function movedList_(d) { try { return JSON.parse(PropertiesService.getScriptProperties().getProperty('moved-' + d) || '[]'); } catch (e) { return []; } }
+function noteMove_(t, newDate) {
+  const today = ymd_(new Date());
+  if (t.date !== today || newDate === today || t.done || !checkable_(t)) return;
+  const list = movedList_(today); if (list.indexOf(t.id) >= 0) return;
+  list.push(t.id); PropertiesService.getScriptProperties().setProperty('moved-' + today, JSON.stringify(list));
+}
+// Full box = she really checked off at least half of the day. Otherwise it's a mini box (common only, fewer coins).
+function quality_(all, d) {
+  const day = all.filter(t => checkable_(t) && t.cat !== 'flex' && t.date === d);   // dinner doesn't count as work
+  const movedOff = movedList_(d).filter(id => !day.some(t => t.id === id));
+  const total = day.length + movedOff.length, done = day.filter(t => t.done).length;
+  return { done: done, total: total, need: Math.max(0, Math.ceil(total / 2) - done), full: total > 0 && done * 2 >= total };
+}
+function fullDays_() { try { return JSON.parse(PropertiesService.getScriptProperties().getProperty('fullDays') || '[]'); } catch (e) { return []; } }
+// Sparkle box: this is a full box and the two days before were full boxes too.
+function sparkle_(date, all) { const f = fullDays_(); return quality_(all, date).full && f.indexOf(addDays_(date, -1)) >= 0 && f.indexOf(addDays_(date, -2)) >= 0; }
 function coins_(all, ledger) {
   return all.filter(t => t.done && !t.deleted).reduce((n, t) => n + (Number(t.coins) || 0), 0) + ledger.reduce((n, l) => n + (Number(l.amount) || 0), 0);
 }
@@ -319,7 +336,8 @@ function snapshot_() {
     boxes: boxDates_(all, squishies), tokens: tokens_(all, squishies), catalogSize: CATALOG.length,
     catalog: CATALOG.map(catalogItem_), shopPrice: SHOP_PRICE, ticketTypes: TICKETS.map(x => ({ id: x[0], name: x[1], price: x[2] })),
     coins: coins_(all, ledger), tickets: ledger.filter(l => l.kind === 'ticket' && l.used !== 'yes').map(l => ({ id: l.id, name: l.name, at: l.at })),
-    sparkle: boxDates_(all, squishies).map(sparkle_),
+    sparkle: boxDates_(all, squishies).map(d => sparkle_(d, all)),
+    boxInfo: boxDates_(all, squishies).map(d => Object.assign({ date: d, sparkle: sparkle_(d, all) }, quality_(all, d))),
     chat: !!PropertiesService.getScriptProperties().getProperty('ANTHROPIC_API_KEY') };
 }
 
@@ -388,7 +406,7 @@ function applyFields_(t, f) {
   if ('cat' in f && CATS.indexOf(f.cat) >= 0) t.cat = f.cat;
   if ('color' in f && (f.color === '' || COLORS.indexOf(f.color) >= 0)) t.color = f.color;
   if ('due' in f && (f.due === '' || isDate_(f.due))) t.due = f.due;
-  if ('date' in f && isDate_(f.date)) t.date = f.date;
+  if ('date' in f && isDate_(f.date)) { noteMove_(t, f.date); t.date = f.date; }
   if ('order' in f) t.order = String(Number(f.order) || 0);
   if ('pile' in f) t.pile = !!f.pile;
   if ('deleted' in f) t.deleted = !!f.deleted;
@@ -488,11 +506,14 @@ function doPost(e) {
     } else if (a === 'openBox') {
       const squishies = readRows_('Squishies', Q_COLS);
       if (boxDates_(all, squishies).indexOf(req.date) < 0) throw new Error('no box');
-      const sparkle = sparkle_(req.date);
-      const s = rollSquishy_(squishies, sparkle);
+      const q = quality_(all, req.date), sparkle = sparkle_(req.date, all);
+      const s = rollSquishy_(squishies, sparkle, !q.full);
+      const boxCoins = q.full ? BOX_COINS : 2;
+      if (q.full) { const f = fullDays_(); if (f.indexOf(req.date) < 0) { f.push(req.date); PropertiesService.getScriptProperties().setProperty('fullDays', JSON.stringify(f.slice(-60))); } }
+      extra.fullBox = q.full;
       const now = new Date().toISOString();
-      writeRow_('Ledger', L_COLS, { id: 'l' + newId_(), date: req.date, kind: 'box', amount: BOX_COINS, name: 'Mystery box', used: '', at: now });
-      extra.coinsGained = BOX_COINS; extra.sparkle = sparkle;
+      writeRow_('Ledger', L_COLS, { id: 'l' + newId_(), date: req.date, kind: 'box', amount: boxCoins, name: q.full ? 'Mystery box' : 'Mini box', used: '', at: now });
+      extra.coinsGained = boxCoins; extra.sparkle = sparkle;
       if (s) {
         Object.assign(s, { id: 'q' + newId_(), date: req.date, openedAt: now, realWeek: '', pos: '', source: sparkle ? 'sparkle box' : 'box' });
         writeRow_('Squishies', Q_COLS, s);

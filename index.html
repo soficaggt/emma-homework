@@ -678,7 +678,10 @@ function renderRewards() {
   const r = $("rewards"); r.textContent = "";
   (data.boxes || []).forEach(d => {
     const c = el("div", "reward"); c.innerHTML = GIFT;
-    const tx = el("div"); tx.append(el("b", null, "Mystery box unlocked!"), el("span", null, (d === data.today ? "You cleared today." : "You cleared " + dayName(d) + ".") + " Open it to get a squishy."));
+    const info = boxInfo(d);
+    const msg = info.full ? (info.sparkle ? "3 full days in a row: it's a Sparkle box!" : "You did the work. Open it for any squishy, even legendary, plus 5 coins.")
+      : "Mini box: commons only. Check off " + info.need + " more " + (info.need === 1 ? "thing" : "things") + " to make it a full box!";
+    const tx = el("div"); tx.append(el("b", null, info.full ? (info.sparkle ? "Sparkle box ready!" : "Full mystery box ready!") : "Mini box ready"), el("span", null, msg));
     c.append(tx, btn("btn purple", "Open it", () => openBox(d)));
     r.append(c);
   });
@@ -1169,7 +1172,8 @@ function celebrate(d) {
   celebrated[d] = true; boxDate = d;
   const st = $("boxstage"); st.className = "boxstage celebrate";
   $("boxTitle").textContent = "You're done!";
-  $("boxSub").textContent = "Congratulations! You finished everything for today.";
+  const info = boxInfo(d);
+  $("boxSub").textContent = info.full ? "Congratulations! You finished everything for today." : "Everything's handled for today. You skipped a lot, so it's a mini box. Check off " + info.need + " more to make it a full one!";
   $("realName").hidden = true; $("boxLater").hidden = false;
   $("boxov").hidden = false; glitter("rain"); $("toBox").focus();
 }
@@ -1178,9 +1182,9 @@ function openBox(d) {
   boxDate = d;
   const st = $("boxstage"); st.className = "boxstage";
   $("bx").innerHTML = BOX; $("pop").innerHTML = "";
-  const sp = (data.boxes || []).indexOf(d) >= 0 && (data.sparkle || [])[(data.boxes || []).indexOf(d)];
-  $("boxTitle").textContent = sp ? "Sparkle box!" : "Mystery box!";
-  $("boxSub").textContent = sp ? "3 days in a row! Way better chance of rare and legendary. Tap it!" : "Tap it to open!";
+  const info = boxInfo(d), sp = info.full && info.sparkle;
+  $("boxTitle").textContent = sp ? "Sparkle box!" : info.full ? "Mystery box!" : "Mini box";
+  $("boxSub").textContent = sp ? "3 full days in a row! Way better chance of rare and legendary. Tap it!" : info.full ? "Tap it to open!" : "Commons only. Check off " + info.need + " more first to make it a full box, or tap to open now.";
   st.classList.toggle("sparkle", !!sp);
   $("boxActions").hidden = true; $("realName").hidden = true; $("boxLater").hidden = false;
   $("boxov").hidden = false; $("bx").focus();
@@ -1209,6 +1213,7 @@ $("boxDone").addEventListener("click", () => { $("boxov").hidden = true; boxDate
 $("coinPill").addEventListener("click", () => { view = "shop"; render(); });
 $("boxLater").addEventListener("click", () => { $("boxov").hidden = true; render(); });
 function boxToast() {}
+function boxInfo(d) { return (data.boxInfo || []).find(x => x.date === d) || { full: true, need: 0, sparkle: false }; }
 // ---- coins: every task pays, more for the important ones ----
 const COIN_VALUE = { purple: 5, blue: 4, white: 3, pink: 3, orange: 2, yellow: 2, green: 2, gray: 1 };
 function coinsFor(t) { return t.cat === "flex" ? 1 : (COIN_VALUE[colorOf(t)] || 3); }
