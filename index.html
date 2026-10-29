@@ -1106,7 +1106,7 @@ function renderCollection(root) {
 const TEXTURE_NAME = { dough: "super solid dough", foam: "slow-rising foam", gel: "squishy gel", squeeze: "big soft squeeze", silicone: "handmade silicone", putty: "thinking putty", slime: "slime" };
 function showInfo(q) {
   const b = $("sqInfo"); if (!b) return; b.textContent = "";
-  b.append(el("b", null, q.name), el("span", "rar " + q.rarity, q.rarity), el("small", null, (TEXTURE_NAME[q.texture] || "squishy") + (q.price ? " \u00b7 about $" + q.price : "") + " \u00b7 " + (q.source === "shop" ? "bought " : "won ") + shortDate(q.date)));
+  b.append(el("b", null, q.name), el("span", "rar " + q.rarity, q.rarity), el("small", null, (TEXTURE_NAME[q.texture] || "squishy") + " \u00b7 " + (q.source === "shop" ? "bought " : "won ") + shortDate(q.date)));
 }
 function squish(node, texture) {
   const svg = node.querySelector("svg"); if (!svg) return;
@@ -1116,7 +1116,7 @@ function squish(node, texture) {
 }
 function pickReal(q) {
   $("confirmTitle").textContent = "Get " + q.name + " for real?";
-  $("confirmMsg").textContent = (Number(q.price) > 40 ? "This one is over $40, so Sofia will check first. " : "") + "Sofia gets a text to order it for you.";
+  $("confirmMsg").textContent = "Sofia gets a text to order it for you.";
   $("confirmYes").textContent = "Yes, this one";
   confirmFn = () => { const w = pickWeek; pickWeek = null; post({ action: "pickReal", id: q.id, week: w }).then(j => { if (j) { alertSofia("Emma earned a real one for the week of " + w + "! She picked: " + q.name + (q.price ? " (about $" + q.price + ")" : "") + ". Time to order it."); toastMsg("Yay!", q.name + " is coming for real."); } }); };
   $("confirmDlg").showModal();
