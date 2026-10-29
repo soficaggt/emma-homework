@@ -1347,7 +1347,7 @@ $("chatForm").addEventListener("submit", async e => {
   const j = await post({ action: "chat", message: text, history });
   wait.remove();
   if (!j) { addMsg("bot", "That didn't go through. Try again?"); return; }
-  addMsg("bot", j.reply || "Done!");
+  addMsg("bot", (j.reply || "Done!").replace(/\*\*(.+?)\*\*/g, "$1").replace(/^\s*[-*]\s+/gm, "\u2022 "));
   chatLog.push({ role: "bot", text: j.reply || "" });
   if ((j.completed || []).length) { confetti(); j.completed.forEach(finishedAlert); setTimeout(boxToast, 1500); }
 });
