@@ -58,17 +58,41 @@ const CATALOG = [
   ['snoop-cloud', 'Snoop Slimes Cloud Slime', 'jar', 'sky', 'uncommon', 'slime', 15, 'slime'],
   ['momo-glossy', 'Momo Slimes Glossy Slime', 'jar', 'pink', 'uncommon', 'slime', 15, 'slime'],
   ['rodem-crunchy', 'Rodem Crunchy Slime', 'jar', 'teal', 'rare', 'slime', 16, 'slime'],
-  ['glitter-bingsu', 'Glitter Slimes Bingsu Slime', 'jar', 'purple', 'rare', 'slime', 16, 'slime']
+  ['glitter-bingsu', 'Glitter Slimes Bingsu Slime', 'jar', 'purple', 'rare', 'slime', 16, 'slime'],
+  ['elmers-clear-glue', "Elmer's Clear School Glue (5 oz)", 'bottle', 'sky', 'common', 'slime', 3, 'slime'],
+  ['elmers-magical-liquid', "Elmer's Magical Liquid Slime Activator", 'bottle', 'teal', 'common', 'slime', 5, 'slime'],
+  ['elmers-glow-glue', "Elmer's Glow-in-the-Dark Glue", 'bottle', 'lime', 'uncommon', 'slime', 6, 'slime'],
+  ['elmers-color-glue', "Elmer's Pastel Color Glue", 'bottle', 'purple', 'common', 'slime', 4, 'slime'],
+  ['pigment-drops', 'Pastel Slime Pigment Drops', 'bottle', 'pink', 'common', 'slime', 6, 'slime'],
+  ['pastel-foam-beads', 'Pastel Foam Beads (floam)', 'beads', 'pink', 'common', 'slime', 5, 'slime'],
+  ['fishbowl-beads', 'Clear Fishbowl Beads', 'beads', 'sky', 'common', 'slime', 5, 'slime'],
+  ['slushee-beads', 'Slushee Beads', 'beads', 'lavender', 'common', 'slime', 6, 'slime'],
+  ['bingsu-beads', 'Bingsu Beads', 'beads', 'yellow', 'common', 'slime', 6, 'slime'],
+  ['crunchy-foam-cubes', 'Crunchy Foam Cubes', 'beads', 'teal', 'uncommon', 'slime', 6, 'slime'],
+  ['instant-snow', 'Instant Snow Powder (for cloud slime)', 'beads', 'white', 'common', 'slime', 6, 'slime'],
+  ['daiso-soft-clay', 'Daiso Soft Clay (for butter slime)', 'clay', 'yellow', 'uncommon', 'slime', 4, 'slime'],
+  ['iridescent-glitter', 'Iridescent Chunky Glitter', 'shaker', 'lavender', 'common', 'slime', 4, 'slime'],
+  ['holo-star-sprinkles', 'Holographic Star Sprinkles', 'shaker', 'yellow', 'common', 'slime', 4, 'slime'],
+  ['rainbow-sugar-sprinkles', 'Rainbow Sugar Sprinkles', 'shaker', 'pink', 'common', 'slime', 3, 'slime'],
+  ['fruit-slice-charms', 'Mini Fruit Slice Charms (polymer clay)', 'kit', 'orange', 'common', 'slime', 5, 'slime'],
+  ['kawaii-food-charms', 'Kawaii Food Resin Charms (20 pack)', 'kit', 'pink', 'common', 'slime', 7, 'slime'],
+  ['slime-storage-jars', 'Empty Slime Storage Jars (6 pack)', 'jar', 'white', 'common', 'slime', 6, 'slime']
 ];
 // Shop prices in coins. Only common and uncommon things are for sale: rare and legendary only come from mystery boxes.
 const SHOP_PRICE = { common: 25, uncommon: 45 };
-const TICKETS = [
-  ['song', 'Song break (one song, dancing allowed)', 8],
-  ['call', 'Call a friend for 10 min', 12],
-  ['youtube', 'YouTube for 15 min (pick the video first)', 15],
-  ['phone', 'Phone for 15 min', 20]
-];
-const BOX_COINS = 5, EGG_COINS = 3;
+const TICKETS = [];   // tickets are off for now
+const EGG_COINS = 1;   // +1 for pressing Start and finishing that same thing
+const SHOP_PER_WEEK = 6;   // shelf items and slime items each, new picks every Monday
+// This week's shop: a shuffle seeded by the week, so it's the same all week and new every Monday.
+function shopWeek_(squishies) {
+  const week = monday_(ymd_(new Date()));
+  const owned = {}; squishies.forEach(q => { owned[q.itemId || q.name] = true; owned[q.name] = true; });
+  let h = 0; for (const ch of week) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+  const rnd = () => { h = (h * 1664525 + 1013904223) >>> 0; return h / 4294967296; };
+  const pickFrom = cat => CATALOG.filter(c => c[7] === cat && SHOP_PRICE[c[4]]).map(c => [rnd(), c]).sort((a, b) => a[0] - b[0]).map(x => x[1])
+    .filter(c => !owned[c[0]] && !owned[c[1]]).slice(0, SHOP_PER_WEEK).map(c => c[0]);
+  return { week: week, items: pickFrom('shelf').concat(pickFrom('slime')) };
+}
 
 
 // Recurring "possible homework". Edit the Template tab in the sheet to change it.
@@ -335,7 +359,7 @@ function snapshot_() {
     squishies: squishies.filter(s => s.kind !== 'none').map(s => { const c = Object.assign({}, s); delete c._row; return c; }),
     boxes: boxDates_(all, squishies), tokens: tokens_(all, squishies), catalogSize: CATALOG.length,
     catalog: CATALOG.map(catalogItem_), shopPrice: SHOP_PRICE, ticketTypes: TICKETS.map(x => ({ id: x[0], name: x[1], price: x[2] })),
-    coins: coins_(all, ledger), tickets: ledger.filter(l => l.kind === 'ticket' && l.used !== 'yes').map(l => ({ id: l.id, name: l.name, at: l.at })),
+    coins: coins_(all, ledger), shop: shopWeek_(squishies), tickets: ledger.filter(l => l.kind === 'ticket' && l.used !== 'yes').map(l => ({ id: l.id, name: l.name, at: l.at })),
     sparkle: boxDates_(all, squishies).map(d => sparkle_(d, all)),
     boxInfo: boxDates_(all, squishies).map(d => Object.assign({ date: d, sparkle: sparkle_(d, all) }, quality_(all, d))),
     chat: !!PropertiesService.getScriptProperties().getProperty('ANTHROPIC_API_KEY') };
@@ -508,12 +532,10 @@ function doPost(e) {
       if (boxDates_(all, squishies).indexOf(req.date) < 0) throw new Error('no box');
       const q = quality_(all, req.date), sparkle = sparkle_(req.date, all);
       const s = rollSquishy_(squishies, sparkle, !q.full);
-      const boxCoins = q.full ? BOX_COINS : 2;
       if (q.full) { const f = fullDays_(); if (f.indexOf(req.date) < 0) { f.push(req.date); PropertiesService.getScriptProperties().setProperty('fullDays', JSON.stringify(f.slice(-60))); } }
       extra.fullBox = q.full;
       const now = new Date().toISOString();
-      writeRow_('Ledger', L_COLS, { id: 'l' + newId_(), date: req.date, kind: 'box', amount: boxCoins, name: q.full ? 'Mystery box' : 'Mini box', used: '', at: now });
-      extra.coinsGained = boxCoins; extra.sparkle = sparkle;
+      extra.sparkle = sparkle;
       if (s) {
         Object.assign(s, { id: 'q' + newId_(), date: req.date, openedAt: now, realWeek: '', pos: '', source: sparkle ? 'sparkle box' : 'box' });
         writeRow_('Squishies', Q_COLS, s);
@@ -542,6 +564,7 @@ function doPost(e) {
       } else {
         const c = CATALOG.find(x => x[0] === req.itemId); if (!c) throw new Error('not found');
         const price = SHOP_PRICE[c[4]]; if (!price) throw new Error('boxes only');
+        if (shopWeek_(squishies).items.indexOf(c[0]) < 0) throw new Error('not in the shop this week');
         if (squishies.some(q => q.itemId === c[0] || q.name === c[1])) throw new Error('already have it');
         if (balance < price) throw new Error('not enough coins');
         writeRow_('Ledger', L_COLS, { id: 'l' + newId_(), date: today, kind: 'shop', amount: -price, name: c[1], used: '', at: now });

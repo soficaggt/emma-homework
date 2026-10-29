@@ -683,7 +683,7 @@ function renderRewards() {
   (data.boxes || []).forEach(d => {
     const c = el("div", "reward"); c.innerHTML = GIFT;
     const info = boxInfo(d);
-    const msg = info.full ? (info.sparkle ? "3 full days in a row: it's a Sparkle box!" : "You did the work. Open it for any squishy, even legendary, plus 5 coins.")
+    const msg = info.full ? (info.sparkle ? "3 full days in a row: it's a Sparkle box!" : "You did the work. Open it for any squishy, even legendary.")
       : "Mini box: commons only. Check off " + info.need + " more " + (info.need === 1 ? "thing" : "things") + " to make it a full box!";
     const tx = el("div"); tx.append(el("b", null, info.full ? (info.sparkle ? "Sparkle box ready!" : "Full mystery box ready!") : "Mini box ready"), el("span", null, msg));
     c.append(tx, btn("btn purple", "Open it", () => openBox(d)));
@@ -949,10 +949,13 @@ function makeSortable(ul) {
 
 // ---- calendar ----
 function calItems(d) {
-  const rank = t => isPlan(t) || t.cat === "test" ? 0 : t.due === d && t.date !== d ? 1 : 2;
-  return live().filter(t => (t.date === d && !t.pile) || t.due === d).sort((a, b) => rank(a) - rank(b) || byOrder(a, b));
+  // Only due dates, plus classes/tests/activities on their day. Never dinner, never the day she plans to do it.
+  const rank = t => isPlan(t) || t.cat === "test" ? 0 : 1;
+  const event = t => isPlan(t) || (/\b(test|quiz|class)\b/i.test(t.title) && !/study|review|prep/i.test(t.title));
+  return live().filter(t => t.cat !== "flex" && (t.due === d || (event(t) && t.date === d && !t.pile)))
+    .sort((a, b) => rank(a) - rank(b) || byOrder(a, b));
 }
-function calLabel(t, d) { return (t.due === d && t.date !== d ? "Due: " : "") + t.title; }
+function calLabel(t, d) { return (t.due === d && !isPlan(t) && !/\b(test|quiz|class)\b/i.test(t.title) ? "Due: " : "") + t.title; }
 function renderCal(root) {
   if (!calMonth) calMonth = data.today.slice(0, 7);
   const box = el("section", "cal");
@@ -960,7 +963,7 @@ function renderCal(root) {
   const [y, m] = calMonth.split("-").map(Number);
   const shift = n => { const d = new Date(Date.UTC(y, m - 1 + n, 15)); calMonth = d.toISOString().slice(0, 7); render(); };
   head.append(btn("btn ghost", "‹", () => shift(-1), "Last month"), el("h2", null, new Date(Date.UTC(y, m - 1, 15)).toLocaleDateString("en-US", { month: "long", year: "numeric", timeZone: "UTC" })), btn("btn ghost", "›", () => shift(1), "Next month"));
-  box.append(head, el("p", "meta", "Everything planned each day, plus what\u2019s due. Tap a day to see it all or add a test."));
+  box.append(head, el("p", "meta", "When things are due, plus classes and tests. Tap a day to see it or add a test."));
   const g = el("div", "grid7");
   ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"].forEach(w => g.append(el("div", "wd", w)));
   const first = calMonth + "-01";
@@ -1053,6 +1056,10 @@ function squishySVG(kind, color) {
     case "jelly": b = `${[28,40,52,64,74].map((x, i) => `<path d="M${x} 58 q${i % 2 ? 6 : -6} 12 0 22 q${i % 2 ? -6 : 6} 8 0 14" fill="none" stroke="${S}" stroke-width="3.2" stroke-linecap="round"/>`).join("")}<path d="M16 60 Q16 22 50 22 Q84 22 84 60 Q50 68 16 60Z" fill="${F}" fill-opacity=".9" ${sw}/>${glit([[30,40,1.5],[44,32,1.2],[62,36,1.6],[70,50,1.2],[36,54,1.1]])}${shine(34, 34)}${face(46)}`; break;
     case "jar": b = `<rect x="22" y="16" width="56" height="14" rx="5" fill="#fff" stroke="#b9b1cf" stroke-width="2.6"/><path d="M24 30 H76 Q82 30 82 38 V82 Q82 90 74 90 H26 Q18 90 18 82 V38 Q18 30 24 30Z" fill="#ffffff" fill-opacity=".55" stroke="#b9b1cf" stroke-width="2.6"/><path d="M21 46 Q30 40 40 46 Q50 52 60 46 Q70 40 79 46 V82 Q79 87 74 87 H26 Q21 87 21 82Z" fill="${F}"/>${glit([[32,60,1.3],[66,72,1.5],[50,80,1.2]])}${shine(30, 40)}${face(64)}`; break;
     case "kit": b = `<rect x="22" y="30" width="30" height="56" rx="8" fill="#fff" stroke="#b9b1cf" stroke-width="2.6"/><rect x="31" y="18" width="12" height="14" rx="4" fill="${D}"/><rect x="26" y="48" width="22" height="16" rx="4" fill="${F}"/><rect x="54" y="52" width="28" height="34" rx="7" fill="${F}" ${sw}/><rect x="56" y="44" width="24" height="10" rx="4" fill="#fff" stroke="${S}" stroke-width="2"/>${glit([[62,64,1.4],[72,74,1.2],[66,80,1]])}${face(70, 68, .55)}`; break;
+    case "bottle": b = `<rect x="40" y="10" width="20" height="12" rx="4" fill="${D}"/><path d="M38 22 H62 L66 34 Q76 38 76 50 V82 Q76 90 68 90 H32 Q24 90 24 82 V50 Q24 38 34 34Z" fill="${F}" ${sw}/><rect x="31" y="52" width="38" height="22" rx="6" fill="#fff" opacity=".85"/>${shine(34, 42)}${face(63, 50, .55)}`; break;
+    case "beads": b = `<path d="M24 34 H76 L72 86 Q72 90 66 90 H34 Q28 90 28 86Z" fill="#fff" fill-opacity=".6" stroke="#b9b1cf" stroke-width="2.6"/><rect x="20" y="26" width="60" height="10" rx="4" fill="${D}"/>${[[38,78],[50,80],[62,78],[44,68],[56,68],[38,58],[50,58],[62,60],[44,48],[56,48]].map(([x,y])=>`<circle cx="${x}" cy="${y}" r="6" fill="${F}" stroke="${S}" stroke-width="1.6"/><circle cx="${x-2}" cy="${y-2}" r="1.6" fill="#fff"/>`).join("")}`; break;
+    case "clay": b = `<path d="M18 48 Q18 40 26 40 H74 Q82 40 82 48 V78 Q82 88 72 88 H28 Q18 88 18 78Z" fill="#fff" stroke="#b9b1cf" stroke-width="2.6"/><path d="M24 54 Q34 42 50 50 Q66 42 76 54 V78 Q76 82 72 82 H28 Q24 82 24 78Z" fill="${F}"/><rect x="16" y="32" width="68" height="10" rx="5" fill="${D}"/>${face(64, 62, .6)}`; break;
+    case "shaker": b = `<rect x="32" y="12" width="36" height="14" rx="5" fill="#fff" stroke="#b9b1cf" stroke-width="2.6"/>${[40,50,60].map(x=>`<circle cx="${x}" cy="19" r="2" fill="#b9b1cf"/>`).join("")}<rect x="30" y="26" width="40" height="64" rx="10" fill="#fff" fill-opacity=".6" stroke="#b9b1cf" stroke-width="2.6"/><rect x="33" y="50" width="34" height="37" rx="8" fill="${F}"/>${glit([[40,58,1.6],[56,62,1.4],[46,72,1.8],[60,78,1.4],[40,82,1.2],[52,54,1.2]])}`; break;
     default: b = `${blob()}${face(62)}`;
   }
   return `<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" role="img" aria-hidden="true"><ellipse cx="50" cy="92" rx="28" ry="4" fill="#000" opacity=".08"/>${b}</svg>`;
@@ -1121,28 +1128,12 @@ function renderShop(root) {
   const coins = data.coins || 0;
   const head = el("div", "card shophead");
   head.innerHTML = '<span class="coin big"></span>';
-  head.append(el("b", null, coins + " coins"), el("small", null, "Mystery boxes are free when you finish your day, and they give 5 coins too. Rare and legendary squishies only come from boxes, never the shop."));
+  head.append(el("b", null, coins + " coins"), el("small", null, "New things every Monday! Mystery boxes are free when you finish your day, and rare and legendary squishies only come from boxes."));
   wrap.append(head);
-  const mine = data.tickets || [];
-  if (mine.length) {
-    const box = el("div", "card"); box.append(el("h3", "shelfh", "My tickets"));
-    mine.forEach(tk => {
-      const r = el("div", "shoprow"); r.append(el("span", "ticket", "\u2605"), el("span", "sname", tk.name));
-      r.append(btn("btn purple", "Use it", () => {
-        $("confirmTitle").textContent = "Use " + tk.name + "?"; $("confirmMsg").textContent = "Sofia will get a text that you're using it."; $("confirmYes").textContent = "Use it";
-        confirmFn = () => post({ action: "useTicket", id: tk.id }).then(j => { if (j) { alertSofia("Emma is using a ticket: " + tk.name + ", " + nowClock()); toastMsg("Enjoy!", tk.name); } });
-        $("confirmDlg").showModal();
-      }));
-      box.append(r);
-    });
-    wrap.append(box);
-  }
-  const tix = el("div", "card"); tix.append(el("h3", "shelfh", "Tickets"));
-  (data.ticketTypes || []).forEach(tt => tix.append(shopRow(el("span", "ticket", "\u2605"), tt.name, tt.price, () => post({ action: "buy", ticket: tt.id }).then(j => { if (j) toastMsg("Got it!", tt.name + " is in your tickets."); }))));
-  wrap.append(tix);
   const owned = new Set((data.squishies || []).map(q => q.itemId || q.name));
   [["shelf", "For your shelf"], ["slime", "For the slime corner"]].forEach(([cat, label]) => {
-    const items = (data.catalog || []).filter(c => c.cat === cat && (data.shopPrice || {})[c.rarity] && !owned.has(c.itemId) && !owned.has(c.name));
+    const week = new Set(((data.shop || {}).items) || []);
+    const items = (data.catalog || []).filter(c => c.cat === cat && (data.shopPrice || {})[c.rarity] && week.has(c.itemId) && !owned.has(c.itemId) && !owned.has(c.name));
     if (!items.length) return;
     const box = el("div", "card"); box.append(el("h3", "shelfh", label));
     const g = el("div", "shopgrid");
@@ -1201,15 +1192,14 @@ $("bx").addEventListener("click", async () => {
   const [j] = await Promise.all([post({ action: "openBox", date: boxDate }), new Promise(r => setTimeout(r, 1100))]);
   boxBusy = false; st.classList.remove("shake");
   if (!j) { $("boxov").hidden = true; return; }
-  coinFly(j.coinsGained, $("bx"));
-  if (!j.opened) { $("boxTitle").textContent = "You've collected them all!"; $("boxSub").textContent = "Every squishy is on your shelf. +" + (j.coinsGained || 0) + " coins!"; $("boxActions").hidden = false; return; }
+  if (!j.opened) { $("boxTitle").textContent = "You've collected them all!"; $("boxSub").textContent = "Every squishy is on your shelf!"; $("boxActions").hidden = false; return; }
   const sq = (j.squishies || []).find(x => x.id === j.opened);
   st.classList.add("open"); glitter("burst");
   setTimeout(() => {
     $("pop").innerHTML = squishySVG(sq.kind, sq.color);
     st.classList.add("revealed");
     $("boxTitle").textContent = sq.rarity === "legendary" ? "LEGENDARY!" : sq.rarity === "rare" ? "A rare one!" : sq.rarity === "uncommon" ? "Ooh, uncommon!" : "So squishy!";
-    $("boxSub").textContent = "You got: " + sq.name + "  \u00b7  +" + (j.coinsGained || 0) + " coins";
+    $("boxSub").textContent = "You got: " + sq.name;
     $("boxActions").hidden = false;
   }, 380);
 });
@@ -1270,7 +1260,7 @@ function sparkleAt(x, y) {
 function rewardFx(j, from) {
   if (!j) return;
   coinFly(j.coinsGained, from);
-  if (j.hatched) setTimeout(() => toastMsg("Your egg hatched!", "+3 bonus coins for starting it with the Start button."), 1600);
+  if (j.hatched) setTimeout(() => toastMsg("Your egg hatched!", "+1 bonus coin for using the Start button."), 1600);
 }
 function maybeCelebrate(j) { if (j && j.justEarned && j.justEarned === j.today && !celebrated[j.justEarned]) setTimeout(() => celebrate(j.justEarned), 1200); }
 
@@ -1312,7 +1302,7 @@ function openStart() {
     if (!list.length) return;
     pk.append(el("div", "grp", name));
     list.sort(byOrder).forEach(t => {
-      pk.append(paint(btn("", t.title, () => { dlg.close(); data.status = { taskId: t.id, title: t.title, startedAt: new Date().toISOString() }; render(); post({ action: "start", id: t.id }); alertSofia("Emma started: " + t.title + ", " + nowClock()); toastMsg("You got an egg!", "Finish " + t.title + " and it hatches into 3 bonus coins."); }), t));
+      pk.append(paint(btn("", t.title, () => { dlg.close(); data.status = { taskId: t.id, title: t.title, startedAt: new Date().toISOString() }; render(); post({ action: "start", id: t.id }); alertSofia("Emma started: " + t.title + ", " + nowClock()); toastMsg("You got an egg!", "Finish " + t.title + " this time and it hatches into a bonus coin."); }), t));
     });
   });
   if (!pk.children.length) pk.append(el("p", null, "Nothing left to start today."));
