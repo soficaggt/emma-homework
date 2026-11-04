@@ -716,7 +716,8 @@ function rangeBar() {
 function renderDays(root) {
   const lay = el("div", "layout"), col = el("div", "col");
   const today = data.today, end = addDays(today, Math.min(range, data.days) - 1);
-  const all = live();
+  // A test or due marker (a plan whose due date is its own day) lives on the due calendar only, never the daily list.
+  const all = live().filter(t => !(isPlan(t) && t.due && t.due === t.date));
   const earlier = all.filter(t => t.date < today && !t.done && !t.pile && !noProof(t)).sort((a, b) => a.date.localeCompare(b.date) || byOrder(a, b));
   if (earlier.length) col.append(daySection({ title: "Still to do from earlier", earlier: true }, earlier));
   for (let d = today; d <= end; d = addDays(d, 1)) {
