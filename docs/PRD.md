@@ -53,7 +53,7 @@ Today it is really just Emma and Sofia, plus Annat through a special link. The n
 |---|---|---|---|
 | Jedi (student) | Emma, later more students | Opens the site on her iPad, no login | Own username and password, stays signed in. Sees only her own work |
 | Yoda (coach) | Sofia | Same page as Emma, plus a key that unlocks the proof board | Own login with two-factor. Home screen is the proof board for every student |
-| Parent | Annat, later other parents | Gets the special proof link | Own login, read-only, only their own child |
+| Parent | Annat, later other parents | Gets the special proof link | Own login, only their own child, read-only except a few settings (prize budget and buying method, consents, their own alerts) |
 | Automations | Claude scheduled tasks in Sofia's browser (RSM daily, Schoology and Pearson on request) | Use the same Google link as everyone | A connection per platform per student, run by an always-on agent (see 6d), each with its own protected key tied to one student |
 
 ## 3. Every screen and feature today
@@ -175,13 +175,13 @@ Everyone signs in through either door. Supabase holds the logins, data and photo
 - Emma's theme looks the same as today: kawaii, same colors, fonts, squishy drawings and celebration. Other students get their own look (6c)
 
 ### Logins: username and password, then it remembers her
-- Sofia creates each account herself in the Yoda screen. There's no public sign-up
-- Emma signs in once with a username (like "emma") and a password. The app keeps her signed in through Apple's secure Keychain, so she never types it again unless she taps Sign out or Sofia removes access
+- An adult (Sofia or a parent) creates the account and a one-time invite. There's no public sign-up. Emma then makes her own username and password and saves them wherever she wants. The iPad's password autofill is the easiest. Adults never see or set her password.
+- Emma signs in once with a username and password that she chooses herself. The app keeps her signed in through Apple's secure Keychain, so she never types it again unless she taps Sign out or Sofia removes access
 - On the website, "Remember me" keeps her signed in on that browser
 - Optional: Face ID to reopen the app
 - Sofia's login adds two-factor (an authenticator app). Parents get their own username and password
 - Built on Supabase Auth (never a homemade login). Passwords are never stored in plain text, and too many wrong tries locks the account for a bit
-- Sofia can reset a password or sign someone out of every device from the Yoda screen
+- Sofia or a parent can send a reset link or sign someone out of every device from the Yoda screen. A reset gives the student a one-time link to choose a new password, so adults still never see or set it
 - In-app Delete account button, which Apple requires for apps with logins
 
 ### Notifications live in the app
@@ -196,7 +196,7 @@ Everyone signs in through either door. Supabase holds the logins, data and photo
 
 ### Who can see what, enforced by the database
 - A student only ever reaches her own tasks, proof, coins and collection
-- A parent can only read their own child's proof and progress
+- A parent can read their own child's proof, progress and tutor conversations, and can change only a short list of settings for their own child: the weekly real prize budget and how it gets bought, consents, and their own alert choices
 - Only Sofia sees all students and edits templates, rewards and settings
 - This holds even if someone opens the code and tries to call the database directly (Supabase Row Level Security)
 
@@ -246,12 +246,12 @@ The old Helper does not work today and only reacts when someone types. The new H
 
 - **Always replanning.** It reschedules on its own whenever something changes, not only when someone chats: a task is finished, skipped, moved or runs late; new homework arrives from a platform; a due date or test is added; the day ends with work left over; Emma starts a task and takes much longer than planned.
 - **It knows the situation.** It reads the student's tasks, due dates, how long things really take her (learned from Start and finish times), classes and Plans, the Not today pile, and the day's progress.
-- **Guardrails, set per student by Sofia.** Three levels: suggest only (a card Emma or Sofia taps to accept), apply small moves and tell Sofia, or apply everything. Default is suggest. It never deletes tasks, never checks things off without proof, never counts a moved task as done, and never breaks the "moving work off today counts as skipping" rule. Every change is written to a history with who or what made it, and any change can be undone with one tap.
+- **Guardrails, set per student by Sofia.** Three levels: suggest only (a card Emma or Sofia taps to accept), apply small moves and tell Emma and Sofia, or apply everything and tell them. Default is suggest, and in every case Emma sees the change (6i). It never deletes tasks, never checks things off without proof, never counts a moved task as done, and never breaks the "moving work off today counts as skipping" rule. Every change is written to a history with who or what made it, and any change can be undone with one tap.
 - **Chat stays.** Emma (if allowed) and Sofia can still type "I did Latin, move Hobbit to Thursday". Replies are one or two short sentences, no emojis. Cap per user per day (80 to start), enforced by the server.
 - **How it runs.** A server function calls the Anthropic API. It runs on events (task changed, new homework pulled) and on a schedule (morning, after school, evening, end of day), so no phone or browser has to be open. The key never leaves the server.
 - **It must actually work.** Before building, find out why today's chat fails (missing key or workspace ID in the script properties is the likely cause) so the cause is not carried over.
 - **Cost control.** Each student has a daily call budget. Replans only run when something changed.
-- **Launch rule (App Store).** Chat with Emma is off until Sofia and a parent turn it on (PRD section 7). The background replanner works on task data only and sends no child-typed text to anyone else.
+- **Launch rule (App Store).** Chat with Emma is on, once a parent's consent is recorded in the app (PRD section 7). The background replanner works on task data only and sends no child-typed text to anyone else.
 - **Big assignments and projects** get their own planning conversation that breaks them down across her week (6g). The planner is one of three helpers with separate jobs (6h).
 - **She stays in her own plan.** Replans are shown to Emma and, by default, only suggested. Nothing in her week changes silently (6i).
 
@@ -321,7 +321,7 @@ Open question: the user referred to a "personal agent" product. The requirement 
 ADHD does not look the same in every person. During setup, each student gets a short profile of how it shows up for her, so the app can fit her instead of using one default for everyone. It is a support setting, not a diagnosis, and it never produces a severity score.
 
 ### Who fills it in
-- At launch: Sofia or a parent, together with the student, using plain questions in the app. The student gets a kid-friendly version she can read and edit.
+- **Entirely optional.** Nobody has to fill it in at launch. Without a profile the app uses safe general ADHD defaults (the eleven principles in 1a). The setup interview offers the questions with a clear "skip for now". Anyone can fill it in later: Sofia or a parent with the student, using plain questions in the app. The student gets a kid-friendly version she can read and edit.
 - **The clinician form (planned, after launch; the question list is designed now so the form can be made from it).** One standard form containing every question the app needs, designed so a psychiatrist or therapist can fill it in. It comes as a fillable PDF and a printable one. A parent can upload a completed form at any time, now or months later, to personalize or re-personalize the app.
   - The app reads the answers straight from the form's fields, so no AI has to read a clinical document. A handwritten or scanned form is typed in by the parent, or read by AI only if the parent consents.
   - After an upload, the parent sees what the app understood, in plain words, and approves it before anything changes. Every upload is a new version; the parent can see what changed and go back.
@@ -435,21 +435,21 @@ A project, a paper, a presentation, a test to study for, a long reading, or anyt
 
 There are three helpers, each with its own job, its own permissions and its own server function. They are separate on purpose: the helper that explains cannot change rewards, and the helper that judges proof cannot plan the week.
 
-| Job | Emma's choice | What it does | What it cannot do |
+| Job | Character | What it does | What it cannot do |
 |---|---|---|---|
-| Planner | BB-8 | Builds and changes the week, runs the intake when she adds a task, plans big assignments (6g), replans (6b) | Check things off or confirm rewards |
-| Tutor | C-3PO | Explains and discusses freely, never gives the final answer, shows one curated video at a time | Change the plan or any reward, or mark anything done |
-| Checker | R2-D2 | Asks the proof questions, judges the proof (6f), flags things for adults | Change the plan or decide rewards (the server decides) |
+| Planner | A round, rolling droid | Builds and changes the week, runs the intake when she adds a task, plans big assignments (6g), replans (6b) | Check things off or confirm rewards |
+| Tutor | A polite, gold-toned droid | Explains and discusses freely, never gives the final answer, shows one curated video at a time | Change the plan or any reward, or mark anything done |
+| Checker | A small, resourceful droid | Asks the proof questions, judges the proof (6f), flags things for adults | Change the plan or decide rewards (the server decides) |
 
-Why these fit (my read): BB-8 is cheerful and always rolling ahead, a good planner. C-3PO is polite and fluent at explaining things, a good tutor. R2-D2 is resourceful and gets to the truth, a good checker.
+Emma's inspiration was BB-8 (a cheerful planner), C-3PO (a polite, fluent explainer) and R2-D2 (a resourceful checker). Those traits are kept in original characters.
 
 ### Character notes
 - Borrow the cheerful, polite and resourceful parts. Do not borrow C-3PO's worrying ("we're doomed"): the ADHD design says protect feelings (1a, principle 7).
 - The checker can beep for fun, but every result also comes with clear words. The checker never accuses.
 - The three jobs are fixed. The names and looks are theme data (6c), so another student can have different characters.
 
-### Star Wars and the App Store
-These are trademarked characters. Using the official names and art in an App Store app risks rejection or a takedown, and the characters would appear in store screenshots. This is not legal advice. Options: (a) original droid characters in the same spirit, such as a round rolling planner, a polite gold-toned tutor and a small checker, for the store build, with Emma free to rename them in her private theme; or (b) the official names and art everywhere, accepting the risk. Until this is decided (see the open questions in docs/PROGRESS.md), build with placeholder characters and do not commit official art.
+### Names and looks are each student's own (decided Nov 12)
+The app ships original droid characters in the same spirit. Each student can give the three helpers her own names and change their looks (colors, shapes, faces) from a set of original parts. Official Star Wars names and art are not used, because of App Store and trademark risk (not legal advice). A name a student types in her own private theme is her own text. Until the original art exists, the build uses placeholders.
 
 ### The tutor
 - **How it talks:** like talking to normal Claude, as if every message ended with "but don't give the answer". She can ask it anything about her work. It can explain a concept, show how a method works, work through a similar example with different numbers, ask her questions, check her thinking, and say whether her attempt looks right and point to the step to recheck. It never gives the final answer to her actual problem, and it never writes her work for her. For writing, it gives feedback on what she wrote.
@@ -482,6 +482,24 @@ For a child with ADHD both sides matter. She needs the outside record, because h
 - It reinforces principle 9: Emma and the adults share the plan.
 - Set up as measurements: whether she starts without a prompt, and whether the walk-through and start plans help. Sofia reviews, and anything that does not help is dropped.
 
+## 6j. Real prizes: how they get bought (added Nov 12)
+
+- **The budget belongs to the parent.** A parent sets the weekly real prize budget for their child. For Emma it is $40 today, and it may be lower later. The child, Sofia and the app cannot change it. The price including shipping and tax must fit within it. Whether any exception above it is allowed (the old "legendary exception") is the parent's choice, and the default is none.
+- **The parent chooses how it gets bought,** per child:
+  1. **Alert only (how it works today):** an adult gets an alert and orders it.
+  2. **One-tap checkout:** the app prepares the order (the item in the retailer's cart) and the parent finishes it in the retailer's own page or app, behind a parent gate, with their own saved card and address.
+  3. **Automatic:** once the week's rewards are confirmed, the app orders what the child earned and it ships to the home.
+- **Automatic buying: what is possible, and the limits.** There is no universal way to buy from any store automatically. It depends on the retailer. A few offer proper ordering tools, and many do not. Automating a normal shopping site by logging in and clicking is often against its terms and breaks easily. So automatic buying is offered only for retailers where a proper ordering method has been tested, item by item, and every other item falls back to one-tap checkout. Squishy and slime shops vary a lot, so this is checked in step 9 before it is promised. This is not legal advice.
+- **Safeguards, always:**
+  - The parent opts in, per child, and can turn it off at any time.
+  - The parent's budget is a hard cap. If the price, shipping or tax would go over it, the order stops.
+  - Only items that Sofia and the parent approved in the catalog can be ordered.
+  - An order is placed only after the week's rewards are confirmed (after the 24-hour review window in 6f), and after a short delay during which the parent can cancel. The parent gets a notice when an order is placed.
+  - Emma cannot trigger a purchase. The server does, from an earned week.
+  - Every order is logged (item, price, retailer, status), and the parent and Sofia can read the log.
+- **No stored card or address.** The app never stores a card number or a home address. The payment method and the shipping address stay in the parent's own retailer account or payment provider. This keeps the app within "collect only what the app needs" (section 6) and the App Store's kids rules. Physical goods are outside Apple's in-app purchase system, and anything to buy sits behind a parent gate.
+- **Suggested first release:** alert only and one-tap checkout. Add automatic buying after at least one retailer's ordering method has been tested.
+
 ## 7. App Store reality check
 
 The App Store is doable. The catch is that an app for kids gets Apple's strictest rules, so the app has to be built for them from the start.
@@ -494,7 +512,7 @@ The App Store is doable. The catch is that an app for kids gets Apple's strictes
   - No third-party ads or analytics, and no sending kids' data to third parties
   - Links out of the app and anything to buy need a parent gate, like a question only an adult can answer. This matters for "order this squishy" links
   - Only collect what the app needs
-  - The Helper chat is the risky part: it sends Emma's messages to Anthropic. Safest plan for launch: the chat is for Sofia only, or a parent turns it on with consent. Decide before submitting
+  - The Helper chat is the risky part: it sends Emma's messages to Anthropic. Decided Nov 12: the chats (planner and tutor) are on for Emma, and a parent's consent is recorded in the app first, because her messages go to an AI provider. No student's chat turns on without a parent's consent
 - **Privacy policy:** Apple requires a privacy policy link and "privacy nutrition labels" saying what data the app collects
 - **Review:** every update goes through Apple's review, usually a day or two. Small fixes to the website go live instantly
 - **Parent consent:** before students who aren't Emma, get each parent's written OK on what's collected and how to delete it. A US kids' privacy law (COPPA) covers apps for under-13s. This isn't legal advice, so read up before it grows

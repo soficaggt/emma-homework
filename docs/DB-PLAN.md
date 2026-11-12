@@ -13,7 +13,7 @@ Every login is a Supabase Auth account. Each account has one row saying its role
 ## The tables (what gets stored)
 
 **People**
-- `profiles`: one per login. Role (coach, student, parent), first name, username, time zone.
+- `profiles`: one per login. Role (coach, student, parent), first name, username, time zone. The student chooses her own username and password from an invite an adult creates. Supabase Auth expects an email, so the username is turned into an internal address behind the scenes and no real email is needed for a child (to be confirmed in step 3). Adults never see or set her password, and a reset sends her a one-time link.
 - `student_links`: which coach coaches which student, and which parent(s) belong to which student. This one table drives most permission rules.
 
 **Homework**
@@ -65,6 +65,12 @@ Every login is a Supabase Auth account. Each account has one row saying its role
 - `tasks` gains `start_plan`: her own if-then start plan in her words ("After dinner, I will start Latin at the kitchen table").
 - `walkthroughs`: student, date, and only whether she did it or skipped it. No recall score is stored or shown.
 
+**Real prizes (added Nov 12)**
+- `prize_settings`: per student: the weekly budget (set by the parent, $40 for Emma today), the buying method (alert only, one-tap checkout, automatic), whether any exception above the budget is allowed (default none), the cancel delay, and who set it and when. Parents can write this row for their own child.
+- `prize_orders`: student, week, item, price including shipping and tax, retailer, status (suggested, awaiting parent, placed, cancelled, shipped, delivered, failed), placed-at, cancel-until, and the retailer's order reference. There are no card or address columns anywhere.
+- `catalog_items` gains `retailer` and `purchase_method` (link only, prefilled cart, automatic order), so the app knows which items can be bought which way.
+- Rules: a student can never write these tables or trigger an order. Only a server function places an order, and only for an earned, confirmed week, within the cap, after the cancel delay, for an approved item.
+
 **Integrity (added Nov 12)**
 - `tasks` gains `reward_status` (provisional, confirmed, reversed), `review_status` (unreviewed, looks_good, needs_more, not_done), `reviewed_by`, `reviewed_at`, `review_note`, `proof_questions` (the questions generated for the task), `proof_answers`, `value_set_by` (template, coach, Helper, platform, AI intake, adult), `confirmed_at`, and `final_at` (24 hours after she finishes). `source` (template, coach, Helper, platform, or student) already exists and drives which tasks are trusted.
 - `proof_checks`: task, kind (rules or AI), result (pass, needs more, unclear), the reason in plain words, and when.
@@ -97,7 +103,7 @@ Every login is a Supabase Auth account. Each account has one row saying its role
 Every table has security turned on with nothing allowed by default. Then:
 
 1. A student can read and add rows for herself only. She can edit her own task titles, notes, dates, colors, order, and the Not today pile. She cannot write her own coins, her verified status, her box results, or anything in another student's data.
-2. A parent can read, never write, the rows for their own child's tasks, proof and progress. A parent cannot see the Helper chat, the catalog editor, or other students.
+2. A parent can read their own child's tasks, proof, progress and tutor conversations. A parent can write only a short list of settings for their own child: the weekly real prize budget and how it gets bought, consents, and their own alert choices. A parent cannot see the catalog editor or other students.
 3. The coach can read and write everything for the students she coaches.
 4. Anything that must not be forgeable goes through a server-side function instead of a direct table write:
    - Completing a task (sets done, time, coins, egg bonus, alert, and checks proof is present).
