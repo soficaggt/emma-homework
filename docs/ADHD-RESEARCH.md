@@ -52,6 +52,16 @@ Organizational Skills Training (OST) was tested in randomized trials for grades 
 Large deficits in the central executive part of working memory are reported in school-age children with ADHD (PubMed 39291373, excerpt).
 - App meaning: one instruction at a time, written cues, short lists, no multi-step instructions held in her head.
 
+### 9. Handing the planning to an AI can weaken memory for the plan (Moderate; adults and students, not children with ADHD)
+- Studies of cognitive offloading find it can boost immediate performance and ease pressure on working memory, but can impair memory for the offloaded content. A 2026 neuroimaging study reports that offloading weakens the neural representation of to-be-remembered information. A 2026 paper on student and AI collaboration says offloading may impair memory, problem solving and independent reasoning over time. Another 2026 paper notes that reminders improve accuracy and confidence (all excerpts).
+- This matches Sofia's own experience: when an AI schedules everything into a calendar, she forgets more, because she did not write it down or think it through. The "generation effect" (people remember what they produce themselves better than what they are handed) is a well-known idea in cognitive psychology, but I did not source it in this scan.
+- App meaning: the app holds the record (working memory is weak, finding 8) but keeps the child involved in making the plan. Offload the remembering, not the planning (PRD 6i).
+
+### 10. If-then plans helped children with ADHD in lab tasks (Moderate for lab tasks, Weak for homework)
+- In randomized lab studies, children with ADHD who formed if-then plans ("If X happens, then I will Y") made fewer errors on a shifting task and did better on delay-of-gratification tasks (Gawrilow, Gollwitzer and Oettingen, 2011). A systematic review and meta-analysis of implementation intentions in children exists; I saw only its study table.
+- Limits: these were computer tasks, not homework. In the studies I saw, the plan wording was usually supplied to the children. An overview notes that vague plans work less well than precise ones.
+- App meaning: offer a fill-in "After ___, I will ___ at ___" with precise choices. It is a promising, cheap feature, not a proven treatment (PRD 6i).
+
 ## How today's design lines up
 
 | Today | Evidence says | Decision needed |
@@ -67,11 +77,13 @@ Large deficits in the central executive part of working memory are reported in s
 | Random rarity in mystery boxes | Variable rewards can hook impulsive kids | Keep earned-by-effort only, no real-money purchases, review |
 | Toast with "Get ready for her call at 10pm" | Pressure message | Replace |
 | One fixed look and prompting style | ADHD varies by person | Per-student profile (PRD 6e) |
+| Planner reschedules quietly | Offloading can weaken memory for the plan | Show every change, suggest by default, keep Emma making her start plans (PRD 6i) |
 
 ## What I could not establish
 - Whether a particular reward schedule (fixed or surprise) works better for a given child. The evidence I saw says it varies, which is why how feedback and nearer milestones are presented is a per-student setting that should be measured. The coin amounts and prices themselves stay the same for everyone.
 - Whether apps like this improve grades. The tested interventions are skills programs with adults, not apps. The app is a support for that approach, and the PRD should not claim more.
 - Long-term effects of gamified systems. Evidence was thin in what I read.
+- Whether an AI-made plan harms a child's memory of it. The offloading studies are mostly with adults and students, and the if-then studies are lab tasks, so PRD 6i is a cautious design choice, not a proven fix.
 
 ## Sources
 - Organizational skills training, HOPS, STAND: https://www.chop.edu/sites/default/files/adhd-exec-8-research-based-interventions-for-otmp-child-focused.pdf (read in full)
@@ -87,3 +99,10 @@ Large deficits in the central executive part of working memory are reported in s
 - Serious games as digital therapeutics for ADHD: https://pubmed.ncbi.nlm.nih.gov/40327858/ (page did not load, not read)
 - Adherence in video-game-based ADHD treatments: https://www.researchgate.net/publication/374156144 (excerpt)
 - Gamification trilemma in digital mental health: https://www.researchgate.net/publication/400553920 (excerpt)
+- Cognitive offloading weakens the neural representation of to-be-remembered information: https://www.nature.com/articles/s41598-026-71442-0 (excerpt)
+- Consequences of cognitive offloading, boosting performance but diminishing memory: https://www.researchgate.net/publication/350314236 (excerpt)
+- Cognitive offloading in student and AI collaboration: https://www.sciencedirect.com/science/article/pii/S2451958826002046 (excerpt)
+- Meta-cognitive insights into cognitive offloading: https://www.nature.com/articles/s41599-026-06621-5 (excerpt)
+- If-then plans benefit executive functions in children with ADHD (Gawrilow, Gollwitzer and Oettingen, 2011): https://www.researchgate.net/publication/228874906 (excerpt)
+- Effectiveness of implementation intentions in children, systematic review and meta-analysis: https://bpspsychub.onlinelibrary.wiley.com/doi/10.1111/bjop.70065 (excerpt, study table only)
+- Implementation intentions overview: https://www.researchgate.net/publication/232586066 (excerpt)

@@ -23,7 +23,7 @@ Direction: Emma's Homework is the first instance of a general app for children a
 
 The app is not a medical device. It does not diagnose or treat. It supports daily routines alongside treatment, and alongside the adults in the child's life. The evidence behind this section, with how strong each piece is, is in docs/ADHD-RESEARCH.md. That file is a quick literature scan, not a systematic review, and a clinician should review it and this section.
 
-### The ADHD check: ten principles every feature must pass
+### The ADHD check: eleven principles every feature must pass
 1. **Make starting easy.** Starting is often the hardest part. Any task can have a tiny first step ("open the book to page 40", about two minutes). Start is one tap. The Helper proposes the first step.
 2. **Put time and memory outside her head.** Visible timers and time bars, estimates compared with actual time ("Time Detective"), written bring-home and packing lists, and nothing that depends on remembering what someone said.
 3. **One next thing.** Show what to do now, not everything. Today is the default view, with a clear next task. Keep choices per screen few. One instruction at a time.
@@ -34,6 +34,7 @@ The app is not a medical device. It does not diagnose or treat. It supports dail
 8. **Fewer, calmer interruptions.** Notifications are both a tool and a distraction. Defaults are minimal. Animations and sounds can be skipped and respect reduce-motion. No endless feeds or lists.
 9. **Adults stay in the loop, and watching is transparent.** Tested skills programs all rely on adult support, so the app supports Sofia and parents and does not replace them. Emma is told what Sofia can see and why ("Sofia can cheer you on"), not secretly watched.
 10. **Different brains, different settings.** ADHD shows up differently (inattentive, hyperactive, combined; reward timing, time sense, emotions). Setup captures how it shows up for this student (6e), the app tunes its prompts, timing and tone to it, and Sofia reviews every change. The economy numbers do not change per student (6c).
+11. **Plan with her, not for her.** If an AI makes the whole plan and drops it into a calendar, the person often remembers it less, because she never thought it through herself. The app holds the record outside her head (principle 2), but she stays involved in making the plan: she chooses when and where she will start, in her own words; she picks the order; she approves and edits plans; and every change to her plan is shown to her, never made silently (6i). Offload the remembering, not the planning.
 
 ### Where today's design needs a decision against these principles
 - The Days tab can show 7 days at once: default to today with one clear next task.
@@ -189,6 +190,7 @@ Everyone signs in through either door. Supabase holds the logins, data and photo
 - Sofia gets everything she gets today: finished (with the photo right in the alert), started, stopped, Not today, unchecked, real squishy earned, ticket used. One thread per student
 - Parents can get a short daily summary and "day cleared" alerts, if Sofia turns that on
 - Emma can get gentle reminders she can't turn into a distraction, like "History is due tonight" or "Your mystery box is ready"
+- Emma gets a gentle alert when a new project is posted, with a button to plan it (6g)
 - Each person picks which alerts they get in Settings
 - Later (not launch): text and email as extra channels. Alerts are saved as rows first, then sent by a server function to each channel the person turned on, so adding a channel does not change the rest of the app
 
@@ -223,6 +225,7 @@ Everyone signs in through either door. Supabase holds the logins, data and photo
 - Emma picks one reward she's saving for, and the other options refresh (maybe daily)
 - Reward options pull live from the internet when she wants
 - The clinician form (6e): a fillable PDF with every setup question, and an upload a parent can use at any time to update the ADHD profile
+- Focus mode on the iPad (6h): block other apps and sites while she works, using Apple's Screen Time framework
 
 ## 6a. Integrations and verified proof (added Nov 12)
 
@@ -250,6 +253,7 @@ The old Helper does not work today and only reacts when someone types. The new H
 - **Cost control.** Each student has a daily call budget. Replans only run when something changed.
 - **Launch rule (App Store).** Chat with Emma is off until Sofia and a parent turn it on (PRD section 7). The background replanner works on task data only and sends no child-typed text to anyone else.
 - **Big assignments and projects** get their own planning conversation that breaks them down across her week (6g). The planner is one of three helpers with separate jobs (6h).
+- **She stays in her own plan.** Replans are shown to Emma and, by default, only suggested. Nothing in her week changes silently (6i).
 
 ## 6c. Everything is customizable per student: themes, colors, rewards, interests (revised Nov 12)
 
@@ -417,11 +421,13 @@ When the app learns about a project or a large assignment (pulled from a platfor
 A project, a paper, a presentation, a test to study for, a long reading, or anything with a far-off due date or many parts. The planner spots these from the name, the size and the due date, and any adult can mark something as big.
 
 ### The planning conversation
-- **One question at a time,** with tap answers where possible, and visible progress ("3 of 8"), so it never feels like an interrogation. Emma can say "ask Sofia" and the question goes to Sofia. By default a project planning conversation happens with Sofia, like the weekly planning conference in the evidence-based skills programs (docs/ADHD-RESEARCH.md). The planner prepares what it already knows, so there are fewer questions.
+- **It starts with Emma.** When a project is posted (from a platform, an email, Sofia, or Emma herself), Emma gets a gentle alert ("New project: science fair poster. Want to plan it?"). The planner talks to her directly, asks the questions, breaks the project down, and shows her the plan. She is the one in charge of her plan, which fits the tested skills programs: they bring the child in as a partner instead of doing the planning for her (docs/ADHD-RESEARCH.md).
+- **One question at a time,** with tap answers where possible, and visible progress ("3 of 8"), so it never feels like an interrogation. Emma can say "ask Sofia" and the question goes to Sofia. Sofia can also join a planning conversation. The planner prepares what it already knows, so there are fewer questions.
 - **What it asks:** what the project is and what the teacher wants (paste or photograph the assignment sheet or rubric); the due date and any teacher checkpoints; what the parts are; what materials or help she needs; which parts are easy or hard for her; how long she thinks each part takes, compared with how long similar things took before ("Time Detective"); what is already in her week (classes, Plans, tutoring) and which days have room; and her best focus times (ADHD profile, 6e).
 - **What it produces:** milestones and small steps, each with a tiny first step and an estimate, placed across her week around her fixed Plans, starting early, with spare days left before the deadline. People commonly underestimate how long big work takes, and time blindness makes that worse. That is a design stance, not a finding from the research I did.
 - **Studying for a test** is spread over several days, with each chunk having a specific goal ("make flashcards for chapters 3 and 4"). Spreading study out is commonly recommended, but it was not part of my ADHD research. Specific goals also give the checker something to ask about.
-- **Approval:** a project plan is shown to Emma and Sofia as a suggestion before it lands in her week. Project plans always need approval, whatever the Helper's autonomy level is (open question 22).
+- **Emma approves, or edits it first.** The plan is shown to her as a suggestion before it lands in her week, whatever the Helper's autonomy level is. She can approve it, move steps, change estimates, and add or remove steps. Sofia does not have to approve it. Sofia is told when a plan lands or changes, and she can see it and edit it.
+- **What Emma cannot change:** the due date that the source set (a platform, the calendar, or Sofia). She can move steps, but not past the due date. If her edits leave too little time or remove most of the steps, the planner tells her plainly and suggests a fix, and tells Sofia. Her edits are logged.
 - **Afterward:** each step is a normal task linked to the project, with a project progress bar, its own proof (a photo of an outline is natural proof), and normal rewards from the fixed table. Finishing a project earns nothing extra unless decided later. If steps are missed or run long, the planner replans the rest (6b) and tells Sofia if the deadline is at risk.
 - **Not too much at once:** only the next few steps show in her Days view (ADHD principle 3). The rest stay in the project view.
 
@@ -432,7 +438,7 @@ There are three helpers, each with its own job, its own permissions and its own 
 | Job | Emma's choice | What it does | What it cannot do |
 |---|---|---|---|
 | Planner | BB-8 | Builds and changes the week, runs the intake when she adds a task, plans big assignments (6g), replans (6b) | Check things off or confirm rewards |
-| Tutor | C-3PO | Explains topics, answers in the mode Sofia sets, shows one curated video at a time | Change the plan or any reward, or mark anything done |
+| Tutor | C-3PO | Explains and discusses freely, never gives the final answer, shows one curated video at a time | Change the plan or any reward, or mark anything done |
 | Checker | R2-D2 | Asks the proof questions, judges the proof (6f), flags things for adults | Change the plan or decide rewards (the server decides) |
 
 Why these fit (my read): BB-8 is cheerful and always rolling ahead, a good planner. C-3PO is polite and fluent at explaining things, a good tutor. R2-D2 is resourceful and gets to the truth, a good checker.
@@ -443,14 +449,38 @@ Why these fit (my read): BB-8 is cheerful and always rolling ahead, a good plann
 - The three jobs are fixed. The names and looks are theme data (6c), so another student can have different characters.
 
 ### Star Wars and the App Store
-These are trademarked characters. Using the official names and art in an App Store app risks rejection or a takedown, and the characters would appear in store screenshots. This is not legal advice. Options: (a) original droid characters in the same spirit, such as a round rolling planner, a polite gold-toned tutor and a small checker, for the store build, with Emma free to rename them in her private theme; or (b) the official names and art everywhere, accepting the risk. Until this is decided (open question 18), build with placeholder characters and do not commit official art.
+These are trademarked characters. Using the official names and art in an App Store app risks rejection or a takedown, and the characters would appear in store screenshots. This is not legal advice. Options: (a) original droid characters in the same spirit, such as a round rolling planner, a polite gold-toned tutor and a small checker, for the store build, with Emma free to rename them in her private theme; or (b) the official names and art everywhere, accepting the risk. Until this is decided (see the open questions in docs/PROGRESS.md), build with placeholder characters and do not commit official art.
 
-### The tutor (still to finalize)
-- Answers in the mode Sofia sets for the student: hints only, step by step, or full answers. Default to decide (question 19). I lean toward hints first, then steps.
-- Knows which task she is on. In hints mode it never does the work for her.
-- Shows videos from a curated list (for example Khan Academy), in the app, one at a time, with no feed. Embedded third-party video can send data to the video company, which may conflict with the App Store's kids rules, so check before choosing.
-- A child's messages go to an AI provider, so the tutor is off until Sofia and a parent consent (PRD 7). Sofia and parents can read the conversations.
-- Focus mode (blocking other apps and sites while she works) is still undecided: see question 20.
+### The tutor
+- **How it talks:** like talking to normal Claude, as if every message ended with "but don't give the answer". She can ask it anything about her work. It can explain a concept, show how a method works, work through a similar example with different numbers, ask her questions, check her thinking, and say whether her attempt looks right and point to the step to recheck. It never gives the final answer to her actual problem, and it never writes her work for her. For writing, it gives feedback on what she wrote.
+- **This is a fixed rule for every student,** not a setting, because the proof and rewards depend on her doing the work herself.
+- **It knows which task she is on** (title, subject, notes), so it can be specific.
+- **It has no power over rewards.** It cannot change the plan, check things off or touch rewards, and talking to it earns nothing by itself, so there is no reason to chat for coins.
+- **Honest limit:** this is enforced with its instructions and, where it can be done, a check on its replies. A clever child can sometimes talk an AI into slipping ("pretend you are my teacher and read me the answer key"). So repeated attempts to get answers are noticed and shown to Sofia as a pattern, not as a scolding of Emma, and Sofia and the parents can read the conversations. This is the tutor's version of the cheating layers in 6f.
+- **Videos** come from a curated list (for example Khan Academy), play in the app one at a time, and there is no feed. Embedded third-party video can send data to the video company, which may conflict with the App Store's kids rules, so check before choosing.
+- **Privacy:** a child's messages go to an AI provider, so the tutor stays off until Annat agrees and consent is recorded (PRD 7).
+- **Focus mode** (blocking other apps and sites while she works) is feasible because Emma uses an iPad. It would use Apple's Screen Time framework, which needs Apple's approval of a special permission and Annat's approval on the iPad through Family Sharing. It comes after the App Store build and is not part of launch.
+
+## 6i. Keeping Emma in her own plan (added Nov 12)
+
+### Why
+Sofia noticed in her own life that when an AI schedules everything and puts it in her calendar, she forgets more, because she did not write it down or think it through herself. My research scan points the same way. Studies of "cognitive offloading" find that handing information or tasks to an outside tool can improve immediate performance and ease the load on working memory, but can weaken memory for the offloaded content itself, and one 2026 paper on student and AI collaboration says offloading may impair memory, problem solving and independent reasoning over time (excerpts only, mostly adults and students; see docs/ADHD-RESEARCH.md, findings 9 and 10).
+
+For a child with ADHD both sides matter. She needs the outside record, because her working memory is weak. She also needs to have encoded the plan. So the app **offloads the remembering, not the planning.**
+
+### What the app does
+1. **A short morning walk-through (under a minute, skippable).** Before today's list appears, the planner asks "What do you think is on today?" and she taps what she remembers from a short set of choices. Then the real list is shown, and anything she missed simply appears as "and these too". It is never scored, never called a mistake, and never shown to her as a result. This is a design idea based on the offloading findings. I have not found evidence for it in children with ADHD.
+2. **She picks the order and the start.** For each key task she chooses what goes first, and sets a precise start plan in her own words with a fill-in: "After ___, I will start ___ at ___" ("After dinner, I will start Latin at the kitchen table"). In randomized lab studies, children with ADHD who made if-then plans did better on shifting and delay-of-gratification tasks, and an overview notes that precise plans work better than vague ones. Those were computer tasks, and the plan wording was usually supplied to the children, so this is promising, not proven for homework.
+3. **Her words.** The tiny first step and the start plan are in her own words, typed or chosen from options she can edit. Her reminders show her words.
+4. **Changes are never silent.** When the planner or Sofia moves or changes something in her plan, Emma sees a short "what changed" card and can acknowledge or undo it. A task does not quietly end up on another day.
+5. **The weekly plan is hers too.** At the weekly planning with Sofia, the app prepares suggestions, and Emma places things. The app does not fill her week for her. Project plans are approved and edited by Emma (6g).
+6. **Reminders she chooses,** within sensible limits, for the key tasks she picks (ADHD principle 8: few, calm interruptions).
+7. **No silent calendar filling.** The app does not push her week into any calendar she has not seen.
+
+### How it fits the ADHD check (1a)
+- It adds steps, so each one has to stay under a minute and skippable (principle 3). Nothing here is scored or blamed (principle 7).
+- It reinforces principle 9: Emma and the adults share the plan.
+- Set up as measurements: whether she starts without a prompt, and whether the walk-through and start plans help. Sofia reviews, and anything that does not help is dropped.
 
 ## 7. App Store reality check
 
@@ -480,7 +510,7 @@ The website goes first because it's fastest to switch Emma to. The App Store com
 5. Start, egg, proof and photos, with the AI assignment intake and the layered proof checks (6f)
 6. Calendar, Plans and the bring-home list
 7. Rewards engine: coins, mystery box, Shelf and Shop. One fixed economy for everyone, with per-student currency looks and catalogs, plus small rewards for skill use (1a), and provisional rewards that an adult can reverse (6f)
-8. The helpers: planner (chat, automatic rescheduling, big-assignment planning) and tutor, with separate permissions (6b, 6g, 6h)
+8. The helpers: planner (chat, automatic rescheduling, big-assignment planning) and tutor, with separate permissions, and keeping Emma in her own plan (6b, 6g, 6h, 6i)
 9. Personalization: the setup interview including the ADHD profile (6e), theme editor and per-student catalogs and art (6c)
 10. Move the data from the Google Sheet and the photos from Drive
 11. Notifications: the bell inbox, then push to phones
@@ -508,28 +538,7 @@ The website goes first because it's fastest to switch Emma to. The App Store com
 Year one minimum is about $99 plus Helper chat usage.
 
 ### Open questions
-1. What's Emma's username, and who keeps her password: Sofia or Annat?
-2. Helper chat at launch: Sofia only, or on for Emma once Annat agrees?
-3. Which reminders should Emma get on her own device, if any?
-4. Should parents get a daily summary, or only "day cleared" alerts?
-5. App name and icon for the App Store. Keep "Emma's Homework," or a name that fits more students?
-6. Free netlify.app web address, or a custom one?
-7. Which platforms must connect first (RSM, Schoology, Pearson, TutorBird, Remy's emails), and which have a feed or email option?
-8. The vault: sign in once in a live cloud browser and keep the session (recommended), or store usernames and passwords? The second conflicts with "no school passwords" and is riskier for a child's accounts.
-9. Helper autonomy default: suggest only, small moves automatic, or everything automatic?
-10. What art approach for new students' collections: recolorable shapes, reviewed generated images, or icon sets?
-11. Is there a specific "personal agent" product you want evaluated for step 16?
-12. Who fills in the ADHD profile in the app at launch (Sofia, Annat, Emma)? Will a clinician review section 1a and docs/ADHD-RESEARCH.md, and help design the later clinician form?
-13. What small fixed amounts should skill actions earn (starting, writing it down, packing, planning)?
-14. Streak and threshold rules (full box needs half the day, sparkle needs three days in a row, no dodging): keep or soften?
-15. Is the weekly real prize budget (about $40) an adult setting per student?
-16. Which currency looks to offer: gold coins (default), cash, others?
-17. Annat's own consent to send Emma's task names, answers and proof to the AI checker, to record before real use.
-18. The three helpers: official Star Wars names and art (BB-8, C-3PO, R2-D2), or original droids in the same spirit? Official ones risk App Store rejection.
-19. Tutor default: hints only, step by step, or full answers?
-20. Focus mode (blocking other apps and sites during Start): which device or devices does Emma use, and will Annat approve the Screen Time permission?
-21. Should finishing a whole project earn anything extra? (The economy is fixed, so I lean no.)
-22. Must Emma and Sofia approve a project plan before it lands in her week, whatever the Helper's autonomy level? (I lean yes.)
+The live list is in docs/PROGRESS.md, grouped by the step that needs each answer, so it stays in one place.
 
 ### Sources
 - Claude Code in the cloud: quickstart

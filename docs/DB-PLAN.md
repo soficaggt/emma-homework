@@ -53,11 +53,17 @@ Every login is a Supabase Auth account. Each account has one row saying its role
 **Projects (added Nov 12)**
 - `projects`: student, title, source (platform, email, Sofia, Emma), due date, size, status, the assignment sheet or rubric (text and image path), and who created it.
 - `tasks` gains `project_id` and `project_step` (the order of the step in its project).
-- `planning_conversations`: project, each question, each answer, who answered (Emma or Sofia), and when. Project plans always need approval before they land in the week.
+- `planning_conversations`: project, each question, each answer, who answered (Emma or Sofia), and when. Emma approves or edits a project plan before it lands in her week. Her edits are logged, Sofia can see and edit the plan, and Emma cannot change the due date the source set.
 
 **Tutor (added Nov 12)**
-- `tutor_settings`: per student: answer mode (hints, steps, full answers), curated videos on or off, and consent recorded (who agreed and when).
+- `tutor_settings`: per student: curated videos on or off, and consent recorded (who agreed and when). There is no answer-mode setting: the tutor never gives final answers.
 - `tutor_conversations`: readable by the coach and the student's parent only.
+- `tutor_flags`: repeated attempts to get the final answer, shown to the coach as a pattern and never to the student as an accusation.
+
+**Keeping her in her plan (added Nov 12)**
+- `plan_changes` (see Helper v2) also records when each change was shown to the student and when she acknowledged or undid it. A change made by the planner or by an adult is always shown to her.
+- `tasks` gains `start_plan`: her own if-then start plan in her words ("After dinner, I will start Latin at the kitchen table").
+- `walkthroughs`: student, date, and only whether she did it or skipped it. No recall score is stored or shown.
 
 **Integrity (added Nov 12)**
 - `tasks` gains `reward_status` (provisional, confirmed, reversed), `review_status` (unreviewed, looks_good, needs_more, not_done), `reviewed_by`, `reviewed_at`, `review_note`, `proof_questions` (the questions generated for the task), `proof_answers`, `value_set_by` (template, coach, Helper, platform, AI intake, adult), `confirmed_at`, and `final_at` (24 hours after she finishes). `source` (template, coach, Helper, platform, or student) already exists and drives which tasks are trusted.
