@@ -17,6 +17,33 @@ Emma's Homework is a cute, kawaii checklist that shows Emma (10, ADHD) what to d
 | Helper chat | Claude Sonnet through the Anthropic API, max 80 messages a day |
 | Last change | Nov 4: tests and due markers stay on the calendar, off the daily list |
 
+## 1a. Built for ADHD brains (added Nov 12)
+
+Direction: Emma's Homework is the first instance of a general app for children and teens with ADHD, and for anyone who struggles with executive function (starting, remembering, planning, managing time and feelings). Emma's setup is the first example, not the rule. The most important test for every feature in this PRD is whether it works for an ADHD brain.
+
+The app is not a medical device. It does not diagnose or treat. It supports daily routines alongside treatment, and alongside the adults in the child's life. The evidence behind this section, with how strong each piece is, is in docs/ADHD-RESEARCH.md. That file is a quick literature scan, not a systematic review, and a clinician should review it and this section.
+
+### The ADHD check: ten principles every feature must pass
+1. **Make starting easy.** Starting is often the hardest part. Any task can have a tiny first step ("open the book to page 40", about two minutes). Start is one tap. The Helper proposes the first step.
+2. **Put time and memory outside her head.** Visible timers and time bars, estimates compared with actual time ("Time Detective"), written bring-home and packing lists, and nothing that depends on remembering what someone said.
+3. **One next thing.** Show what to do now, not everything. Today is the default view, with a clear next task. Keep choices per screen few. One instruction at a time.
+4. **Fast, frequent, real feedback.** Feedback arrives at the moment of starting and finishing. Long-delay prizes (the weekly real pick) get visible progress and nearer steps. Rewards are real or tangible, not hypothetical.
+5. **Reward the skill, not only the outcome.** The programs with the best evidence reward using the skills: writing it down, planning, packing, starting. Plan with the adult to fade rewards toward natural ones (praise, free time, grades) over time.
+6. **Expect variable days.** Performance changes day to day with tiredness, medication timing and context. Plans have slack, the Helper adapts, and Sofia can switch on a hard-day mode. A bad day is never punished.
+7. **Protect feelings.** Frustration and shame derail kids with ADHD. No scolding, no pressure countdowns, no "you lost your streak" feeling. The wording is "a glitch to beat", never "lazy". Mistakes and late work get a plan, not a penalty.
+8. **Fewer, calmer interruptions.** Notifications are both a tool and a distraction. Defaults are minimal. Animations and sounds can be skipped and respect reduce-motion. No endless feeds or lists.
+9. **Adults stay in the loop, and watching is transparent.** Tested skills programs all rely on adult support, so the app supports Sofia and parents and does not replace them. Emma is told what Sofia can see and why ("Sofia can cheer you on"), not secretly watched.
+10. **Different brains, different settings.** ADHD shows up differently (inattentive, hyperactive, combined; reward timing, time sense, emotions). Setup captures how it shows up for this student (6e), the app tunes its prompts, timing and tone to it, and Sofia reviews every change. The economy numbers do not change per student (6c).
+
+### Where today's design needs a decision against these principles
+- The Days tab can show 7 days at once: default to today with one clear next task.
+- Sofia sees a live "working now" status and unchecks: tell Emma what is shared and why.
+- Full box needs half the day, sparkle box needs three full days in a row, and moving work off today counts as skipping: review with a clinician so a miss never feels like a loss, and add a hard-day mode.
+- Mystery boxes have random rarity: keep them earned by effort only, never bought with real money, and review them with a clinician.
+- The real weekly pick is a week-long delay: add nearer milestones (the daily box already helps).
+- The "Get ready for her call at 10pm" message in the check-off toast is a pressure message: replace it.
+- Rewards today are for finishing only: add small fixed rewards for starting, writing it down, packing and planning (amounts decided in step 7).
+
 ## 2. Who uses it
 
 Today it is really just Emma and Sofia, plus Annat through a special link. The new version keeps the same roles but gives everyone their own login.
@@ -232,7 +259,7 @@ Only the structure and the safety rules are fixed. How it looks, what the colors
 - Safety and access rules: the proof flow, who-sees-what, parent gates on links out and purchases, no gambling-style mechanics, and accessibility minimums (readable contrast, large tap targets, a reduce-motion option).
 
 ### What is customizable
-Palette, fonts, shapes and corners, icons, the mascot and what "hatches", celebration style, wording and tone, page names, the currency, rarity names and odds, shop size and refresh day, what is collected, and how much of the app is themed at all.
+Palette, fonts, shapes and corners, icons, the mascot and what "hatches", celebration style, wording and tone, page names, what the currency looks and is called, rarity names and art, what is collected, and how much of the app is themed at all. The economy itself (how coins are earned, what things cost, box odds, shop size) is not customizable: see "Currency and the economy" below.
 
 ### Colors do not have a fixed meaning
 - Each theme has a **color system**: a list of steps (any number), each with a color, a name and a meaning, in an order the theme chooses. A system can be an urgency ladder (Emma's: purple for must do today down to gray for optional), colors by subject, colors by task type, or no colors at all.
@@ -253,14 +280,18 @@ Palette, fonts, shapes and corners, icons, the mascot and what "hatches", celebr
 - **Rarity** per pack: from real price and how hard the item is to get (as with squishies), from a set the pack defines (rare characters), or chosen by Sofia.
 - **Art** per pack: drawn shapes (Emma's squishies), a product image from the listing (check each store's terms), generated art Sofia approves, or icons. Licensed characters such as Star Wars raise trademark questions: names and links are likely fine for a private unlisted app, but check before using official images, because App Review can flag them.
 
-### Currency and the economy
-- The coin currency can be renamed and re-skinned (stars, credits, gems), and earn rates, shop prices and box odds can be adjusted per student. It can also be left on the normal defaults. Reward rules in PRD 3a become per-student settings with Emma's values as the defaults.
+### Currency and the economy: the structure is fixed, the look is not
+- **The way money works is the same for every student.** How coins are earned (PRD 3a), what things cost, the box odds, the weekly shop size and refresh day, and the rules for full box, mini box, sparkle and the real weekly pick do not change per student. Earn rates and prices are not adjustable. This keeps the economy fair and predictable, and the Helper and the app can rely on it.
+- **Items are priced in coins by rarity only:** common 25, uncommon 45, and rare and legendary come only from boxes. This holds for every reward pack.
+- **What the currency looks like is customizable.** The default is gold coins, which look the same for everyone unless changed. Other skins: cash or bills, stars, gems, credits, tokens, whatever fits. The name and the picture change, never the numbers.
+- Only Sofia (not the student) changes the skin. Adults can still give a box or coins by hand, always logged.
+- To confirm: the real weekly prize budget (about $40 for Emma) is real money, not an in-app rate, so it is likely an adult setting per student.
 
 ### How into it is the student: theming depth
 - A per-student setting from "just the rewards" to "the whole app looks like it". A student who is mildly into clothes may only get a clothing pack. A student who loves Star Wars may get Star Wars colors, mascot, wording, celebration and rewards.
 
 ### Setup interview
-- When Sofia adds a student, the Helper asks plain questions: interests, how into them, favorite colors and style, what the colors should mean to her (or whether to use colors at all), what a real prize is and its budget, and what her week looks like. It builds the theme, the reward pack and a starter catalog, and Sofia reviews and edits everything before it goes live. The same interview can be re-run later when interests change.
+- When Sofia adds a student, the Helper asks plain questions: interests, how into them, favorite colors and style, what the colors should mean to her (or whether to use colors at all), what a real prize is and its budget, what her week looks like, and how ADHD shows up for her (6e). It builds the theme, the reward pack and a starter catalog, and Sofia reviews and edits everything before it goes live. The same interview can be re-run later when interests change.
 - Sofia can duplicate a theme, change it, or move a student to another one without losing her collection.
 
 ## 6d. Connections: homework from other platforms, running without an app open (added Nov 12)
@@ -278,6 +309,38 @@ Claude scheduled tasks in Sofia's own browser do not work beyond one household: 
 Rules for all tiers: only a student's own key can write that student's tasks; connections can add and update tasks and mark them verified, and nothing else; school passwords are never kept in the app database or in code; every connection needs the parent's OK before it is turned on, and some schools' rules may forbid automated sign-in, so each platform is checked before it is offered. Everything a connection does is in the audit log.
 
 Open question: the user referred to a "personal agent" product. The requirement is written generally (any always-on agent with a vault and its own browser). If a specific product is intended, name it so session 16 can evaluate it.
+
+## 6e. The ADHD profile: "How I work" (added Nov 12)
+
+ADHD does not look the same in every person. During setup, each student gets a short profile of how it shows up for her, so the app can fit her instead of using one default for everyone. It is a support setting, not a diagnosis, and it never produces a severity score.
+
+### Who fills it in
+- Sofia or a parent, together with the student, using plain questions. A one-page printable version can be filled in with the student's psychiatrist or therapist, who may know it best. The student gets a kid-friendly version she can read and edit. A clinician portal is not part of launch.
+
+### What it asks (plain language, all optional)
+- **Starting:** how hard is it to begin? What helps (a tiny first step, someone nearby, a timer, music)?
+- **Staying with it:** what pulls her away? How long before she needs a break? Does she need to move or fidget?
+- **Time sense:** does she tend to underestimate or overestimate how long things take? Does she need to see time?
+- **Remembering:** does she forget what to bring or what was said? What written cues help?
+- **Planning and big projects:** can she break things down alone, or does she need help?
+- **Switching:** are changes between activities hard? How much warning helps?
+- **Feelings:** how does she react to frustration, mistakes, correction, or missing a goal? What helps her reset? What words should never be used?
+- **What motivates her:** interest, novelty, choice, praise, surprise, or deadlines? Does she like surprise rewards or predictable ones?
+- **Her best and worst times of day** for focus, in the family's own words. No medication names or doses are asked for, only windows ("sharp after breakfast, tired after 7").
+- **Environment:** noise, music, where she works best.
+- **What has worked and not worked** before.
+
+### What it controls
+First-step size, timer and time-bar style, break lengths, how much slack plans have, how many items are shown, reminder style and timing, how feedback and nearer milestones are presented, surprise versus predictable rewards, tone and words, hard-day mode, and when the hardest tasks get scheduled. It never changes the coin amounts, prices or box odds (6c).
+
+### It keeps learning, with Sofia in charge
+- The app records estimates against actual time, when she starts and stalls, and which times of day go well. The Helper proposes profile changes ("homework after 7 is slower, move the hard work earlier?"). Sofia approves. Nothing changes silently.
+
+### Privacy and consent (this is sensitive health information)
+- Entirely optional, and the minimum is collected. No diagnosis names or medication names are required.
+- Stored apart from ordinary task data. Readable only by the coach, that student, and her parent. Never shared with other students or parents, and never shown in alerts or logs.
+- The Helper receives only the derived settings and short plain-language notes, not the raw answers or any clinical document, and only with the parent's consent. Clinician documents are not stored unless a parent chooses.
+- It must be disclosed in the privacy policy and App Store privacy labels, covered by the parent's written consent (PRD 7), and deletable on request.
 
 ## 7. App Store reality check
 
@@ -303,12 +366,12 @@ The website goes first because it's fastest to switch Emma to. The App Store com
 1. Foundation: PRD, house rules, progress file, database plan
 2. Supabase database and the who-sees-what rules (including themes, connections and plan history)
 3. Logins and roles, plus a Yoda screen where Sofia creates accounts
-4. Days checklist in Expo, built on theme settings from day one (Emma's look is the first theme)
+4. Days checklist in Expo, built on theme settings from day one (Emma's look is the first theme), with the ADHD check (1a): today by default, one clear next task, first-step prompt
 5. Start, egg, proof and photos
 6. Calendar, Plans and the bring-home list
-7. Rewards engine: coins, mystery box, Shelf and Shop, driven by per-student settings and catalogs
+7. Rewards engine: coins, mystery box, Shelf and Shop. One fixed economy for everyone, with per-student currency looks and catalogs, plus small rewards for skill use (1a)
 8. Helper v2: chat plus automatic rescheduling (6b)
-9. Personalization: the setup interview, theme editor and per-student catalogs and art (6c)
+9. Personalization: the setup interview including the ADHD profile (6e), theme editor and per-student catalogs and art (6c)
 10. Move the data from the Google Sheet and the photos from Drive
 11. Notifications: the bell inbox, then push to phones
 12. Proof board for Sofia and parents
@@ -346,6 +409,11 @@ Year one minimum is about $99 plus Helper chat usage.
 9. Helper autonomy default: suggest only, small moves automatic, or everything automatic?
 10. What art approach for new students' collections: recolorable shapes, reviewed generated images, or icon sets?
 11. Is there a specific "personal agent" product you want evaluated for step 16?
+12. Who fills in the ADHD profile (Sofia, Annat, Emma, with her psychiatrist's help through a printable sheet)? Will a clinician review section 1a and docs/ADHD-RESEARCH.md?
+13. What small fixed amounts should skill actions earn (starting, writing it down, packing, planning)?
+14. Streak and threshold rules (full box needs half the day, sparkle needs three days in a row, no dodging): keep, soften, or add a hard-day mode?
+15. Is the weekly real prize budget (about $40) an adult setting per student?
+16. Which currency looks to offer: gold coins (default), cash, others?
 
 ### Sources
 - Claude Code in the cloud: quickstart

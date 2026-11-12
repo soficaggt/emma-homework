@@ -10,12 +10,12 @@ Read this at the start of every session and update it at the end. Rules are in C
 | 1 | Foundation: PRD, CLAUDE.md, this file, database plan | User approves docs/DB-PLAN.md | Updated Nov 12, waiting for approval |
 | 2 | Database and security (including themes, connections, plan history) | Two fake students cannot see each other's data; a fake parent sees only their child; a student cannot forge coins or verified status | Not started |
 | 3 | Logins and the Yoda screen | Sofia can create "emma" and sign in as her | Not started |
-| 4 | Days checklist in Expo, on theme settings | Looks and behaves like today's site, with colors coming from theme data | Not started |
+| 4 | Days checklist in Expo, on theme settings | Looks and behaves like today's site, colors from theme data, today view by default with one clear next task and a first-step prompt | Not started |
 | 5 | Start, egg, proof and photos | A photo uploads and only Sofia can open it | Not started |
 | 6 | Calendar, Plans, bring-home list | Due dates stay off the daily list | Not started |
-| 7 | Rewards engine driven by reward packs and per-student economy | A cleared day gives a box, rules match PRD 3a, values come from the theme | Not started |
+| 7 | Rewards engine: one fixed economy, reward packs and currency skins | A cleared day gives a box, rules match PRD 3a exactly, and two students with different themes earn and pay the same amounts | Not started |
 | 8 | Helper v2: chat plus automatic rescheduling | Finishing late or adding homework triggers a sensible replan, undoable | Not started |
-| 9 | Personalization: setup interview, themes, color systems, reward packs, item sources | A second fake student (for example into Star Wars) gets a different look, color meanings and reward pack from the interview | Not started |
+| 9 | Personalization: setup interview including the ADHD profile, themes, color systems, reward packs, item sources | A second fake student (for example into Star Wars) gets a different look, color meanings and reward pack from the interview | Not started |
 | 10 | Move data from the Sheet and Drive | Emma's real history matches the old site | Not started |
 | 11 | Notifications: bell inbox, then push | Finishing a task puts an alert in Sofia's bell | Not started |
 | 12 | Proof board for Sofia and parents | A parent sees only their child | Not started |
@@ -32,7 +32,8 @@ Read this at the start of every session and update it at the end. Rules are in C
 - The repo stays public until step 15, because GitHub Pages on a private repo needs a paid plan and Emma uses the live site every day. The old ntfy channel name is treated as exposed and is retired when alerts move into the app.
 - (Nov 12) Claude scheduled tasks are only a stopgap for RSM until step 16. The real design is an always-on agent per PRD 6d.
 - (Nov 12) Nothing aesthetic is fixed except the page set, the general layout of counters and buttons, safety rules and accessibility minimums. Colors have no fixed meaning: each theme defines its own color system. "No red, no black" is Emma's theme default only.
-- (Nov 12) Rewards are reward packs: whatever the student is into (clothes, Star Wars, squishies). Items come from hand-made lists, pasted wishlists, web search, or connected accounts, and Sofia approves every item. Currency and economy are adjustable per student but can stay default. Theming depth depends on how into it the student is.
+- (Nov 12) Rewards are reward packs: whatever the student is into (clothes, Star Wars, squishies). Items come from hand-made lists, pasted wishlists, web search, or connected accounts, and Sofia approves every item. The economy structure (earn rates, prices, box odds, shop size, box rules) is fixed and identical for every student; only the currency's look is customizable (default gold coins, or cash and so on). Theming depth depends on how into it the student is.
+- (Nov 12) The whole product is built for ADHD brains (PRD 1a, docs/ADHD-RESEARCH.md): a ten-point check every feature passes, and an optional ADHD profile at setup (PRD 6e) that tunes prompts, timing and tone, never the economy numbers.
 - (Nov 12) The Helper is a planner that replans on events and schedules, not only a chat.
 
 ## Open questions for Sofia (PRD section 9)
@@ -48,9 +49,15 @@ Read this at the start of every session and update it at the end. Rules are in C
 10. Art approach for new collections: drawn shapes, store images, generated art, or icons (step 9)
 11. Is there a specific "personal agent" product to evaluate for step 16
 12. Mini box coins, chat check-off coins, and gift box button (see DB-PLAN)
-13. Which interests and stores to test first for reward packs (for example Depop, ThredUp, a Star Wars list), and confirm that "comedy" meant the currency
+13. Which interests and stores to test first for reward packs (for example Depop, ThredUp, a Star Wars list), and which currency looks to offer (gold coins, cash, others)
+
+14. Who fills in the ADHD profile (Sofia, Annat, Emma, with her psychiatrist's help through a printable sheet), and will a clinician review PRD 1a and docs/ADHD-RESEARCH.md
+15. Small fixed amounts for skill actions: starting, writing it down, packing, planning (step 7)
+16. Streak and threshold rules (full box needs half the day, sparkle needs three days in a row, no dodging): keep, soften, or add a hard-day mode
+17. Is the weekly real prize budget (about $40) an adult setting per student
 
 ## Session log
 - 2026-11-12, step 1: read index.html, proof.html and backend/Code.gs. Wrote docs/PRD.md (new sections 3a, 6a), CLAUDE.md, this file, and docs/DB-PLAN.md. No app code and no live site files changed.
 - 2026-11-12, step 1 revised (2): colors and look are fully per-student, rewards became reward packs, PRD 6c rewritten, house rules 6 and 7 and the themes tables updated.
 - 2026-11-12, step 1 revised: added PRD 6b (Helper v2), 6c (per-student themes), 6d (connections and the always-on agent). Build order is now 18 steps. House rules 6, 7, 11, 12 and 13 updated. DB plan gained themes, plan history and connections tables.
+- 2026-11-12, step 1 revised (3): researched ADHD and task completion (docs/ADHD-RESEARCH.md). Added PRD 1a (ten-point ADHD check), PRD 6e (ADHD profile at setup), and house rules 14 and 15. Economy structure made fixed for every student, only the currency look customizable (PRD 6c rewritten, house rule 6, DB plan).

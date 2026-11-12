@@ -37,10 +37,17 @@ Every login is a Supabase Auth account. Each account has one row saying its role
 
 **Themes and personalization (revised Nov 12)**
 - `themes`: per student (or a template Sofia reuses): name, page names and icons, palette, fonts, shapes, mascot and what hatches, celebration style, wording and tone, currency name and look, theming depth (rewards only up to whole app), and a `color_system`: an ordered list of steps, each with color, name and meaning, plus the mode (urgency ladder, by subject, by type, or none). Emma's current look is the first row.
-- `reward_packs`: per student: what is collected and its name, digital collectibles on or off, real prizes on or off and budget, rarity method, art style, item sources, and the economy (earn rates, shop prices, box odds, shop size and refresh day), with Emma's values as the defaults.
+- `reward_packs`: per student: what is collected and its name, digital collectibles on or off, real prizes on or off and budget, rarity names, art style, item sources, and the currency skin (default gold coins). The economy numbers (earn rates, prices by rarity, box odds, shop size, refresh day, box rules) are not stored per student: they are one shared set that only the developers change.
 - `catalog_items`: per pack: name, image or art reference, price, link, tags, rarity, source (hand-made, pasted wishlist, web search, connected account), and status (proposed, approved). Only Sofia approves. Links out are flagged for the parent gate.
 - `student_setup`: the saved interview answers, so the Helper can rebuild or extend a theme and pack when interests change.
 - `tasks.color_step`: the task's chosen step in the student's color system (replaces a fixed color name).
+
+**ADHD profile (added Nov 12)**
+- `adhd_profiles`: one per student: the "How I work" answers (starting, staying, time sense, remembering, planning, switching, feelings, motivation, best and worst times of day, environment, what worked), who filled it in (parent, coach, student, clinician sheet), when, consent flags (stored, Helper may receive derived settings), and a version. No diagnosis or medication fields. Readable and editable only by the coach, the student (her kid-friendly view) and her parent. Reads are written to the audit log.
+- `profile_settings`: the derived settings the app and Helper actually use: first-step size, timer style, break lengths, plan slack, items shown, reminder style and timing, tone and avoided words, hard-day mode, best-focus windows. This is the only part the Helper receives.
+- `profile_suggestions`: changes the Helper proposes from the data, with status (proposed, approved, rejected). Only Sofia approves.
+- `tasks` gains `first_step` (a tiny starting step), `estimated_minutes` and `actual_minutes` (for Time Detective and learning).
+- `skill_events`: starting, writing it down, packing and planning actions (student, kind, time), used for rewards for skill use. The amounts are one shared fixed set, decided in step 7.
 
 **Helper v2 (added Nov 12)**
 - `plan_changes`: every reschedule: student, what changed, who or what did it (Emma, Sofia, Helper), why, status (suggested, applied, undone), and the before-and-after so it can be undone with one tap.
