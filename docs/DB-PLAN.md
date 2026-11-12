@@ -1,6 +1,6 @@
 # Database and permissions plan (for approval)
 
-Nothing here is built yet. This is the plan in plain English. Session 2 builds it after you approve.
+Approved by Sofia on 2026-11-12. Nothing here is built yet. This is the plan in plain English, and session 2 builds it.
 
 ## The three roles
 
@@ -122,11 +122,11 @@ Every table has security turned on with nothing allowed by default. Then:
 - The hard-coded "Get ready for her call at 10pm" message in the "Nice, that is done" toast (needs to be a setting, or removed).
 - Edits made directly in a spreadsheet clashing with the app (the database fixes this).
 
-## Things in the old code that need your decision
+## Old-code decisions (decided Nov 12)
 
-1. The Nov 1 commit message says a mini box gives 2 coins, but the code gives no coins from boxes. Which is right?
-2. The old chat gives 3 coins for anything checked off through it. Keep that, or use the normal color-based coins?
-3. Gift boxes (the one you gave back on Oct 28) are hard-coded. I would make "give a box" a button on the Yoda screen.
+1. **Mini box:** gives no coins. The old code never gave coins from boxes, and a Nov 1 commit message that said 2 coins was never built.
+2. **Check-offs through the chat:** there is no special rule. Every check-off goes through the normal flow with proof and normal coins, and the planner chat cannot check things off at all (PRD 6h). The old flat 3 coins goes away.
+3. **Gift boxes:** the hard-coded Oct 28 gift box goes away. "Give a box" becomes a button on the Yoda screen, and every gift is logged.
 
 ## How I will check it (session 2 "done when")
 

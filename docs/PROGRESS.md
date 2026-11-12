@@ -7,7 +7,7 @@ Read this at the start of every session and update it at the end. Rules are in C
 | # | Step | Done when | Status |
 |---|---|---|---|
 | 0 | Accounts and keys (user does this) | Keys saved in the environment settings, open questions answered | In progress |
-| 1 | Foundation: PRD, CLAUDE.md, this file, database plan | User approves docs/DB-PLAN.md | Updated Nov 12, waiting for approval |
+| 1 | Foundation: PRD, CLAUDE.md, this file, database plan | User approves docs/DB-PLAN.md | Done. Database plan approved Nov 12 |
 | 2 | Database and security (including themes, connections, plan history) | Two fake students cannot see each other's data; a fake parent sees only their child; a student cannot forge coins or verified status | Not started |
 | 3 | Logins and the Yoda screen | An adult can invite Emma, she chooses her own username and password and signs in, and a reset sends her a one-time link (adults never see her password) | Not started |
 | 4 | Days checklist in Expo, on theme settings | Looks and behaves like today's site, colors from theme data, today view by default with one clear next task and a first-step prompt | Not started |
@@ -52,32 +52,31 @@ Read this at the start of every session and update it at the end. Rules are in C
 - (Nov 12) Chat (planner and tutor) is on for Emma, with a parent's consent recorded in the app first.
 - (Nov 12) The ADHD profile is entirely optional. Nobody has to fill it in at launch, and the app works with safe defaults.
 - (Nov 12) Helper autonomy default is suggest only (Emma sees and accepts each change). Sofia can raise it per student, and Emma always sees every change. Project plans always need Emma's approval.
+- (Nov 12) The database plan (docs/DB-PLAN.md) is approved. Mini box gives no coins (as the old code did). Check-offs always go through the normal flow with proof and normal coins, and the planner chat cannot check things off. "Give a box" becomes a logged button on the Yoda screen. The hold-then-confirm plan for coins and boxes stands.
 - (Nov 12) Later: a clinician-fillable form a parent can upload at any time to personalize the app (PRD 6e). The setup question list is designed now so the form can be built from it.
 - (Nov 12) The Helper is a planner that replans on events and schedules, not only a chat.
 
 ## Open questions for Sofia (the one live list)
 
-### Needed now (the only blockers before step 2)
-1. Approve docs/DB-PLAN.md (the database and permissions plan).
-2. Three old-code decisions at the bottom of docs/DB-PLAN.md: does a mini box give 2 coins (the Nov 1 commit message says yes, the code gives none); do check-offs through the chat give a flat 3 coins or the normal amount; should "give a box" be a button on the Yoda screen.
-3. Confirm the plan to hold coins until confirmed and make boxes wait for their tasks (PRD 6f). I have treated this as accepted.
+### Needed now
+Nothing. The database plan was approved on Nov 12.
 
 ### Needed at the step that builds it (nothing needed now)
-4. App name. Not blocking: the technical bundle ID will be neutral, so the display name can change later.
-5. Small fixed amounts for skill actions: starting, writing it down, packing, planning (step 7). I will propose numbers then.
-6. Streak and threshold rules: keep or soften (step 7). I will propose options then.
-7. Annat's own consent for the AI helpers, recorded in the app before Emma uses them for real (step 5).
-8. Art for the original droids and their customizable parts (step 4), and the art approach for new collections (step 9).
-9. Which interests and stores to test first for reward packs, which currency looks to offer, and which retailers to test for one-tap and automatic buying (step 9).
-10. Parent daily summary, or only "day cleared" alerts; and which reminders Emma gets on her own device (step 11).
-11. Which platforms connect first, and which have a feed or email option (step 13).
-12. Free netlify.app address, or a custom one (step 14).
-13. Someone with a clinical background to review the ADHD sections (PRD 1a, 6e, docs/ADHD-RESEARCH.md) before the app is shared beyond Emma. Optional but recommended.
+1. App name. Not blocking: the technical bundle ID will be neutral, so the display name can change later.
+2. Small fixed amounts for skill actions: starting, writing it down, packing, planning (step 7). I will propose numbers then.
+3. Streak and threshold rules: keep or soften (step 7). I will propose options then.
+4. Annat's own consent for the AI helpers, recorded in the app before Emma uses them for real (step 5).
+5. Art for the original droids and their customizable parts (step 4), and the art approach for new collections (step 9).
+6. Which interests and stores to test first for reward packs, which currency looks to offer, and which retailers to test for one-tap and automatic buying (step 9).
+7. Parent daily summary, or only "day cleared" alerts; and which reminders Emma gets on her own device (step 11).
+8. Which platforms connect first, and which have a feed or email option (step 13).
+9. Free netlify.app address, or a custom one (step 14).
+10. Someone with a clinical background to review the ADHD sections (PRD 1a, 6e, docs/ADHD-RESEARCH.md) before the app is shared beyond Emma. Optional but recommended.
 
 ### Later
-14. The vault: sign in once and keep the session (recommended), or store school passwords (step 16).
-15. A specific "personal agent" product to evaluate (step 16).
-16. Annat's approval of the Screen Time permission for focus mode (after step 17).
+11. The vault: sign in once and keep the session (recommended), or store school passwords (step 16).
+12. A specific "personal agent" product to evaluate (step 16).
+13. Annat's approval of the Screen Time permission for focus mode (after step 17).
 
 ## Session log
 - 2026-11-12, step 1: read index.html, proof.html and backend/Code.gs. Wrote docs/PRD.md (new sections 3a, 6a), CLAUDE.md, this file, and docs/DB-PLAN.md. No app code and no live site files changed.
@@ -90,3 +89,4 @@ Read this at the start of every session and update it at the end. Rules are in C
 - 2026-11-12, step 1 revised (7): recorded the tutor rule (never gives the final answer), Emma on an iPad, and Emma approving her own project plans. Merged the two open-question lists into one live list here, grouped by step, because the PRD and this file had drifted in numbering.
 - 2026-11-12, step 1 revised (8): added ADHD principle 11 and PRD 6i (keeping Emma in her own plan), research findings 9 and 10, and house rule 18, from Sofia's observation about AI-made schedules.
 - 2026-11-12, step 1 revised (9): recorded Emma choosing her own username and password, original customizable droids, parent-set prize budget with alert, one-tap or automatic buying (PRD 6j), parents' short list of settings, chat on with parent consent, the ADHD profile being optional, and suggest-only autonomy. Trimmed the open questions to three real blockers.
+- 2026-11-12, step 1 closed: the database plan is approved and the three old-code decisions are picked. Next is step 2 (database and security), in a new chat. It needs the Supabase project, token and network access from step 0.
