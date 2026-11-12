@@ -26,7 +26,7 @@ Today it is really just Emma and Sofia, plus Annat through a special link. The n
 | Jedi (student) | Emma, later more students | Opens the site on her iPad, no login | Own username and password, stays signed in. Sees only her own work |
 | Yoda (coach) | Sofia | Same page as Emma, plus a key that unlocks the proof board | Own login with two-factor. Home screen is the proof board for every student |
 | Parent | Annat, later other parents | Gets the special proof link | Own login, read-only, only their own child |
-| Automations | Claude scheduled tasks (RSM daily, Schoology and Pearson on request) | Use the same Google link as everyone | Their own protected key, tied to one student |
+| Automations | Claude scheduled tasks in Sofia's browser (RSM daily, Schoology and Pearson on request) | Use the same Google link as everyone | A connection per platform per student, run by an always-on agent (see 6d), each with its own protected key tied to one student |
 
 ## 3. Every screen and feature today
 
@@ -116,6 +116,7 @@ These are in backend/Code.gs and are easy to lose in a rebuild.
 - RSM homework is pulled every day by a Claude scheduled task in Sofia's desktop app browser, where she stays signed in. Schoology (Microsoft sign-in) and Pearson are pulled when she asks. Claude never types passwords
 
 ### Known bugs
+- The Helper chat does not work at all right now (cause not yet found) and only reacts to typed messages. See 6b
 - The Helper chat's color rules still list red, but the site has no red. Remove it from the chat's instructions (the old code also still lists red, black and other colors in its allowed color list)
 - Edits made through the Google Sheet directly can clash with Emma editing at the same time
 - If the computer is asleep, the daily RSM pull pauses
@@ -208,6 +209,47 @@ Homework comes from many outside platforms, and submitting there should count as
 - **Honest limit.** Pulls depend on those platforms' pages and on Sofia's computer being awake. Verified status is a convenience on top of normal proof, never the only path.
 - **Passwords.** Claude never types or stores a school password. Pulls run in Sofia's already signed-in browser, as today.
 
+## 6b. Helper v2: a planner that keeps rescheduling (added Nov 12)
+
+The old Helper does not work today and only reacts when someone types. The new Helper is the planner for the whole week.
+
+- **Always replanning.** It reschedules on its own whenever something changes, not only when someone chats: a task is finished, skipped, moved or runs late; new homework arrives from a platform; a due date or test is added; the day ends with work left over; Emma starts a task and takes much longer than planned.
+- **It knows the situation.** It reads the student's tasks, due dates, how long things really take her (learned from Start and finish times), classes and Plans, the Not today pile, and the day's progress.
+- **Guardrails, set per student by Sofia.** Three levels: suggest only (a card Emma or Sofia taps to accept), apply small moves and tell Sofia, or apply everything. Default is suggest. It never deletes tasks, never checks things off without proof, never counts a moved task as done, and never breaks the "moving work off today counts as skipping" rule. Every change is written to a history with who or what made it, and any change can be undone with one tap.
+- **Chat stays.** Emma (if allowed) and Sofia can still type "I did Latin, move Hobbit to Thursday". Replies are one or two short sentences, no emojis. Cap per user per day (80 to start), enforced by the server.
+- **How it runs.** A server function calls the Anthropic API. It runs on events (task changed, new homework pulled) and on a schedule (morning, after school, evening, end of day), so no phone or browser has to be open. The key never leaves the server.
+- **It must actually work.** Before building, find out why today's chat fails (missing key or workspace ID in the script properties is the likely cause) so the cause is not carried over.
+- **Cost control.** Each student has a daily call budget. Replans only run when something changed.
+- **Launch rule (App Store).** Chat with Emma is off until Sofia and a parent turn it on (PRD section 7). The background replanner works on task data only and sends no child-typed text to anyone else.
+
+## 6c. Customizable per student: themes, rewards and look (added Nov 12)
+
+Today the look and the rewards are built for Emma. In the new version nothing about squishies, colors or style is hard-coded. Emma's setup becomes the first example, not the rule.
+
+- **Setup interview.** When Sofia adds a student, the Helper walks her through setup in plain questions: what the student loves (squishies, stickers, trading cards, plants, anything), favorite colors and style (kawaii, space, sporty, plain), how often rewards should come, what a "real prize" is and its budget, which subjects and classes, and what the weekly schedule looks like. It then builds that student's theme and starter template, and Sofia reviews and edits before it goes live.
+- **A theme is data, not code.** Each student has a theme made of: a name; the collectible type and what to call it (squishies, cards, stickers); a palette and fonts; a mascot and what "hatches" (egg or something else); celebration style; rarity names and odds; coin values; shop size and refresh day; and the catalog of items with art.
+- **Priority colors keep their meaning.** What a color means (must do today down to optional) stays the same for everyone so the Helper and the app can reason about it. What each step looks like can change per student, including whether red or black are allowed. "No red, no black" becomes Emma's default theme, not a global rule.
+- **Catalog per student.** The item list (Code.gs has 50 real squishy and slime products for Emma) becomes a per-student catalog Sofia can edit. The Helper can propose items from the interview and from live web lookups, and Sofia approves them. Real products still need real names, real rarity and a real price for the weekly real pick.
+- **Art needs a system.** Today every squishy is drawn by hand-written code. For new themes the app needs one of: recolorable shape templates, uploaded or generated images reviewed by Sofia, or an icon set. Decide in step 9. Art always goes through Sofia's approval, since students are children.
+- **Reward rules stay shared.** Full box, mini box, sparkle, coins and the real weekly pick (PRD 3a) become per-student settings with Emma's values as defaults. No gambling-style mechanics for any theme.
+- **Switch themes.** Sofia can duplicate a theme, change it, and move a student to it without losing her collection.
+
+## 6d. Connections: homework from other platforms, running without an app open (added Nov 12)
+
+Claude scheduled tasks in Sofia's own browser do not work beyond one household: they stop when the computer sleeps, sign-ins fail, and people get stuck in a confusing in-app browser. The new version gets homework through three tiers, from most reliable to least.
+
+1. **Feeds, email and official links (preferred).** Where a platform offers a calendar feed, an API or email notifications, use that. Each student gets a private inbox address, so tutor notes (like Remy's) and platform emails can simply be forwarded in, and the Helper reads them and creates tasks. These need no passwords and no browser.
+2. **Always-on connected browser (a live agent).** For platforms with nothing better (Schoology behind Microsoft sign-in, Pearson, TutorBird), a small agent runs on a computer in the cloud that is always on, with its own headless browser, whether or not any app is open. It runs on a schedule and on demand, reads assignments and submission status, and sends tasks and verified status to the student's account through that student's protected key.
+   - **Connecting once.** In the app the user taps Connect, a live window of the cloud browser opens, they sign in themselves (including any two-factor step), and the agent keeps that signed-in session in an encrypted vault. Passwords are not typed into the agent and not stored where possible. This is the safer shape of the "vault" idea.
+   - **When a sign-in expires** (Microsoft sessions do), the connection shows "needs reconnect" and the user gets an alert with a Reconnect button. It never silently fails.
+   - **Per student, per platform.** A `connections` record holds the platform, the student, status (working, needs reconnect, paused), last run, and last error. Sofia sees all of them in one place; a parent sees only their child's.
+   - **Always on.** This is a separate small service (not Supabase or Netlify), so it has a monthly cost. Pick the host at step 16.
+3. **Manual fallback.** Snap a screenshot or paste text of a portal and the Helper turns it into tasks. Always available, and the thing to use when a connection is down.
+
+Rules for all tiers: only a student's own key can write that student's tasks; connections can add and update tasks and mark them verified, and nothing else; school passwords are never kept in the app database or in code; every connection needs the parent's OK before it is turned on, and some schools' rules may forbid automated sign-in, so each platform is checked before it is offered. Everything a connection does is in the audit log.
+
+Open question: the user referred to a "personal agent" product. The requirement is written generally (any always-on agent with a vault and its own browser). If a specific product is intended, name it so session 16 can evaluate it.
+
 ## 7. App Store reality check
 
 The App Store is doable. The catch is that an app for kids gets Apple's strictest rules, so the app has to be built for them from the start.
@@ -230,21 +272,23 @@ The App Store is doable. The catch is that an app for kids gets Apple's strictes
 The website goes first because it's fastest to switch Emma to. The App Store comes after, from the same code. One piece per Claude Code session, checked before moving on. Progress is tracked in docs/PROGRESS.md.
 
 1. Foundation: PRD, house rules, progress file, database plan
-2. Supabase database and the who-sees-what rules
+2. Supabase database and the who-sees-what rules (including themes, connections and plan history)
 3. Logins and roles, plus a Yoda screen where Sofia creates accounts
-4. Days checklist in Expo
+4. Days checklist in Expo, built on theme settings from day one (Emma's look is the first theme)
 5. Start, egg, proof and photos
 6. Calendar, Plans and the bring-home list
-7. Rewards: coins, mystery box, Shelf and Shop
-8. Helper chat
-9. Move the data from the Google Sheet and the photos from Drive
-10. Notifications: the bell inbox, then push to phones
-11. Proof board for Sofia and parents
-12. Integrations: the protected pull endpoint and verified-by-platform
-13. Website on a Netlify preview link, tested with a fake student and a fake parent, then a full security review
-14. Switch Emma: sign her in on her iPad, give Annat her own login, shut off the old Google link and shared key, make the repo private, point the RSM task at the new version
-15. App Store: Apple Developer Program, TestFlight, privacy policy, unlisted request
-16. The edit backlog
+7. Rewards engine: coins, mystery box, Shelf and Shop, driven by per-student settings and catalogs
+8. Helper v2: chat plus automatic rescheduling (6b)
+9. Personalization: the setup interview, theme editor and per-student catalogs and art (6c)
+10. Move the data from the Google Sheet and the photos from Drive
+11. Notifications: the bell inbox, then push to phones
+12. Proof board for Sofia and parents
+13. Connections, easy tiers: private inbox address, feeds and manual screenshot upload, plus verified-by-platform (6a, 6d)
+14. Website on a Netlify preview link, tested with a fake student and a fake parent, then a full security review
+15. Switch Emma: sign her in on her iPad, give Annat her own login, shut off the old Google link and shared key, make the repo private. The existing RSM scheduled task is pointed at the new version as a stopgap
+16. Always-on agent: the cloud computer with a browser, the Connect and Reconnect flow, and the vault (6d)
+17. App Store: Apple Developer Program, TestFlight, privacy policy, unlisted request
+18. The edit backlog
 
 ## 9. Costs, open questions and sources
 
@@ -256,6 +300,7 @@ The website goes first because it's fastest to switch Emma to. The App Store com
 | Expo | Free to start | The free plan gives a few cloud builds a month, in a slower line |
 | Anthropic API | Pay as you go | Helper chat only |
 | Custom web address | About $12 a year | Optional |
+| Always-on agent computer (step 16) | Roughly $5 to $25 a month to start (host to be chosen), plus Anthropic usage per pull | Needed for platforms with no feed or email option. Cost grows with students and platforms |
 | Text or email alerts (later) | Email is nearly free; text costs a little per message and needs carrier registration | Not for launch |
 
 Year one minimum is about $99 plus Helper chat usage.
@@ -267,6 +312,11 @@ Year one minimum is about $99 plus Helper chat usage.
 4. Should parents get a daily summary, or only "day cleared" alerts?
 5. App name and icon for the App Store. Keep "Emma's Homework," or a name that fits more students?
 6. Free netlify.app web address, or a custom one?
+7. Which platforms must connect first (RSM, Schoology, Pearson, TutorBird, Remy's emails), and which have a feed or email option?
+8. The vault: sign in once in a live cloud browser and keep the session (recommended), or store usernames and passwords? The second conflicts with "no school passwords" and is riskier for a child's accounts.
+9. Helper autonomy default: suggest only, small moves automatic, or everything automatic?
+10. What art approach for new students' collections: recolorable shapes, reviewed generated images, or icon sets?
+11. Is there a specific "personal agent" product you want evaluated for step 16?
 
 ### Sources
 - Claude Code in the cloud: quickstart

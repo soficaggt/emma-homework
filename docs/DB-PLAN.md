@@ -35,6 +35,20 @@ Every login is a Supabase Auth account. Each account has one row saying its role
 - `notification_prefs`: which kinds each person wants, per channel. Channels start as "in app" and "push". Text and email can be added later with no change to anything else.
 - `push_tokens`: each phone's Apple push address.
 
+**Themes and personalization (added Nov 12)**
+- `themes`: per student (or shared by Sofia): name, collectible type and name, palette per priority step, fonts, mascot, celebration style, rarity names and odds, coin values, shop size and refresh day, real-prize budget. Emma's current look is the first row.
+- `catalog_items`: the per-theme item list with name, rarity, price, art reference, and status (proposed, approved). Only Sofia approves.
+- `student_setup`: the saved answers from the setup interview, so the Helper can rebuild or extend a theme.
+
+**Helper v2 (added Nov 12)**
+- `plan_changes`: every reschedule: student, what changed, who or what did it (Emma, Sofia, Helper), why, status (suggested, applied, undone), and the before-and-after so it can be undone with one tap.
+- `helper_settings`: per student autonomy level (suggest only, small moves, everything), daily call budget, and whether chat with the student is on.
+
+**Connections (added Nov 12)**
+- `connections`: student, platform, tier (feed, email, browser, manual), status (working, needs reconnect, paused), parent consent recorded, last run, last error.
+- `inbound_addresses`: each student's private email address for forwarded homework.
+- Browser sessions for the always-on agent are kept in an encrypted vault outside these tables (Supabase Vault or the agent host's own secret store), never in a readable column.
+
 **Safety and automation**
 - `automation_keys`: one per pull task, tied to one student. Only a hash of the key is stored. Sofia can revoke it.
 - `chat_usage`: the 80-a-day counter per user.

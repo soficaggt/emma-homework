@@ -11,12 +11,14 @@ A homework checklist for a 10-year-old (Emma) who has ADHD. Being rebuilt from a
 3. **Never put secrets in code, commits, chat or docs.** That means API keys, tokens, passwords, push keys, automation keys, and the ntfy channel name. Secrets live in Supabase server secrets or the Claude Code environment settings. If one is needed, say what it is called and ask the user to add it. Commit a `.env.example` with names only.
 4. **Every permission is enforced by Supabase Row Level Security.** Never rely on the app hiding a button. Every table has RLS on, with no public access. Anything the user must not be able to forge (coins, done-state math, verified-by-platform, box results, purchases) is written only by server-side functions, not by direct table writes from the app.
 5. **Collect the minimum.** First name, schedule, homework, proof. No addresses, no school IDs, no school passwords. No third-party analytics or ads, ever (App Store kids rules).
-6. **Keep the exact look.** Kawaii. Fonts: Fredoka (display), Nunito (body), Caveat (handwriting). Light and dark mode. The existing CSS variables and squishy drawings in `index.html` are the reference.
-7. **Colors, in order of how necessary a task is:** purple (must do today) > blue > white (with a black outline) > pink > orange > yellow > green > gray (optional). **No red. No black.** Same saturation everywhere; each subject gets its own shade. The old Code.gs still lists red and black in its color list and in the Helper prompt: do not carry that over.
+6. **Nothing about a student's look or rewards is hard-coded.** Palette, fonts, collectible type, mascot, rarity odds, coin values, shop size and catalog are per-student theme data (PRD 6c). Emma's current look is the first theme and the default: kawaii, Fredoka (display), Nunito (body), Caveat (handwriting), light and dark mode, and the CSS variables and squishy drawings in `index.html` are its reference. Emma's own screens must look the same as today.
+7. **Priority colors keep a fixed meaning for everyone,** in order of how necessary a task is: purple (must do today) > blue > white > pink > orange > yellow > green > gray (optional). How each step looks can change per theme. **Emma's theme has no red and no black, same saturation everywhere, each subject its own shade;** that is her default, not a global rule. The old Code.gs lists red and black in its color list and in the Helper prompt: do not carry that over for Emma.
 8. **No emojis** anywhere: not in the app, the Helper's replies, alerts, docs, commits or chat.
 9. **No gambling-style mechanics.** Box odds and rules are in PRD section 3a and must be kept as written.
 10. **Do not add logins by hand.** Use Supabase Auth only. No public sign-up: Sofia creates accounts.
-11. **Never type or store a school password.**
+11. **Never type or store a school password.** Platform connections use a sign-in the user does themselves in a live cloud browser, and only the resulting session is kept, encrypted (PRD 6d). If the user decides to store passwords instead, stop and get that decision written into PROGRESS.md first.
+12. **The Helper is a planner, not just a chat.** It replans on events and on a schedule, from the server, with the autonomy level set per student, every change logged and undoable (PRD 6b). It never checks things off without proof or lets a moved task count as done.
+13. **Automations run off-device.** Nothing important may depend on a phone, a browser tab, or Sofia's computer being open (PRD 6d).
 
 ## How we work
 - One build step per session (list in docs/PRD.md section 8). Do not start the next step.
@@ -31,4 +33,5 @@ A homework checklist for a 10-year-old (Emma) who has ADHD. Being rebuilt from a
 - Supabase: Auth, Postgres, Storage (private bucket for proof photos), Edge Functions, Realtime.
 - Hosting: website on Netlify, app built with Expo EAS (no Mac). Vercel is not used.
 - Time zone for "today": America/New_York, per student setting.
-- Helper chat: Anthropic API called only from a Supabase Edge Function.
+- Helper chat and replanning: Anthropic API called only from a Supabase Edge Function.
+- Always-on agent (step 16): a separate small cloud service with a headless browser. Host not chosen yet.
