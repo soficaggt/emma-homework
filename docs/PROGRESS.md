@@ -47,7 +47,7 @@ Read this at the start of every session and update it at the end. Rules are in C
 - (Nov 12) Emma makes her own username and password and saves them wherever she wants. An adult creates the account and invite; adults never see or set her password.
 - (Nov 12) The helper characters are original droids. Each student can name them and change their looks. Official Star Wars names and art are not used (PRD 6h).
 - (Nov 12) Finishing a whole project earns nothing extra.
-- (Nov 12) The weekly real prize budget is set by the parent. It is $40 for Emma today and may be lower later. The parent also chooses how the prize gets bought: alert only, one-tap checkout, or automatic buying that ships to the home. The app never stores a card or an address. Automatic buying is offered only where a retailer's ordering method has been tested; the suggested first release is alert only and one-tap checkout (PRD 6j).
+- (Nov 12, buying method superseded below) The weekly real prize budget is set by the parent. It is $40 for Emma today and may be lower later. The parent also chooses how the prize gets bought: alert only, one-tap checkout, or automatic buying that ships to the home. The app never stores a card or an address. Automatic buying is offered only where a retailer's ordering method has been tested; the suggested first release is alert only and one-tap checkout (PRD 6j).
 - (Nov 12) Parents can change a short list of settings for their own child (prize budget and buying method, consents, their own alerts). Otherwise they are read-only.
 - (Nov 12) Chat (planner and tutor) is on for Emma, with a parent's consent recorded in the app first.
 - (Nov 12) The ADHD profile is entirely optional. Nobody has to fill it in at launch, and the app works with safe defaults.
@@ -61,6 +61,7 @@ Read this at the start of every session and update it at the end. Rules are in C
 - (Nov 12, step 3) Every account saves one email for password resets (for a student: hers or a grown-up's). Reset links go only by email, never on screen. A link works once, for 1 hour, and at most 3 reset emails per account per hour. This is the one addition to "collect the minimum" (house rule 5), chosen by Sofia.
 - (Nov 12, step 3) The Delete account button is left for a later step (Apple needs it by step 17).
 - (Nov 12, step 3) Coach powers need two-factor (an authenticator app). Without the code, the database treats a coach as having no role at all. Students and parents sign in with username and password only.
+- (Nov 12, after step 3) Real prizes, replacing the earlier one-tap and automatic-buying ideas: the parent saves a card and shipping address once in a Stripe form inside the app (Stripe keeps both, our database keeps neither), taps Yes to pay for each earned prize within the budget, and Sofia orders it on whatever site sells it and ships it to the parent. House rules 5 and 19 and PRD 6j updated. Two-factor stays on for all coach accounts only.
 - (Nov 12, step 3) Coach accounts can only be made by the developer script that emails the invite (supabase/scripts/send-coach-invite.mjs). The app has no way to make a coach.
 
 ## Open questions for Sofia (the one live list)
@@ -75,7 +76,7 @@ Read this at the start of every session and update it at the end. Rules are in C
 3. Streak and threshold rules: keep or soften (step 7). I will propose options then.
 4. Annat's own consent for the AI helpers, recorded in the app before Emma uses them for real (step 5).
 5. Art for the original droids and their customizable parts (step 4), and the art approach for new collections (step 9).
-6. Which interests and stores to test first for reward packs, which currency looks to offer, and which retailers to test for one-tap and automatic buying (step 9).
+6. Which interests and stores to test first for reward packs, and which currency looks to offer (step 9). Before building Stripe payments: check Apple's kids-app rules for a parent payment form, Stripe's terms for buying on a parent's behalf, and sales tax (PRD 6j).
 7. Parent daily summary, or only "day cleared" alerts; and which reminders Emma gets on her own device (step 11).
 8. Which platforms connect first, and which have a feed or email option (step 13).
 9. Free netlify.app address, or a custom one (step 14).

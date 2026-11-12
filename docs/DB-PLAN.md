@@ -66,8 +66,8 @@ Every login is a Supabase Auth account. Each account has one row saying its role
 - `walkthroughs`: student, date, and only whether she did it or skipped it. No recall score is stored or shown.
 
 **Real prizes (added Nov 12)**
-- `prize_settings`: per student: the weekly budget (set by the parent, $40 for Emma today), the buying method (alert only, one-tap checkout, automatic), whether any exception above the budget is allowed (default none), the cancel delay, and who set it and when. Parents can write this row for their own child.
-- `prize_orders`: student, week, item, price including shipping and tax, retailer, status (suggested, awaiting parent, placed, cancelled, shipped, delivered, failed), placed-at, cancel-until, and the retailer's order reference. There are no card or address columns anywhere.
+- `prize_settings`: per student: the weekly budget (set by the parent, $40 for Emma today), the buying method (revised Nov 12: alert only, or parent pays through Stripe and Sofia orders, PRD 6j; the column's values change in step 9), whether any exception above the budget is allowed (default none), the cancel delay, and who set it and when. Parents can write this row for their own child.
+- `prize_orders`: student, week, item, price including shipping and tax, retailer, status (suggested, awaiting parent, placed, cancelled, shipped, delivered, failed), placed-at, cancel-until, and the retailer's order reference. There are no card or address columns anywhere (revised Nov 12: Stripe keeps the parent's card and address; step 9 adds a Stripe reference).
 - `catalog_items` gains `retailer` and `purchase_method` (link only, prefilled cart, automatic order), so the app knows which items can be bought which way.
 - Rules: a student can never write these tables or trigger an order. Only a server function places an order, and only for an earned, confirmed week, within the cap, after the cancel delay, for an approved item.
 
