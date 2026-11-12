@@ -6,7 +6,7 @@ Nothing here is built yet. This is the plan in plain English. Session 2 builds i
 
 - **Coach (Sofia):** sees and edits everything for every student she coaches. Creates accounts.
 - **Student (Emma):** sees and edits only her own tasks, proof, and collection. Cannot touch other students.
-- **Parent (Annat):** read-only, only their own child's proof and progress.
+- **Parent (Annat):** only their own child. Reads proof, progress and tutor conversations. Can change a short list of settings for their own child: the weekly real prize budget and how it gets bought, consents, and their own alerts.
 
 Every login is a Supabase Auth account. Each account has one row saying its role and first name.
 
