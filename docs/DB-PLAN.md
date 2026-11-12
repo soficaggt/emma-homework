@@ -131,3 +131,23 @@ Every table has security turned on with nothing allowed by default. Then:
 ## How I will check it (session 2 "done when")
 
 I will create two fake students, one fake parent and one fake coach, and run automated tests that try to break the rules: student A reading student B's tasks, a student setting her own coins, a parent writing anything, a student opening another student's photo, a stolen automation key reading other students. All must be refused.
+
+## As built in session 2 (where the build differs from, or adds to, the plan above)
+
+The plan was built as written, with these small differences. Each one is the safer reading.
+
+1. **Start button (`work_sessions`):** written by the server only. If a student could write her own start time she could forge "worked 30 minutes" and the egg bonus. She can read it.
+2. **Tutor conversations:** readable by the coach and the parent only, exactly as the plan says. That means Emma's own screen needs a server function to show her chat history (step 8).
+3. **Morning walk-through:** only the student reads and writes it. The plan did not say who else sees it, and PRD 6i says it is never shown as a result, so it starts closed. Easy to widen later.
+4. **Time zone:** lives on `profiles` only (the plan listed it in two places). A student cannot change it, because it decides where one day ends.
+5. **ADHD profile:** the table is closed to the app. The coach, the student and her parent reach it only through `read_adhd_profile()` and `save_adhd_profile()`, which check who is asking and log every read (without its content). A student can write only her own answers, and only a parent can record consent.
+6. **Consent** (helper chat, tutor, connections, ADHD storage): only a parent can record it, and the app stamps who and when. A coach cannot record a parent's consent for them.
+7. **`economy_config` (new, read-only):** holds the one shared economy (box odds, mini box, coin range, egg, shop prices and size, 24-hour windows) from PRD 3a. Everyone can read it; only a developer can change it, by migration.
+8. **`tasks.source` and `tasks.source_platform`:** the plan used "source" two ways. `source` is who it came from (student, coach, template, helper, platform) and `source_platform` is which platform (rsm, schoology and so on).
+9. **`tasks.original_date` (new):** set once when the task is created. A task moved off its day can then be told apart from one that never moved, which the box rules need ("moving counts the same as Not today").
+10. **Coins on a task are fixed when it is created.** A student can change a task's color step, but that does not change its coins.
+11. **Prize settings and orders:** Emma cannot read either (the budget is a parent decision). Parent and coach can.
+12. **Item list:** 53 items came across from Code.gs, not 50. The audit trigger was paused for that seed.
+13. **Automation keys:** the database side is built (create, revoke, look up a key, add or update tasks and mark them verified for one student, only callable with the server key). The thing that presents the key to the database is built in step 13.
+14. **Not built yet (by design):** finishing a task, opening a box, buying, and reviewing are server functions in steps 5, 7 and 12. Until then nothing lets a student finish a task, which is the safe state.
+15. **Emma's theme row** is not seeded yet because it needs her account (step 3). It is created when her account exists.
