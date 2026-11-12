@@ -40,6 +40,7 @@ Every login is a Supabase Auth account. Each account has one row saying its role
 - `reward_packs`: per student: what is collected and its name, digital collectibles on or off, real prizes on or off and budget, rarity names, art style, item sources, and the currency skin (default gold coins). The economy numbers (earn rates, prices by rarity, box odds, shop size, refresh day, box rules) are not stored per student: they are one shared set that only the developers change.
 - `catalog_items`: per pack: name, image or art reference, price, link, tags, rarity, source (hand-made, pasted wishlist, web search, connected account), and status (proposed, approved). Only Sofia approves. Links out are flagged for the parent gate.
 - `student_setup`: the saved interview answers, so the Helper can rebuild or extend a theme and pack when interests change.
+- `helper_characters`: per theme: for each of the three jobs (planner, tutor, checker), the character's name and art reference. The jobs are fixed; the names and looks are theme data.
 - `tasks.color_step`: the task's chosen step in the student's color system (replaces a fixed color name).
 
 **ADHD profile (added Nov 12)**
@@ -49,10 +50,19 @@ Every login is a Supabase Auth account. Each account has one row saying its role
 - `tasks` gains `first_step` (a tiny starting step), `estimated_minutes` and `actual_minutes` (for Time Detective and learning).
 - `skill_events`: starting, writing it down, packing and planning actions (student, kind, time), used for rewards for skill use. The amounts are one shared fixed set, decided in step 7.
 
+**Projects (added Nov 12)**
+- `projects`: student, title, source (platform, email, Sofia, Emma), due date, size, status, the assignment sheet or rubric (text and image path), and who created it.
+- `tasks` gains `project_id` and `project_step` (the order of the step in its project).
+- `planning_conversations`: project, each question, each answer, who answered (Emma or Sofia), and when. Project plans always need approval before they land in the week.
+
+**Tutor (added Nov 12)**
+- `tutor_settings`: per student: answer mode (hints, steps, full answers), curated videos on or off, and consent recorded (who agreed and when).
+- `tutor_conversations`: readable by the coach and the student's parent only.
+
 **Integrity (added Nov 12)**
 - `tasks` gains `reward_status` (provisional, confirmed, reversed), `review_status` (unreviewed, looks_good, needs_more, not_done), `reviewed_by`, `reviewed_at`, `review_note`, `proof_questions` (the questions generated for the task), `proof_answers`, `value_set_by` (template, coach, Helper, platform, AI intake, adult), `confirmed_at`, and `final_at` (24 hours after she finishes). `source` (template, coach, Helper, platform, or student) already exists and drives which tasks are trusted.
 - `proof_checks`: task, kind (rules or AI), result (pass, needs more, unclear), the reason in plain words, and when.
-- `task_intake`: for each task Emma adds: the name she typed, what it was matched to, the questions and answers, the AI's verdict, the priority step and size it set, and whether it is waiting for an adult. How long her answers are kept is still to be confirmed.
+- `task_intake`: for each task Emma adds: the name she typed, what it was matched to, the questions and answers, the AI's verdict, the priority step and size it set, any claims she made that would raise the value (like a test date) marked unverified until a platform, the calendar or an adult confirms them, and whether it is waiting for an adult. How long her answers are kept is still to be confirmed.
 - `proof_images`: task, storage path, content hash and perceptual hash (to catch reuse), where it came from (in-app camera, library, screenshot), and taken-at.
 - `integrity_flags`: student, task, kind (implausible title, too fast, duplicate, reused text or photo, many self-added), status, and who has seen it.
 - `ledger` gains a status (held, confirmed, reversed, forgiven) and reversal entries that point at the task they undo, so the balance stays auditable. Only confirmed coins can be spent.

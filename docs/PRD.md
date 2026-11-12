@@ -249,6 +249,7 @@ The old Helper does not work today and only reacts when someone types. The new H
 - **It must actually work.** Before building, find out why today's chat fails (missing key or workspace ID in the script properties is the likely cause) so the cause is not carried over.
 - **Cost control.** Each student has a daily call budget. Replans only run when something changed.
 - **Launch rule (App Store).** Chat with Emma is off until Sofia and a parent turn it on (PRD section 7). The background replanner works on task data only and sends no child-typed text to anyone else.
+- **Big assignments and projects** get their own planning conversation that breaks them down across her week (6g). The planner is one of three helpers with separate jobs (6h).
 
 ## 6c. Everything is customizable per student: themes, colors, rewards, interests (revised Nov 12)
 
@@ -260,7 +261,7 @@ Only the structure and the safety rules are fixed. How it looks, what the colors
 - Safety and access rules: the proof flow, who-sees-what, parent gates on links out and purchases, no gambling-style mechanics, and accessibility minimums (readable contrast, large tap targets, a reduce-motion option).
 
 ### What is customizable
-Palette, fonts, shapes and corners, icons, the mascot and what "hatches", celebration style, wording and tone, page names, what the currency looks and is called, rarity names and art, what is collected, and how much of the app is themed at all. The economy itself (how coins are earned, what things cost, box odds, shop size) is not customizable: see "Currency and the economy" below.
+Palette, fonts, shapes and corners, icons, the names and looks of the three helper characters (6h), the mascot and what "hatches", celebration style, wording and tone, page names, what the currency looks and is called, rarity names and art, what is collected, and how much of the app is themed at all. The economy itself (how coins are earned, what things cost, box odds, shop size) is not customizable: see "Currency and the economy" below.
 
 ### Colors do not have a fixed meaning
 - Each theme has a **color system**: a list of steps (any number), each with a color, a name and a meaning, in an order the theme chooses. A system can be an urgency ladder (Emma's: purple for must do today down to gray for optional), colors by subject, colors by task type, or no colors at all.
@@ -360,19 +361,22 @@ The problem: kids will look for the fastest route to the reward. Emma adds assig
 
 ### Layer 1: which tasks count, and who sets their value
 - Every task records its source: the template, Sofia, the Helper, a connected platform, or "added by Emma".
-- **Emma never sets a task's value.** A task's value (its coins) follows from its priority and size using the fixed table (PRD 3a). Tasks from the template, Sofia, the Helper or a platform arrive with a value already. For a task Emma adds herself, an AI sets the priority step (from her own color legend) and the size.
-- **Adding an assignment goes through a short AI intake,** so a made-up task has nothing to cash in:
-  1. She types a name. The app first matches it against what it already knows (her classes, pulled assignments, tests on the calendar, past tasks). This is quick and sends nothing anywhere.
-  2. If it matches ("Latin vocab" and she takes Latin), the AI proposes the subject, due date, how long it should take and the priority step, and shows one card: "Latin vocab, about 20 minutes, due tomorrow. Right?" She taps yes or fixes it.
-  3. If it does not match or is vague, a short chat of one to three questions: "Which class is this for? When is it due? What do you have to do?" The AI checks that her answers make sense and sets the value.
-  4. If it still does not make sense, the task is saved as "waiting for Sofia". She can see it, but it earns nothing until an adult approves it and sets its value. The app tells her kindly ("Sofia will look at this one").
+- **Emma never sets a task's value.** A task's value (its coins) follows from its priority and size using the fixed table (PRD 3a). Tasks from the template, Sofia, the Helper or a platform arrive with a value already.
+- **What Emma adds herself is the work nobody can pull in:** studying for the history test, reviewing notes, practicing, extra reading. If a platform could supply it, it would already be there. So these tasks cannot be checked against a pulled assignment. They are judged against context instead: her classes, tests and due markers on the calendar, projects in progress, and what she has been working on.
+- **Adding a task goes through a short intake run by the planner (6h),** so a made-up task has nothing to cash in:
+  1. She types what she wants to do ("study for history test"). The app first looks for related context it already knows: is there a History class, a History test or due marker on the calendar, a project in progress? This is quick and sends nothing anywhere.
+  2. If related context exists, one card is shown: "Study for the History test (Friday), about 30 minutes. Right?" She taps yes or fixes it. The planner sets the priority step (from her own color legend) and the size.
+  3. If nothing related is known, a short chat of one to three questions: "Is there a test coming? When? What will you study?" The planner checks that her answers make sense.
+  4. **Claims that would raise the value, like a test date, are unverified.** They are shown to an adult, and the task earns at the default value until a platform, the calendar or an adult confirms it. This stops "test tomorrow" from being an easy way to inflate a task.
+  5. If it still does not make sense, the task is saved as "waiting for Sofia". She can see it, but it earns nothing until an adult approves it and sets its value. The app tells her kindly ("Sofia will look at this one").
+- Studying and prep tasks are proved with specifics: the checker asks what she studied and one thing from it, which also shows whether she studied.
 - Duplicates, tasks finished within seconds, and tasks finished much faster than their estimate are flagged.
 - **It has to be fast.** Quick matching comes first and the AI step should take a couple of seconds, because waiting is hard for an ADHD brain.
 
 ### Layer 2: checking the proof when she submits
 - Instead of a blank box, the app asks one or two specific questions made from the task, such as "Which problems did you do? Which one was the trickiest?" Specific questions are easier for an ADHD brain than "explain what you did", and the answers show whether the work really happened. A short, true answer can pass. Length is not the test.
 - **Rule checks run first** and send nothing to anyone: too short, gibberish, the same text reused on other tasks, filler only.
-- **An AI check runs only when needed.** Does the answer make sense for this task and subject? Is it specific? Is it consistent with the assignment (its title, note and class)? For photos: does it show relevant work, such as a page with writing or a worksheet, rather than a blank wall or something unrelated? Photos are also compared with earlier photos to catch reuse. Where possible a photo must come from the in-app camera, with screenshots allowed only for online work.
+- **An AI check runs only when needed.** Does the answer make sense for this task and subject? Is it specific? Is it consistent with the assignment (its title, note and class)? For photos: does it show relevant work, such as a page with writing or a worksheet, rather than a blank wall or something unrelated? Photos are also compared with earlier photos to catch reuse. Photos can come from the camera or the camera roll (decided), and screenshots are fine for online work. A photo's capture time is compared with when the task was created and started, and one taken long before is flagged as a hint. That time can be missing or edited, so it is never proof by itself.
 - **Results:** pass; "needs a bit more" (a kind prompt, up to two tries, no penalty); or still unclear. If still unclear, the answer is accepted but flagged, and the rewards stay provisional until an adult looks.
 - **Strictness is set per student by Sofia:** gentle (flag only), normal (ask for more up to twice, then accept and flag; the default, decided), or strict (she cannot submit until it passes or an adult approves in person).
 - **Ways to prove that are not writing:** a photo, a short answer, or "show Sofia in person", so a child who finds writing hard is not blocked. Voice answers are not planned for launch because they send a child's voice to a third party.
@@ -387,11 +391,11 @@ The problem: kids will look for the fastest route to the reward. Emma adds assig
 - Sofia and parents can both review, and every review is written to the audit log.
 - Patterns go to Sofia, not to automatic punishment: "3 items flagged this week, mostly after 8pm", so the adults can talk with Emma. The Helper also notes where flags cluster (very long tasks, certain subjects), because that may mean the work feels too big, and it suggests splitting the task or adding a nearer reward. That is a design stance, not a researched finding.
 
-### What happens to coins and boxes: prevent, instead of take back (proposed, needs your yes)
+### What happens to coins and boxes: prevent, instead of take back (auto-confirm decided Nov 12)
 Taking back spent coins or opened boxes is messy, so the design avoids needing to.
 - **Coins have two states:** confirmed (spendable) and held (shown in the counter with a gentle "waiting" look, not yet spendable). The coin animation still plays the moment she finishes, so the feedback is immediate.
 - **Most coins are confirmed at once.** That happens when the task came from a trusted source or passed the AI intake, the proof passed the checks, and nothing was flagged.
-- **Held coins are confirmed** when an adult taps Looks good, or automatically 24 hours after she finished if nobody has looked. She is never punished for an adult being busy, and Sofia gets a nudge about unreviewed flagged items.
+- **Held coins are confirmed** when an adult taps Looks good, or automatically 24 hours after she finished if nobody has looked. She is never punished for an adult being busy. This includes flagged items, so a flagged cheat could slip through if nobody looks. Sofia and the parents get a reminder before the 24 hours run out.
 - **A box opens only when every task that counted toward that day is confirmed.** Usually that is immediate. If something was flagged, the box waits, at most 24 hours.
 - **Not done, within the 24 hours,** removes the held or unspent coins and the box credit for that task. In the rare case her coins were already spent or her box already opened (the checks passed but an adult disagreed), the spent part is forgiven: no negative balance, nothing taken from future earnings, and the item stays. The task reopens, she needs to do it, and it does not pay a second time. Sofia gets a flag so the adults can talk about it, and may raise that student's proof strictness for a while.
 - After 24 hours, everything is final.
@@ -404,6 +408,49 @@ Taking back spent coins or opened boxes is messy, so the design avoids needing t
 
 ### Honest limits
 A determined child can still write plausible text or photograph someone else's work. The goal is to make cheating not worth the effort and to catch patterns early. Adult review is the real backstop. Verified-by-platform proof (6a) is the strongest where it exists. The best defense is also the design: a fixed economy, values set by the AI and adults rather than by her, and tasks that do not feel impossible.
+
+## 6g. Projects and big assignments (added Nov 12)
+
+When the app learns about a project or a large assignment (pulled from a platform, forwarded by email, added by Sofia, or described by Emma), the planner does not drop one big task on one day. It asks a lot about it and helps break it down across her week.
+
+### What counts as big
+A project, a paper, a presentation, a test to study for, a long reading, or anything with a far-off due date or many parts. The planner spots these from the name, the size and the due date, and any adult can mark something as big.
+
+### The planning conversation
+- **One question at a time,** with tap answers where possible, and visible progress ("3 of 8"), so it never feels like an interrogation. Emma can say "ask Sofia" and the question goes to Sofia. By default a project planning conversation happens with Sofia, like the weekly planning conference in the evidence-based skills programs (docs/ADHD-RESEARCH.md). The planner prepares what it already knows, so there are fewer questions.
+- **What it asks:** what the project is and what the teacher wants (paste or photograph the assignment sheet or rubric); the due date and any teacher checkpoints; what the parts are; what materials or help she needs; which parts are easy or hard for her; how long she thinks each part takes, compared with how long similar things took before ("Time Detective"); what is already in her week (classes, Plans, tutoring) and which days have room; and her best focus times (ADHD profile, 6e).
+- **What it produces:** milestones and small steps, each with a tiny first step and an estimate, placed across her week around her fixed Plans, starting early, with spare days left before the deadline. People commonly underestimate how long big work takes, and time blindness makes that worse. That is a design stance, not a finding from the research I did.
+- **Studying for a test** is spread over several days, with each chunk having a specific goal ("make flashcards for chapters 3 and 4"). Spreading study out is commonly recommended, but it was not part of my ADHD research. Specific goals also give the checker something to ask about.
+- **Approval:** a project plan is shown to Emma and Sofia as a suggestion before it lands in her week. Project plans always need approval, whatever the Helper's autonomy level is (open question 22).
+- **Afterward:** each step is a normal task linked to the project, with a project progress bar, its own proof (a photo of an outline is natural proof), and normal rewards from the fixed table. Finishing a project earns nothing extra unless decided later. If steps are missed or run long, the planner replans the rest (6b) and tells Sofia if the deadline is at risk.
+- **Not too much at once:** only the next few steps show in her Days view (ADHD principle 3). The rest stay in the project view.
+
+## 6h. The helper crew: three characters with separate jobs (added Nov 12)
+
+There are three helpers, each with its own job, its own permissions and its own server function. They are separate on purpose: the helper that explains cannot change rewards, and the helper that judges proof cannot plan the week.
+
+| Job | Emma's choice | What it does | What it cannot do |
+|---|---|---|---|
+| Planner | BB-8 | Builds and changes the week, runs the intake when she adds a task, plans big assignments (6g), replans (6b) | Check things off or confirm rewards |
+| Tutor | C-3PO | Explains topics, answers in the mode Sofia sets, shows one curated video at a time | Change the plan or any reward, or mark anything done |
+| Checker | R2-D2 | Asks the proof questions, judges the proof (6f), flags things for adults | Change the plan or decide rewards (the server decides) |
+
+Why these fit (my read): BB-8 is cheerful and always rolling ahead, a good planner. C-3PO is polite and fluent at explaining things, a good tutor. R2-D2 is resourceful and gets to the truth, a good checker.
+
+### Character notes
+- Borrow the cheerful, polite and resourceful parts. Do not borrow C-3PO's worrying ("we're doomed"): the ADHD design says protect feelings (1a, principle 7).
+- The checker can beep for fun, but every result also comes with clear words. The checker never accuses.
+- The three jobs are fixed. The names and looks are theme data (6c), so another student can have different characters.
+
+### Star Wars and the App Store
+These are trademarked characters. Using the official names and art in an App Store app risks rejection or a takedown, and the characters would appear in store screenshots. This is not legal advice. Options: (a) original droid characters in the same spirit, such as a round rolling planner, a polite gold-toned tutor and a small checker, for the store build, with Emma free to rename them in her private theme; or (b) the official names and art everywhere, accepting the risk. Until this is decided (open question 18), build with placeholder characters and do not commit official art.
+
+### The tutor (still to finalize)
+- Answers in the mode Sofia sets for the student: hints only, step by step, or full answers. Default to decide (question 19). I lean toward hints first, then steps.
+- Knows which task she is on. In hints mode it never does the work for her.
+- Shows videos from a curated list (for example Khan Academy), in the app, one at a time, with no feed. Embedded third-party video can send data to the video company, which may conflict with the App Store's kids rules, so check before choosing.
+- A child's messages go to an AI provider, so the tutor is off until Sofia and a parent consent (PRD 7). Sofia and parents can read the conversations.
+- Focus mode (blocking other apps and sites while she works) is still undecided: see question 20.
 
 ## 7. App Store reality check
 
@@ -433,7 +480,7 @@ The website goes first because it's fastest to switch Emma to. The App Store com
 5. Start, egg, proof and photos, with the AI assignment intake and the layered proof checks (6f)
 6. Calendar, Plans and the bring-home list
 7. Rewards engine: coins, mystery box, Shelf and Shop. One fixed economy for everyone, with per-student currency looks and catalogs, plus small rewards for skill use (1a), and provisional rewards that an adult can reverse (6f)
-8. Helper v2: chat plus automatic rescheduling (6b)
+8. The helpers: planner (chat, automatic rescheduling, big-assignment planning) and tutor, with separate permissions (6b, 6g, 6h)
 9. Personalization: the setup interview including the ADHD profile (6e), theme editor and per-student catalogs and art (6c)
 10. Move the data from the Google Sheet and the photos from Drive
 11. Notifications: the bell inbox, then push to phones
@@ -477,10 +524,12 @@ Year one minimum is about $99 plus Helper chat usage.
 14. Streak and threshold rules (full box needs half the day, sparkle needs three days in a row, no dodging): keep or soften?
 15. Is the weekly real prize budget (about $40) an adult setting per student?
 16. Which currency looks to offer: gold coins (default), cash, others?
-17. Do you approve the "prevent, instead of take back" plan for coins and boxes in 6f (held coins, boxes that wait for confirmation, spent coins forgiven)?
-18. If a flagged item is not reviewed within 24 hours, is auto-confirm OK, or should it stay held until an adult looks?
-19. Photo proof: in-app camera only, or camera roll too (screenshots allowed for online work)?
-20. Annat's own consent to send Emma's task names, answers and proof to the AI checker, to record before real use.
+17. Annat's own consent to send Emma's task names, answers and proof to the AI checker, to record before real use.
+18. The three helpers: official Star Wars names and art (BB-8, C-3PO, R2-D2), or original droids in the same spirit? Official ones risk App Store rejection.
+19. Tutor default: hints only, step by step, or full answers?
+20. Focus mode (blocking other apps and sites during Start): which device or devices does Emma use, and will Annat approve the Screen Time permission?
+21. Should finishing a whole project earn anything extra? (The economy is fixed, so I lean no.)
+22. Must Emma and Sofia approve a project plan before it lands in her week, whatever the Helper's autonomy level? (I lean yes.)
 
 ### Sources
 - Claude Code in the cloud: quickstart

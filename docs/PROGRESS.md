@@ -14,7 +14,7 @@ Read this at the start of every session and update it at the end. Rules are in C
 | 5 | Start, egg, proof and photos, with the AI assignment intake and layered proof checks (6f) | A photo uploads, only Sofia can open it, a made-up assignment earns nothing, and junk proof (filler text, reused text or photos) is caught or flagged | Not started |
 | 6 | Calendar, Plans, bring-home list | Due dates stay off the daily list | Not started |
 | 7 | Rewards engine: one fixed economy, provisional rewards an adult can reverse (6f), reward packs and currency skins | A cleared day gives a box, rules match PRD 3a exactly, and two students with different themes earn and pay the same amounts, and reversing a task removes its coins | Not started |
-| 8 | Helper v2: chat plus automatic rescheduling | Finishing late or adding homework triggers a sensible replan, undoable | Not started |
+| 8 | The helpers: planner (chat, rescheduling, project planning) and tutor, with separate permissions | Finishing late triggers a sensible replan, undoable, and a pasted project assignment becomes a week of small steps she and Sofia approve | Not started |
 | 9 | Personalization: setup interview including the ADHD profile, themes, color systems, reward packs, item sources | A second fake student (for example into Star Wars) gets a different look, color meanings and reward pack from the interview | Not started |
 | 10 | Move data from the Sheet and Drive | Emma's real history matches the old site | Not started |
 | 11 | Notifications: bell inbox, then push | Finishing a task puts an alert in Sofia's bell | Not started |
@@ -37,6 +37,10 @@ Read this at the start of every session and update it at the end. Rules are in C
 - (Nov 12) No bad-day or hard-day mode (Sofia's decision). Plans still have slack and the Helper still adapts.
 - (Nov 12) Rewards must be hard to cheat (PRD 6f): provisional rewards, layered proof checks that flag and ask instead of accusing, and adult review that can reverse rewards. A reversal is an undo, not a penalty.
 - (Nov 12) Decided: an adult can reverse a task for 24 hours after she finishes; default proof strictness is normal; no daily coin cap. Adding an assignment goes through an AI intake that sets its value, and Emma never sets a value. Sofia consented to the AI checks for building and testing, and Annat's own consent should be recorded before Emma uses it for real.
+- (Nov 12) Decided: photo proof may come from the camera or the camera roll; flagged items nobody reviews in 24 hours auto-confirm (with a reminder to the adults first); the plan to hold coins and make boxes wait for confirmation stands.
+- (Nov 12) What Emma adds herself is the work nobody can pull in (studying, reviewing, practicing). It is judged against context (classes, calendar tests, projects), and claims that would raise the value, like a test date, stay unverified until confirmed.
+- (Nov 12) Three separate helpers (PRD 6h): planner (Emma chose BB-8), tutor (C-3PO), checker (R2-D2). Jobs and permissions are fixed, names and looks are theme data. Official Star Wars names and art are undecided because of App Store risk.
+- (Nov 12) Big assignments and projects get a planning conversation that breaks them down across her week, with Sofia, and a plan Emma and Sofia approve (PRD 6g).
 - (Nov 12) Later: a clinician-fillable form a parent can upload at any time to personalize the app (PRD 6e). The setup question list is designed now so the form can be built from it.
 - (Nov 12) The Helper is a planner that replans on events and schedules, not only a chat.
 
@@ -60,10 +64,11 @@ Read this at the start of every session and update it at the end. Rules are in C
 16. Streak and threshold rules (full box needs half the day, sparkle needs three days in a row, no dodging): keep or soften
 17. Is the weekly real prize budget (about $40) an adult setting per student
 
-18. Approve the "prevent, instead of take back" plan for coins and boxes: held coins, boxes wait for confirmation, spent coins forgiven (step 7)
-19. A flagged item nobody reviews within 24 hours: auto-confirm, or keep held until an adult looks (step 7)
-20. Photo proof: in-app camera only, or camera roll too, with screenshots for online work (step 5)
-21. Annat's own consent to send Emma's task names, answers and proof to the AI checker, to record before real use
+18. Annat's own consent to send Emma's task names, answers and proof to the AI checker, to record before real use
+19. Official Star Wars names and art for the three helpers, or original droids in the same spirit (step 4)
+20. Tutor default: hints only, step by step, or full answers (before the tutor is built, step 8)
+21. Focus mode (blocking other apps and sites during Start): which device or devices Emma uses, and whether Annat will approve the Screen Time permission
+22. Should finishing a whole project earn anything extra (I lean no, the economy is fixed), and must a project plan always need Emma and Sofia's approval (I lean yes) (step 8)
 
 ## Session log
 - 2026-11-12, step 1: read index.html, proof.html and backend/Code.gs. Wrote docs/PRD.md (new sections 3a, 6a), CLAUDE.md, this file, and docs/DB-PLAN.md. No app code and no live site files changed.
@@ -72,3 +77,4 @@ Read this at the start of every session and update it at the end. Rules are in C
 - 2026-11-12, step 1 revised (3): researched ADHD and task completion (docs/ADHD-RESEARCH.md). Added PRD 1a (ten-point ADHD check), PRD 6e (ADHD profile at setup), and house rules 14 and 15. Economy structure made fixed for every student, only the currency look customizable (PRD 6c rewritten, house rule 6, DB plan).
 - 2026-11-12, step 1 revised (4): removed the hard-day mode everywhere. Added PRD 6f (anti-cheating: provisional rewards, layered proof checks, adult review that reverses rewards), the later clinician form upload in PRD 6e, house rule 16, and integrity tables in the DB plan.
 - 2026-11-12, step 1 revised (5): reversal window set to 24 hours, strictness default normal, daily cap dropped in favor of an AI assignment intake that sets the value, and a proposed hold-then-confirm design for coins and boxes (PRD 6f).
+- 2026-11-12, step 1 revised (6): added PRD 6g (project and big-assignment planning), PRD 6h (planner, tutor and checker as separate characters and permissions), camera roll and auto-confirm decisions, and the corrected intake for tasks Emma adds herself. House rule 17 and DB tables for projects, tutor and helper characters added.
