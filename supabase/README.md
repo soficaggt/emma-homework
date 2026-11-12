@@ -4,7 +4,10 @@
 - `tests/rls.test.sql` the security tests (they try to break the rules). Always rolled back, so safe to run on the real project.
 - `tests/run-local.sh` builds a throwaway local Postgres that imitates Supabase, applies the migrations and runs the tests. Needs PostgreSQL 16 or 17 installed. No account needed.
 - `tests/run-remote.sh` runs the same tests against the real project. Needs `SUPABASE_PROJECT_REF` and `SUPABASE_ACCESS_TOKEN` in the environment (never commit them).
-- `functions/` server functions (step 3 onward).
+- `functions/` server functions. `account-public` (invites, sign in, forgot, reset; no login needed) and `account-admin` (the Yoda screen's actions; login needed). Shared code is in `functions/_shared/`.
+- `scripts/deploy-functions.sh` deploys the functions. `scripts/send-coach-invite.mjs` emails a coach invite (the only way a coach account is made).
+- `tests/logins.e2e.mjs` the login test: makes a fake coach, student and parent on the real project through the deployed functions, tries to cheat each step, then deletes them. Look for `EMMA_LOGIN_E2E result=PASS`. In the cloud environment run it with `NODE_USE_ENV_PROXY=1`.
+- Server secrets the functions read (set in Supabase, never in code): `RESEND_API_KEY` and `EMAIL_FROM` (emails), `APP_URL` (the website address for links), optional `APP_NAME`.
 
 Look for `EMMA_RLS_TESTS result=PASS` at the end of a run.
 

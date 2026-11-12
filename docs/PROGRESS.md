@@ -9,7 +9,7 @@ Read this at the start of every session and update it at the end. Rules are in C
 | 0 | Accounts and keys (user does this) | Keys saved in the environment settings, open questions answered | In progress |
 | 1 | Foundation: PRD, CLAUDE.md, this file, database plan | User approves docs/DB-PLAN.md | Done. Database plan approved Nov 12 |
 | 2 | Database and security (including themes, connections, plan history) | Two fake students cannot see each other's data; a fake parent sees only their child; a student cannot forge coins or verified status | Done Nov 12. 736 security checks pass locally and on the real project |
-| 3 | Logins and the Yoda screen | An adult can invite Emma, she chooses her own username and password and signs in, and a reset sends her a one-time link (adults never see her password) | Not started |
+| 3 | Logins and the Yoda screen | An adult can invite Emma, she chooses her own username and password and signs in, and a reset sends her a one-time link (adults never see her password) | Built Nov 12. Passed with fake accounts on the real project, except actually emailing the reset link, which waits for the email key (see below) |
 | 4 | Days checklist in Expo, on theme settings | Looks and behaves like today's site, colors from theme data, today view by default with one clear next task and a first-step prompt | Not started |
 | 5 | Start, egg, proof and photos, with the AI assignment intake and layered proof checks (6f) | A photo uploads, only Sofia can open it, a made-up assignment earns nothing, and junk proof (filler text, reused text or photos) is caught or flagged | Not started |
 | 6 | Calendar, Plans, bring-home list | Due dates stay off the daily list | Not started |
@@ -57,11 +57,17 @@ Read this at the start of every session and update it at the end. Rules are in C
 - (Nov 12) The Helper is a planner that replans on events and schedules, not only a chat.
 - (Nov 12, step 2) Where the build differs from docs/DB-PLAN.md is listed at the end of that file ("As built in session 2"). The main ones: the Start button is server-written, only parents can record consent, the ADHD profile is reached only through two checking functions, and a new read-only `economy_config` table holds the one shared economy.
 - (Nov 12, step 2) Migration files are the source of truth and are never edited after they are applied. Fixes go in a new numbered file (see `..0900_tuning.sql`).
+- (Nov 12, step 3) Only the coach makes invites for now. Parents inviting can be added later.
+- (Nov 12, step 3) Every account saves one email for password resets (for a student: hers or a grown-up's). Reset links go only by email, never on screen. A link works once, for 1 hour, and at most 3 reset emails per account per hour. This is the one addition to "collect the minimum" (house rule 5), chosen by Sofia.
+- (Nov 12, step 3) The Delete account button is left for a later step (Apple needs it by step 17).
+- (Nov 12, step 3) Coach powers need two-factor (an authenticator app). Without the code, the database treats a coach as having no role at all. Students and parents sign in with username and password only.
+- (Nov 12, step 3) Coach accounts can only be made by the developer script that emails the invite (supabase/scripts/send-coach-invite.mjs). The app has no way to make a coach.
 
 ## Open questions for Sofia (the one live list)
 
-### Needed now
-Nothing. The database plan was approved on Nov 12.
+### Needed now (step 3 follow-up, see "What Sofia needs to do" below)
+1. An email sender for reset links and your coach invite: a Resend account and two server secrets.
+2. To email anyone other than yourself (Annat, or Emma's reset address), Resend needs a web address you own (a domain). This ties into question 9 below (custom address, about $12 a year).
 
 ### Needed at the step that builds it (nothing needed now)
 1. App name. Not blocking: the technical bundle ID will be neutral, so the display name can change later.
@@ -93,10 +99,21 @@ Nothing. The database plan was approved on Nov 12.
 - 2026-11-12, step 1 revised (9): recorded Emma choosing her own username and password, original customizable droids, parent-set prize budget with alert, one-tap or automatic buying (PRD 6j), parents' short list of settings, chat on with parent consent, the ADHD profile being optional, and suggest-only autonomy. Trimmed the open questions to three real blockers.
 - 2026-11-12, step 1 closed: the database plan is approved and the three old-code decisions are picked. Next is step 2 (database and security), in a new chat. It needs the Supabase project, token and network access from step 0.
 - 2026-11-12, step 2: built the database in the Supabase project emma-homework: 44 tables, security on for every one, 9 migration files in supabase/migrations/ (applied and recorded). Wrote 736 security checks in supabase/tests/ that try to break the rules, plus scripts to run them locally (run-local.sh) and against the real project (run-remote.sh). All pass in both places. To check the tests can fail, I broke the rules on purpose 19 times in a scratch copy. The tests caught 16 straight away. The other 3 were rules locked twice over, so removing one lock changed nothing: for the "finished task cannot be edited" rule I removed both locks and the tests caught it; for the ADHD table I added a direct check on the read right; for a student moving her own time zone there is no separate check yet (the column guard alone still refuses it, and the test for it passes). The test run is always rolled back, so the real project holds no fake users or data (checked). Supabase's own security advisor shows no real problems; its remaining notes are intended (the ADHD table has no policy on purpose, and the 10 checking functions are meant to be callable). Not done on purpose: finishing a task, opening a box, buying and reviewing are server functions in steps 5, 7 and 12.
+- 2026-11-12, step 3: built logins and the Yoda screen. Database: migration `20261113000100_logins.sql` (two-factor for coaches; invites, recovery emails, sign-in attempts and reset links in four tables the app cannot reach; 12 server-only functions), applied and recorded on the real project. Public sign-up is turned off in Supabase Auth and passwords need 8 characters. Server: two Edge Functions, `account-public` (look at and use an invite, sign in by username with a 5-try lockout, forgot password, reset) and `account-admin` (Yoda: make, list and cancel invites, email a reset link, sign out everywhere), deployed. App: a new Expo app in `app/` with sign in, invite (one question per screen), forgot, reset, the authenticator step, the Yoda screen and a simple home page. Checked: 826 database security checks pass locally and on the real project (90 new); 46 end-to-end checks through the deployed functions with a fake coach, student and parent pass; a 16-step browser walkthrough of the website passes; the app and both functions pass their type checks. Every test removed its fake accounts (the project was checked empty afterwards). Not checked: the reset email arriving (no email key yet), and the iPad app (needs Apple, step 17). No live site files changed.
 
-## What step 3 needs to know
-- Accounts are created by server code with the service key: create the Auth user, then insert the `profiles` row, then the `student_links` rows. The app cannot do any of those (no grants). A student's username becomes an internal address behind the scenes (no real email for a child).
-- A new student also needs rows in `student_settings`, `helper_settings`, `tutor_settings`, `prize_settings` (parents can update but not insert theirs), `reward_packs` and a `themes` row. Emma's theme row (the kawaii look and her color legend) is created in step 3 or 4.
-- Consent is recorded by the parent in the app (helper chat, tutor, connections, ADHD storage). Annat needs her own login for that before Emma uses the helpers for real.
+## What Sofia needs to do (step 3 follow-up)
+1. Make a free Resend account: go to resend.com, sign up, then in the left menu click API Keys > Create API Key, name it "homework", permission "Sending access", click Add, and copy the key.
+2. Add it to Supabase: supabase.com > your project emma-homework > Edge Functions (left menu) > Secrets > Add new secret. Name `RESEND_API_KEY`, value: the key. Save. Add a second secret named `EMAIL_FROM` with the value `Homework <onboarding@resend.dev>`.
+3. Tell Claude it is done. Claude then emails your coach invite to you (the code is never shown in chat) and re-runs the reset test with a real email.
+4. Until you own a domain and verify it in Resend (Domains > Add domain), Resend only delivers to your own email address. So invite Annat's reset email and Emma's after that.
+5. When the website has an address (step 14), add a secret `APP_URL` with it, so links in emails open the right place. Until then links point to a local test address, and the invite code can be typed on the invite page instead.
+
+## What step 4 needs to know
+- Sign-in state: `app/src/lib/auth.tsx` gives the session, the profile (role, first name, username) and whether a coach has done the authenticator step. `homeFor()` decides where each person goes. Students land on `app/src/app/home.tsx`, which step 4 replaces with the Days checklist.
+- A new student already has a starter `themes` row named "Starter" with empty settings. Emma's theme (the kawaii look and her color legend) is filled into it in step 4, once her account exists.
+- The neutral colors in `app/src/lib/ui.tsx` are only the frame before a theme loads; they carry no meaning.
+- Server functions are deployed with `supabase/scripts/deploy-functions.sh`. Login tests: `supabase/tests/logins.e2e.mjs` (needs `NODE_USE_ENV_PROXY=1` in the cloud environment).
+- Signing someone out everywhere ends their saved sign-ins at once; a login token they already hold keeps working until it expires, at most 1 hour.
+- Consent is still recorded by the parent in the app (helper chat, tutor, connections, ADHD storage). Annat needs her own login for that before Emma uses the helpers for real.
 - `read_adhd_profile()` and `save_adhd_profile()` are the only way to reach the ADHD profile.
 - Storage: photos go in the `proof-photos` bucket under `<student id>/<task id>/<file>`. Opening one means calling `authorize_photo_open(path)` with the adult's login first, then making a short link with the service key.

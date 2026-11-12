@@ -151,3 +151,14 @@ The plan was built as written, with these small differences. Each one is the saf
 13. **Automation keys:** the database side is built (create, revoke, look up a key, add or update tasks and mark them verified for one student, only callable with the server key). The thing that presents the key to the database is built in step 13.
 14. **Not built yet (by design):** finishing a task, opening a box, buying, and reviewing are server functions in steps 5, 7 and 12. Until then nothing lets a student finish a task, which is the safe state.
 15. **Emma's theme row** is not seeded yet because it needs her account (step 3). It is created when her account exists.
+
+## As built in session 3 (logins)
+
+1. **Usernames, not emails, to sign in.** Each account's Supabase Auth address is random and hidden (it ends in `.invalid`, so it can never receive mail). Only server code can look it up from a username.
+2. **Recovery email (new, decided by Sofia):** `account_contacts` holds one email per account for reset links. It is closed to the app; the Yoda screen only ever sees it masked (e***@example.com).
+3. **New server-only tables:** `invites` (only a hash of each code), `auth_attempts` (lockout and rate limits), `reset_tokens` (only a hash, one hour, one use). No grants and no policies for the app.
+4. **Two-factor for coaches:** `app_role()`, `is_coach_of()`, `visible_profile()` and the `student_links` read rule now need the authenticator step (`aal2`) for a coach. Without it a coach sees only her own profile.
+5. **Invites:** only a coach makes student and parent invites, and only for her own students. Coach invites are made only by the developer script. Using an invite creates the profile, the links, the recovery email and a new student's six starting rows (settings, helper, tutor, prize, reward pack, a "Starter" theme) in one step.
+6. **Who may reset or sign someone out:** the person themselves, a coach for her students and their parents, and a parent for their own child.
+7. **Not built (decided):** parents making invites, and the Delete account button.
+
