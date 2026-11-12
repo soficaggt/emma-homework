@@ -50,7 +50,7 @@ The new app has to keep all of this, looking and feeling the same.
 - What to bring home list for each night (vocab book, Hobbit, bio textbook) based on that night's homework
 - Delete asks "Delete this?" first
 
-### Colors (how necessary it is to do that day)
+### Colors (Emma's current theme: every part of this is a per-student setting, see 6c)
 - Purple (must do today), then blue, white (with a black outline), pink, orange, yellow, green, and gray last (truly optional, almost never)
 - No red, no black. Same saturation everywhere; each subject gets its own shade of the color
 
@@ -144,7 +144,7 @@ Everyone signs in through either door. Supabase holds the logins, data and photo
 - Built once with Expo (React Native). The same code becomes the iPhone and iPad app on the App Store, and the website. Android can come later from the same code
 - Website hosted on Netlify (free). App built and sent to Apple with Expo's cloud builds, so no Mac is needed
 - Supabase is the shared backend: logins, database, photos and server functions. The app and the website see the same data instantly
-- Same look as today: kawaii, same colors, fonts, squishy drawings and celebration
+- Emma's theme looks the same as today: kawaii, same colors, fonts, squishy drawings and celebration. Other students get their own look (6c)
 
 ### Logins: username and password, then it remembers her
 - Sofia creates each account herself in the Yoda screen. There's no public sign-up
@@ -222,17 +222,46 @@ The old Helper does not work today and only reacts when someone types. The new H
 - **Cost control.** Each student has a daily call budget. Replans only run when something changed.
 - **Launch rule (App Store).** Chat with Emma is off until Sofia and a parent turn it on (PRD section 7). The background replanner works on task data only and sends no child-typed text to anyone else.
 
-## 6c. Customizable per student: themes, rewards and look (added Nov 12)
+## 6c. Everything is customizable per student: themes, colors, rewards, interests (revised Nov 12)
 
-Today the look and the rewards are built for Emma. In the new version nothing about squishies, colors or style is hard-coded. Emma's setup becomes the first example, not the rule.
+Only the structure and the safety rules are fixed. How it looks, what the colors mean, and what a student collects are all per-student settings. Emma's current setup is the first example, not the rule.
 
-- **Setup interview.** When Sofia adds a student, the Helper walks her through setup in plain questions: what the student loves (squishies, stickers, trading cards, plants, anything), favorite colors and style (kawaii, space, sporty, plain), how often rewards should come, what a "real prize" is and its budget, which subjects and classes, and what the weekly schedule looks like. It then builds that student's theme and starter template, and Sofia reviews and edits before it goes live.
-- **A theme is data, not code.** Each student has a theme made of: a name; the collectible type and what to call it (squishies, cards, stickers); a palette and fonts; a mascot and what "hatches" (egg or something else); celebration style; rarity names and odds; coin values; shop size and refresh day; and the catalog of items with art.
-- **Priority colors keep their meaning.** What a color means (must do today down to optional) stays the same for everyone so the Helper and the app can reason about it. What each step looks like can change per student, including whether red or black are allowed. "No red, no black" becomes Emma's default theme, not a global rule.
-- **Catalog per student.** The item list (Code.gs has 50 real squishy and slime products for Emma) becomes a per-student catalog Sofia can edit. The Helper can propose items from the interview and from live web lookups, and Sofia approves them. Real products still need real names, real rarity and a real price for the weekly real pick.
-- **Art needs a system.** Today every squishy is drawn by hand-written code. For new themes the app needs one of: recolorable shape templates, uploaded or generated images reviewed by Sofia, or an icon set. Decide in step 9. Art always goes through Sofia's approval, since students are children.
-- **Reward rules stay shared.** Full box, mini box, sparkle, coins and the real weekly pick (PRD 3a) become per-student settings with Emma's values as defaults. No gambling-style mechanics for any theme.
-- **Switch themes.** Sofia can duplicate a theme, change it, and move a student to it without losing her collection.
+### What stays fixed for every student
+- The set of pages exists: Days, Calendar, the collection page, Shop, proof, Helper, the bell inbox, Settings. Their names and icons can change ("Shelf" can become "Closet").
+- The general layout of counters and buttons: a coin counter in the corner, tabs, one + Add per day, Start, check off.
+- Safety and access rules: the proof flow, who-sees-what, parent gates on links out and purchases, no gambling-style mechanics, and accessibility minimums (readable contrast, large tap targets, a reduce-motion option).
+
+### What is customizable
+Palette, fonts, shapes and corners, icons, the mascot and what "hatches", celebration style, wording and tone, page names, the currency, rarity names and odds, shop size and refresh day, what is collected, and how much of the app is themed at all.
+
+### Colors do not have a fixed meaning
+- Each theme has a **color system**: a list of steps (any number), each with a color, a name and a meaning, in an order the theme chooses. A system can be an urgency ladder (Emma's: purple for must do today down to gray for optional), colors by subject, colors by task type, or no colors at all.
+- A task stores a step from that student's system. The Helper reads the student's color legend every time it plans, so it never relies on hard-coded colors or meanings.
+- The "guess from the due date" rule works on whatever ordered steps the theme defines, if it is an urgency ladder.
+- Emma's rules (no red, no black, same saturation, each subject a shade) belong to her theme only.
+
+### Reward packs: whatever the student is into
+- A **reward pack** is: what is collected and what it is called, where items come from, how rarity works, and the art style. Squishies are Emma's pack. Others: clothing (Depop, ThredUp, wishlists), Star Wars (characters, LEGO sets, cards), plants, trading cards, makeup, books, anything.
+- A pack can give **digital collectibles** (free, kept in the app), **real prizes** (the weekly pick, within a budget, ordered by Sofia or a parent), or both.
+- **Where items come from, easiest first:**
+  1. A list Sofia or a parent builds by hand.
+  2. A pasted link to a public wishlist or collection that the Helper reads.
+  3. The Helper searches the web for things matching the student's interests, and Sofia approves.
+  4. A connected account through the always-on agent (6d) for wishlists that need a sign-in.
+- **Honest limits:** many stores have no public way to read wishlists and some block automated reading, and terms differ. Nothing is promised for a specific store (Depop, ThredUp, others) until it is tested in step 9, and each store is checked before it is offered.
+- **Every item** has a name, image or art, price, link, tags, rarity and a status (proposed or approved). Sofia approves every item before a child sees it. Links out and anything to buy sit behind a parent gate.
+- **Rarity** per pack: from real price and how hard the item is to get (as with squishies), from a set the pack defines (rare characters), or chosen by Sofia.
+- **Art** per pack: drawn shapes (Emma's squishies), a product image from the listing (check each store's terms), generated art Sofia approves, or icons. Licensed characters such as Star Wars raise trademark questions: names and links are likely fine for a private unlisted app, but check before using official images, because App Review can flag them.
+
+### Currency and the economy
+- The coin currency can be renamed and re-skinned (stars, credits, gems), and earn rates, shop prices and box odds can be adjusted per student. It can also be left on the normal defaults. Reward rules in PRD 3a become per-student settings with Emma's values as the defaults.
+
+### How into it is the student: theming depth
+- A per-student setting from "just the rewards" to "the whole app looks like it". A student who is mildly into clothes may only get a clothing pack. A student who loves Star Wars may get Star Wars colors, mascot, wording, celebration and rewards.
+
+### Setup interview
+- When Sofia adds a student, the Helper asks plain questions: interests, how into them, favorite colors and style, what the colors should mean to her (or whether to use colors at all), what a real prize is and its budget, and what her week looks like. It builds the theme, the reward pack and a starter catalog, and Sofia reviews and edits everything before it goes live. The same interview can be re-run later when interests change.
+- Sofia can duplicate a theme, change it, or move a student to another one without losing her collection.
 
 ## 6d. Connections: homework from other platforms, running without an app open (added Nov 12)
 
