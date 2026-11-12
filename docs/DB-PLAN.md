@@ -43,11 +43,20 @@ Every login is a Supabase Auth account. Each account has one row saying its role
 - `tasks.color_step`: the task's chosen step in the student's color system (replaces a fixed color name).
 
 **ADHD profile (added Nov 12)**
-- `adhd_profiles`: one per student: the "How I work" answers (starting, staying, time sense, remembering, planning, switching, feelings, motivation, best and worst times of day, environment, what worked), who filled it in (parent, coach, student, clinician sheet), when, consent flags (stored, Helper may receive derived settings), and a version. No diagnosis or medication fields. Readable and editable only by the coach, the student (her kid-friendly view) and her parent. Reads are written to the audit log.
-- `profile_settings`: the derived settings the app and Helper actually use: first-step size, timer style, break lengths, plan slack, items shown, reminder style and timing, tone and avoided words, hard-day mode, best-focus windows. This is the only part the Helper receives.
+- `adhd_profiles`: one per student: the "How I work" answers (starting, staying, time sense, remembering, planning, switching, feelings, motivation, best and worst times of day, environment, what worked), who filled it in (parent, coach, student, clinician form upload), when, each upload as a new version the parent approved, consent flags (stored, Helper may receive derived settings), and a version. No diagnosis or medication fields. Readable and editable only by the coach, the student (her kid-friendly view) and her parent. Reads are written to the audit log.
+- `profile_settings`: the derived settings the app and Helper actually use: first-step size, timer style, break lengths, plan slack, items shown, reminder style and timing, tone and avoided words, best-focus windows. This is the only part the Helper receives.
 - `profile_suggestions`: changes the Helper proposes from the data, with status (proposed, approved, rejected). Only Sofia approves.
 - `tasks` gains `first_step` (a tiny starting step), `estimated_minutes` and `actual_minutes` (for Time Detective and learning).
 - `skill_events`: starting, writing it down, packing and planning actions (student, kind, time), used for rewards for skill use. The amounts are one shared fixed set, decided in step 7.
+
+**Integrity (added Nov 12)**
+- `tasks` gains `reward_status` (provisional, confirmed, reversed), `review_status` (unreviewed, looks_good, needs_more, not_done), `reviewed_by`, `reviewed_at`, `review_note`, `proof_questions` (the questions generated for the task) and `proof_answers`. `source` (template, coach, Helper, platform, or student) already exists and drives which tasks are trusted.
+- `proof_checks`: task, kind (rules or AI), result (pass, needs more, unclear), the reason in plain words, and when.
+- `proof_images`: task, storage path, content hash and perceptual hash (to catch reuse), where it came from (in-app camera, library, screenshot), and taken-at.
+- `integrity_flags`: student, task, kind (implausible title, too fast, duplicate, reused text or photo, many self-added), status, and who has seen it.
+- `ledger` gains reversal entries that point at the task they undo, so the balance stays auditable and a reversal can itself be reviewed.
+- `student_settings` gains `proof_strictness` (gentle, normal, strict) and `review_window_days`.
+- Rules: a student can never write the review fields, `reward_status`, or the ledger. The daily cap on coins from self-added tasks is computed on the server. Deleting a finished task keeps its audit trail and its flags.
 
 **Helper v2 (added Nov 12)**
 - `plan_changes`: every reschedule: student, what changed, who or what did it (Emma, Sofia, Helper), why, status (suggested, applied, undone), and the before-and-after so it can be undone with one tap.

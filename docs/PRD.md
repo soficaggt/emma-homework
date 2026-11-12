@@ -29,7 +29,7 @@ The app is not a medical device. It does not diagnose or treat. It supports dail
 3. **One next thing.** Show what to do now, not everything. Today is the default view, with a clear next task. Keep choices per screen few. One instruction at a time.
 4. **Fast, frequent, real feedback.** Feedback arrives at the moment of starting and finishing. Long-delay prizes (the weekly real pick) get visible progress and nearer steps. Rewards are real or tangible, not hypothetical.
 5. **Reward the skill, not only the outcome.** The programs with the best evidence reward using the skills: writing it down, planning, packing, starting. Plan with the adult to fade rewards toward natural ones (praise, free time, grades) over time.
-6. **Expect variable days.** Performance changes day to day with tiredness, medication timing and context. Plans have slack, the Helper adapts, and Sofia can switch on a hard-day mode. A bad day is never punished.
+6. **Expect variable days.** Performance changes day to day with tiredness, medication timing and context. Plans have slack and the Helper adapts. There is no separate bad-day mode. A bad day is never punished.
 7. **Protect feelings.** Frustration and shame derail kids with ADHD. No scolding, no pressure countdowns, no "you lost your streak" feeling. The wording is "a glitch to beat", never "lazy". Mistakes and late work get a plan, not a penalty.
 8. **Fewer, calmer interruptions.** Notifications are both a tool and a distraction. Defaults are minimal. Animations and sounds can be skipped and respect reduce-motion. No endless feeds or lists.
 9. **Adults stay in the loop, and watching is transparent.** Tested skills programs all rely on adult support, so the app supports Sofia and parents and does not replace them. Emma is told what Sofia can see and why ("Sofia can cheer you on"), not secretly watched.
@@ -38,7 +38,7 @@ The app is not a medical device. It does not diagnose or treat. It supports dail
 ### Where today's design needs a decision against these principles
 - The Days tab can show 7 days at once: default to today with one clear next task.
 - Sofia sees a live "working now" status and unchecks: tell Emma what is shared and why.
-- Full box needs half the day, sparkle box needs three full days in a row, and moving work off today counts as skipping: review with a clinician so a miss never feels like a loss, and add a hard-day mode.
+- Full box needs half the day, sparkle box needs three full days in a row, and moving work off today counts as skipping: review with a clinician so a miss never feels like a loss.
 - Mystery boxes have random rarity: keep them earned by effort only, never bought with real money, and review them with a clinician.
 - The real weekly pick is a week-long delay: add nearer milestones (the daily box already helps).
 - The "Get ready for her call at 10pm" message in the check-off toast is a pressure message: replace it.
@@ -222,6 +222,7 @@ Everyone signs in through either door. Supabase holds the logins, data and photo
 - Rethink the coin system
 - Emma picks one reward she's saving for, and the other options refresh (maybe daily)
 - Reward options pull live from the internet when she wants
+- The clinician form (6e): a fillable PDF with every setup question, and an upload a parent can use at any time to update the ADHD profile
 
 ## 6a. Integrations and verified proof (added Nov 12)
 
@@ -315,7 +316,13 @@ Open question: the user referred to a "personal agent" product. The requirement 
 ADHD does not look the same in every person. During setup, each student gets a short profile of how it shows up for her, so the app can fit her instead of using one default for everyone. It is a support setting, not a diagnosis, and it never produces a severity score.
 
 ### Who fills it in
-- Sofia or a parent, together with the student, using plain questions. A one-page printable version can be filled in with the student's psychiatrist or therapist, who may know it best. The student gets a kid-friendly version she can read and edit. A clinician portal is not part of launch.
+- At launch: Sofia or a parent, together with the student, using plain questions in the app. The student gets a kid-friendly version she can read and edit.
+- **The clinician form (planned, after launch; the question list is designed now so the form can be made from it).** One standard form containing every question the app needs, designed so a psychiatrist or therapist can fill it in. It comes as a fillable PDF and a printable one. A parent can upload a completed form at any time, now or months later, to personalize or re-personalize the app.
+  - The app reads the answers straight from the form's fields, so no AI has to read a clinical document. A handwritten or scanned form is typed in by the parent, or read by AI only if the parent consents.
+  - After an upload, the parent sees what the app understood, in plain words, and approves it before anything changes. Every upload is a new version; the parent can see what changed and go back.
+  - The uploaded file is not kept unless the parent chooses. The approved answers are kept.
+  - The form's questions are exactly the list below, so the form and the app never drift apart.
+  - A portal where the clinician fills it in online is a later idea, not part of this.
 
 ### What it asks (plain language, all optional)
 - **Starting:** how hard is it to begin? What helps (a tiny first step, someone nearby, a timer, music)?
@@ -331,7 +338,7 @@ ADHD does not look the same in every person. During setup, each student gets a s
 - **What has worked and not worked** before.
 
 ### What it controls
-First-step size, timer and time-bar style, break lengths, how much slack plans have, how many items are shown, reminder style and timing, how feedback and nearer milestones are presented, surprise versus predictable rewards, tone and words, hard-day mode, and when the hardest tasks get scheduled. It never changes the coin amounts, prices or box odds (6c).
+First-step size, timer and time-bar style, break lengths, how much slack plans have, how many items are shown, reminder style and timing, how feedback and nearer milestones are presented, surprise versus predictable rewards, tone and words, and when the hardest tasks get scheduled. It never changes the coin amounts, prices or box odds (6c).
 
 ### It keeps learning, with Sofia in charge
 - The app records estimates against actual time, when she starts and stalls, and which times of day go well. The Helper proposes profile changes ("homework after 7 is slower, move the hard work earlier?"). Sofia approves. Nothing changes silently.
@@ -341,6 +348,53 @@ First-step size, timer and time-bar style, break lengths, how much slack plans h
 - Stored apart from ordinary task data. Readable only by the coach, that student, and her parent. Never shared with other students or parents, and never shown in alerts or logs.
 - The Helper receives only the derived settings and short plain-language notes, not the raw answers or any clinical document, and only with the parent's consent. Clinician documents are not stored unless a parent chooses.
 - It must be disclosed in the privacy policy and App Store privacy labels, covered by the parent's written consent (PRD 7), and deletable on request.
+
+## 6f. Integrity: rewards that are hard to cheat (added Nov 12)
+
+The problem: kids will look for the fastest route to the reward. Emma adds assignments with random names and checks them off with random text in the proof box. That backfires. She earns rewards for work that was not done, the plan stops being true, and the adults stop trusting it. Cheating is also a signal that a task feels too big or the reward feels too far away, and the app treats it that way, without shaming.
+
+### Principles
+- **The server decides, never the app.** Done-state, coins and box credit are worked out in server functions (house rule 4). A student cannot write her own rewards or approve her own work.
+- **Layers, cheapest first, with adults as the backstop.** No automatic check is perfect, and a wrong block hurts an honest child with ADHD. So the checks flag and ask, and adults decide.
+- **Never accuse.** The child's screen never says "cheating" or "fake". It asks for more detail in a kind way.
+
+### Layer 1: which tasks count
+- Every task records its source: the template, Sofia, the Helper, a connected platform, or "added by Emma".
+- Tasks from the template, Sofia, the Helper or a platform are trusted.
+- Tasks Emma adds herself still work and give instant feedback, but their coins are provisional, and there is a small fixed daily cap on coins from self-added tasks, lifted when an adult approves one. The cap is part of the fixed economy, the same for every student. The amount is still to be decided.
+- A self-added task is checked for plausibility against her subjects, classes, pulled assignments and past tasks. A title like "asdfgh", or one that matches nothing in her week, is marked "needs a look" for an adult. Duplicates, and many tasks added and finished in quick succession, are flagged.
+- A task created and finished within seconds, or finished much faster than its estimate, is flagged.
+
+### Layer 2: checking the proof when she submits
+- Instead of a blank box, the app asks one or two specific questions made from the task, such as "Which problems did you do? Which one was the trickiest?" Specific questions are easier for an ADHD brain than "explain what you did", and the answers show whether the work really happened. A short, true answer can pass. Length is not the test.
+- **Rule checks run first** and send nothing to anyone: too short, gibberish, the same text reused on other tasks, filler only.
+- **An AI check runs only when needed.** Does the answer make sense for this task and subject? Is it specific? Is it consistent with the assignment (its title, note and class)? For photos: does it show relevant work, such as a page with writing or a worksheet, rather than a blank wall or something unrelated? Photos are also compared with earlier photos to catch reuse. Where possible a photo must come from the in-app camera, with screenshots allowed only for online work.
+- **Results:** pass; "needs a bit more" (a kind prompt, up to two tries, no penalty); or still unclear. If still unclear, the answer is accepted but flagged, and the rewards stay provisional until an adult looks.
+- **Strictness is set per student by Sofia:** gentle (flag only), normal (ask for more up to twice, then accept and flag; the default), or strict (she cannot submit until it passes or an adult approves in person).
+- **Ways to prove that are not writing:** a photo, a short answer, or "show Sofia in person", so a child who finds writing hard is not blocked. Voice answers are not planned for launch because they send a child's voice to a third party.
+- **Privacy:** only that one task's proof text and photo go to the checker, only with the parent's consent, and rule checks run first so most tasks send nothing. The AI provider's retention terms are confirmed before launch.
+
+### Layer 3: adult review that can reverse rewards
+- On the proof board, every finished item has three buttons: **Looks good**, **Needs more**, **Not done**.
+- **Looks good:** the rewards become confirmed.
+- **Needs more:** the task goes back to Emma with a kind note, and its coins stay held until she adds more.
+- **Not done:** the task goes back to unchecked, its coins are removed, its credit toward the day's box is removed, and an optional reason is recorded. Emma sees a calm message in her inbox, for example "Sofia reopened Latin vocab. Finish it to earn the coins back." She gets the same coins when she does it properly. The reversal is an undo of rewards she did not earn. Nothing extra is taken.
+- Reviews stay open for a set window (for example 7 days). After that, rewards are final.
+- Sofia and parents can both review, and every review is written to the audit log.
+- Patterns go to Sofia, not to automatic punishment: "3 items flagged this week, mostly after 8pm", so the adults can talk with Emma. The Helper also notes where flags cluster (very long tasks, certain subjects), because that may mean the work feels too big, and it suggests splitting the task or adding a nearer reward. That is a design stance, not a researched finding.
+
+### To decide before step 7
+- If coins are already spent when a task is reversed: the balance may go negative, shown gently, until she earns it back, with the item staying; or the reversal is capped.
+- If a box was already opened from a day that is later reversed: the item stays, and the next box needs one more cleared day; or nothing further happens.
+
+### How this fits the ADHD check (1a)
+- Feedback stays immediate, because provisional rewards show right away (principle 4).
+- The wording never shames, and honest children are not hard-blocked by default (principle 7).
+- Specific questions lower the memory load of explaining (principle 2).
+- **One real tension:** a reversal is the one place the app takes rewards away, and principle 7 warns against loss that feels like a penalty. It is kept to rewards for work that was not done, it has a clear way to earn them back, the wording is calm, and an adult makes the call. Confirm this with a clinician.
+
+### Honest limits
+A determined child can still write plausible text or photograph someone else's work. The goal is to make cheating not worth the effort and to catch patterns early. Adult review is the real backstop. Verified-by-platform proof (6a) is the strongest where it exists. The best defense is also the design: a fixed economy, capped coins from self-added tasks, and tasks that do not feel impossible.
 
 ## 7. App Store reality check
 
@@ -367,14 +421,14 @@ The website goes first because it's fastest to switch Emma to. The App Store com
 2. Supabase database and the who-sees-what rules (including themes, connections and plan history)
 3. Logins and roles, plus a Yoda screen where Sofia creates accounts
 4. Days checklist in Expo, built on theme settings from day one (Emma's look is the first theme), with the ADHD check (1a): today by default, one clear next task, first-step prompt
-5. Start, egg, proof and photos
+5. Start, egg, proof and photos, with the layered proof checks (6f)
 6. Calendar, Plans and the bring-home list
-7. Rewards engine: coins, mystery box, Shelf and Shop. One fixed economy for everyone, with per-student currency looks and catalogs, plus small rewards for skill use (1a)
+7. Rewards engine: coins, mystery box, Shelf and Shop. One fixed economy for everyone, with per-student currency looks and catalogs, plus small rewards for skill use (1a), and provisional rewards that an adult can reverse (6f)
 8. Helper v2: chat plus automatic rescheduling (6b)
 9. Personalization: the setup interview including the ADHD profile (6e), theme editor and per-student catalogs and art (6c)
 10. Move the data from the Google Sheet and the photos from Drive
 11. Notifications: the bell inbox, then push to phones
-12. Proof board for Sofia and parents
+12. Proof board for Sofia and parents, with Looks good, Needs more and Not done (6f)
 13. Connections, easy tiers: private inbox address, feeds and manual screenshot upload, plus verified-by-platform (6a, 6d)
 14. Website on a Netlify preview link, tested with a fake student and a fake parent, then a full security review
 15. Switch Emma: sign her in on her iPad, give Annat her own login, shut off the old Google link and shared key, make the repo private. The existing RSM scheduled task is pointed at the new version as a stopgap
@@ -409,11 +463,17 @@ Year one minimum is about $99 plus Helper chat usage.
 9. Helper autonomy default: suggest only, small moves automatic, or everything automatic?
 10. What art approach for new students' collections: recolorable shapes, reviewed generated images, or icon sets?
 11. Is there a specific "personal agent" product you want evaluated for step 16?
-12. Who fills in the ADHD profile (Sofia, Annat, Emma, with her psychiatrist's help through a printable sheet)? Will a clinician review section 1a and docs/ADHD-RESEARCH.md?
+12. Who fills in the ADHD profile in the app at launch (Sofia, Annat, Emma)? Will a clinician review section 1a and docs/ADHD-RESEARCH.md, and help design the later clinician form?
 13. What small fixed amounts should skill actions earn (starting, writing it down, packing, planning)?
-14. Streak and threshold rules (full box needs half the day, sparkle needs three days in a row, no dodging): keep, soften, or add a hard-day mode?
+14. Streak and threshold rules (full box needs half the day, sparkle needs three days in a row, no dodging): keep or soften?
 15. Is the weekly real prize budget (about $40) an adult setting per student?
 16. Which currency looks to offer: gold coins (default), cash, others?
+17. Proof strictness default: gentle, normal (ask for more twice, then accept and flag), or strict?
+18. Should coins from tasks Emma adds herself be provisional with a small daily cap until an adult approves them? What cap?
+19. How long can an adult reverse a task (for example 7 days)?
+20. When coins are already spent or a box already opened, what does a reversal do (negative balance, or capped)?
+21. Photo proof: in-app camera only, or camera roll too (screenshots allowed for online work)?
+22. Do you consent to sending a task's proof text and photo to the AI checker, with rule checks first?
 
 ### Sources
 - Claude Code in the cloud: quickstart

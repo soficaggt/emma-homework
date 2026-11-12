@@ -37,7 +37,7 @@ Organizational Skills Training (OST) was tested in randomized trials for grades 
 - Three presentations are recognized: combined, predominantly inattentive, predominantly hyperactive-impulsive. Hyperactivity tends to decrease with age, so inattentive presentation is most common in older teens and adults (World Psychiatry review).
 - Girls and women are reported to show more inattentive symptoms, fewer hyperactive ones, and more emotional difficulties, so their ADHD is less visible to others (item-level review, 2025). Emma is a girl, so do not assume visible hyperactivity.
 - Performance varies within one person with tiredness and context. One 2026 paper proposes an energy-dysregulation model to explain this (Hypothesis). The within-person variability itself is widely reported.
-- App meaning: no one-size defaults. Capture how it shows up for each student (PRD 6e). Plan with slack. Allow hard-day adjustments.
+- App meaning: no one-size defaults. Capture how it shows up for each student (PRD 6e). Plan with slack and let the Helper adapt when a day goes badly (no separate hard-day mode).
 
 ### 6. Emotional regulation difficulties are common and connected to executive function (Moderate)
 - Emotion dysregulation is associated with ADHD symptom severity and with executive function. In children with ADHD, lower executive function was associated with more emotion dysregulation, though the effect was small in one study (a few percent of the variation) (systematic review, 2026; World Psychiatry review).
@@ -63,7 +63,7 @@ Large deficits in the central executive part of working memory are reported in s
 | Real weekly squishy | Real rewards matter, but a week is a long delay | Keep, add nearer milestones |
 | Days tab can show 7 days | Too many items can overwhelm | Default to today or a single "next" card |
 | Sofia sees live "working" and unchecks | Fine as support, but can feel like surveillance | Tell Emma what is shared and why |
-| Full box needs half the work, sparkle needs 3 full days in a row | Streaks and thresholds can feel like loss after a miss | Review with a clinician, add a hard-day mode |
+| Full box needs half the work, sparkle needs 3 full days in a row | Streaks and thresholds can feel like loss after a miss | Review with a clinician so a miss never feels like a loss (no hard-day mode, by Sofia's decision) |
 | Random rarity in mystery boxes | Variable rewards can hook impulsive kids | Keep earned-by-effort only, no real-money purchases, review |
 | Toast with "Get ready for her call at 10pm" | Pressure message | Replace |
 | One fixed look and prompting style | ADHD varies by person | Per-student profile (PRD 6e) |
