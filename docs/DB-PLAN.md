@@ -50,13 +50,14 @@ Every login is a Supabase Auth account. Each account has one row saying its role
 - `skill_events`: starting, writing it down, packing and planning actions (student, kind, time), used for rewards for skill use. The amounts are one shared fixed set, decided in step 7.
 
 **Integrity (added Nov 12)**
-- `tasks` gains `reward_status` (provisional, confirmed, reversed), `review_status` (unreviewed, looks_good, needs_more, not_done), `reviewed_by`, `reviewed_at`, `review_note`, `proof_questions` (the questions generated for the task) and `proof_answers`. `source` (template, coach, Helper, platform, or student) already exists and drives which tasks are trusted.
+- `tasks` gains `reward_status` (provisional, confirmed, reversed), `review_status` (unreviewed, looks_good, needs_more, not_done), `reviewed_by`, `reviewed_at`, `review_note`, `proof_questions` (the questions generated for the task), `proof_answers`, `value_set_by` (template, coach, Helper, platform, AI intake, adult), `confirmed_at`, and `final_at` (24 hours after she finishes). `source` (template, coach, Helper, platform, or student) already exists and drives which tasks are trusted.
 - `proof_checks`: task, kind (rules or AI), result (pass, needs more, unclear), the reason in plain words, and when.
+- `task_intake`: for each task Emma adds: the name she typed, what it was matched to, the questions and answers, the AI's verdict, the priority step and size it set, and whether it is waiting for an adult. How long her answers are kept is still to be confirmed.
 - `proof_images`: task, storage path, content hash and perceptual hash (to catch reuse), where it came from (in-app camera, library, screenshot), and taken-at.
 - `integrity_flags`: student, task, kind (implausible title, too fast, duplicate, reused text or photo, many self-added), status, and who has seen it.
-- `ledger` gains reversal entries that point at the task they undo, so the balance stays auditable and a reversal can itself be reviewed.
-- `student_settings` gains `proof_strictness` (gentle, normal, strict) and `review_window_days`.
-- Rules: a student can never write the review fields, `reward_status`, or the ledger. The daily cap on coins from self-added tasks is computed on the server. Deleting a finished task keeps its audit trail and its flags.
+- `ledger` gains a status (held, confirmed, reversed, forgiven) and reversal entries that point at the task they undo, so the balance stays auditable. Only confirmed coins can be spent.
+- `student_settings` gains `proof_strictness` (gentle, normal, strict; default normal). The review window is fixed at 24 hours for everyone and is not a setting.
+- Rules: a student can never write the review fields, `reward_status`, or the ledger. Held versus confirmed coins, the 24-hour window, auto-confirm, and a box waiting for its tasks to be confirmed are all enforced on the server. Deleting a finished task keeps its audit trail and its flags.
 
 **Helper v2 (added Nov 12)**
 - `plan_changes`: every reschedule: student, what changed, who or what did it (Emma, Sofia, Helper), why, status (suggested, applied, undone), and the before-and-after so it can be undone with one tap.

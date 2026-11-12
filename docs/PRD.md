@@ -358,43 +358,52 @@ The problem: kids will look for the fastest route to the reward. Emma adds assig
 - **Layers, cheapest first, with adults as the backstop.** No automatic check is perfect, and a wrong block hurts an honest child with ADHD. So the checks flag and ask, and adults decide.
 - **Never accuse.** The child's screen never says "cheating" or "fake". It asks for more detail in a kind way.
 
-### Layer 1: which tasks count
+### Layer 1: which tasks count, and who sets their value
 - Every task records its source: the template, Sofia, the Helper, a connected platform, or "added by Emma".
-- Tasks from the template, Sofia, the Helper or a platform are trusted.
-- Tasks Emma adds herself still work and give instant feedback, but their coins are provisional, and there is a small fixed daily cap on coins from self-added tasks, lifted when an adult approves one. The cap is part of the fixed economy, the same for every student. The amount is still to be decided.
-- A self-added task is checked for plausibility against her subjects, classes, pulled assignments and past tasks. A title like "asdfgh", or one that matches nothing in her week, is marked "needs a look" for an adult. Duplicates, and many tasks added and finished in quick succession, are flagged.
-- A task created and finished within seconds, or finished much faster than its estimate, is flagged.
+- **Emma never sets a task's value.** A task's value (its coins) follows from its priority and size using the fixed table (PRD 3a). Tasks from the template, Sofia, the Helper or a platform arrive with a value already. For a task Emma adds herself, an AI sets the priority step (from her own color legend) and the size.
+- **Adding an assignment goes through a short AI intake,** so a made-up task has nothing to cash in:
+  1. She types a name. The app first matches it against what it already knows (her classes, pulled assignments, tests on the calendar, past tasks). This is quick and sends nothing anywhere.
+  2. If it matches ("Latin vocab" and she takes Latin), the AI proposes the subject, due date, how long it should take and the priority step, and shows one card: "Latin vocab, about 20 minutes, due tomorrow. Right?" She taps yes or fixes it.
+  3. If it does not match or is vague, a short chat of one to three questions: "Which class is this for? When is it due? What do you have to do?" The AI checks that her answers make sense and sets the value.
+  4. If it still does not make sense, the task is saved as "waiting for Sofia". She can see it, but it earns nothing until an adult approves it and sets its value. The app tells her kindly ("Sofia will look at this one").
+- Duplicates, tasks finished within seconds, and tasks finished much faster than their estimate are flagged.
+- **It has to be fast.** Quick matching comes first and the AI step should take a couple of seconds, because waiting is hard for an ADHD brain.
 
 ### Layer 2: checking the proof when she submits
 - Instead of a blank box, the app asks one or two specific questions made from the task, such as "Which problems did you do? Which one was the trickiest?" Specific questions are easier for an ADHD brain than "explain what you did", and the answers show whether the work really happened. A short, true answer can pass. Length is not the test.
 - **Rule checks run first** and send nothing to anyone: too short, gibberish, the same text reused on other tasks, filler only.
 - **An AI check runs only when needed.** Does the answer make sense for this task and subject? Is it specific? Is it consistent with the assignment (its title, note and class)? For photos: does it show relevant work, such as a page with writing or a worksheet, rather than a blank wall or something unrelated? Photos are also compared with earlier photos to catch reuse. Where possible a photo must come from the in-app camera, with screenshots allowed only for online work.
 - **Results:** pass; "needs a bit more" (a kind prompt, up to two tries, no penalty); or still unclear. If still unclear, the answer is accepted but flagged, and the rewards stay provisional until an adult looks.
-- **Strictness is set per student by Sofia:** gentle (flag only), normal (ask for more up to twice, then accept and flag; the default), or strict (she cannot submit until it passes or an adult approves in person).
+- **Strictness is set per student by Sofia:** gentle (flag only), normal (ask for more up to twice, then accept and flag; the default, decided), or strict (she cannot submit until it passes or an adult approves in person).
 - **Ways to prove that are not writing:** a photo, a short answer, or "show Sofia in person", so a child who finds writing hard is not blocked. Voice answers are not planned for launch because they send a child's voice to a third party.
-- **Privacy:** only that one task's proof text and photo go to the checker, only with the parent's consent, and rule checks run first so most tasks send nothing. The AI provider's retention terms are confirmed before launch.
+- **Privacy and consent:** only what the check needs goes to the AI provider: the task name, her short answers at intake, and that task's proof text and photo. Quick matching and rule checks run first, so most steps send nothing. Sofia has consented for building and testing. Because Emma is a child and Annat is her parent, Annat's own agreement should be recorded in the app before Emma uses it for real (PRD 7). The provider's retention terms are confirmed before launch.
 
 ### Layer 3: adult review that can reverse rewards
 - On the proof board, every finished item has three buttons: **Looks good**, **Needs more**, **Not done**.
 - **Looks good:** the rewards become confirmed.
 - **Needs more:** the task goes back to Emma with a kind note, and its coins stay held until she adds more.
-- **Not done:** the task goes back to unchecked, its coins are removed, its credit toward the day's box is removed, and an optional reason is recorded. Emma sees a calm message in her inbox, for example "Sofia reopened Latin vocab. Finish it to earn the coins back." She gets the same coins when she does it properly. The reversal is an undo of rewards she did not earn. Nothing extra is taken.
-- Reviews stay open for a set window (for example 7 days). After that, rewards are final.
+- **Not done:** the task goes back to unchecked, its coins are removed, its credit toward the day's box is removed, and an optional reason is recorded. Emma sees a calm message in her inbox, for example "Sofia reopened Latin vocab. Finish it to earn the coins back." If the coins were not spent yet, she earns the same coins when she does it properly. The reversal is an undo of rewards she did not earn. Nothing extra is taken. See "What happens to coins and boxes" below for the case where they were already spent.
+- Reviews stay open for 24 hours after she finishes (decided). After that, rewards are final.
 - Sofia and parents can both review, and every review is written to the audit log.
 - Patterns go to Sofia, not to automatic punishment: "3 items flagged this week, mostly after 8pm", so the adults can talk with Emma. The Helper also notes where flags cluster (very long tasks, certain subjects), because that may mean the work feels too big, and it suggests splitting the task or adding a nearer reward. That is a design stance, not a researched finding.
 
-### To decide before step 7
-- If coins are already spent when a task is reversed: the balance may go negative, shown gently, until she earns it back, with the item staying; or the reversal is capped.
-- If a box was already opened from a day that is later reversed: the item stays, and the next box needs one more cleared day; or nothing further happens.
+### What happens to coins and boxes: prevent, instead of take back (proposed, needs your yes)
+Taking back spent coins or opened boxes is messy, so the design avoids needing to.
+- **Coins have two states:** confirmed (spendable) and held (shown in the counter with a gentle "waiting" look, not yet spendable). The coin animation still plays the moment she finishes, so the feedback is immediate.
+- **Most coins are confirmed at once.** That happens when the task came from a trusted source or passed the AI intake, the proof passed the checks, and nothing was flagged.
+- **Held coins are confirmed** when an adult taps Looks good, or automatically 24 hours after she finished if nobody has looked. She is never punished for an adult being busy, and Sofia gets a nudge about unreviewed flagged items.
+- **A box opens only when every task that counted toward that day is confirmed.** Usually that is immediate. If something was flagged, the box waits, at most 24 hours.
+- **Not done, within the 24 hours,** removes the held or unspent coins and the box credit for that task. In the rare case her coins were already spent or her box already opened (the checks passed but an adult disagreed), the spent part is forgiven: no negative balance, nothing taken from future earnings, and the item stays. The task reopens, she needs to do it, and it does not pay a second time. Sofia gets a flag so the adults can talk about it, and may raise that student's proof strictness for a while.
+- After 24 hours, everything is final.
 
 ### How this fits the ADHD check (1a)
-- Feedback stays immediate, because provisional rewards show right away (principle 4).
+- Feedback stays immediate, because coins show the moment she finishes, even when they are held (principle 4).
 - The wording never shames, and honest children are not hard-blocked by default (principle 7).
 - Specific questions lower the memory load of explaining (principle 2).
 - **One real tension:** a reversal is the one place the app takes rewards away, and principle 7 warns against loss that feels like a penalty. It is kept to rewards for work that was not done, it has a clear way to earn them back, the wording is calm, and an adult makes the call. Confirm this with a clinician.
 
 ### Honest limits
-A determined child can still write plausible text or photograph someone else's work. The goal is to make cheating not worth the effort and to catch patterns early. Adult review is the real backstop. Verified-by-platform proof (6a) is the strongest where it exists. The best defense is also the design: a fixed economy, capped coins from self-added tasks, and tasks that do not feel impossible.
+A determined child can still write plausible text or photograph someone else's work. The goal is to make cheating not worth the effort and to catch patterns early. Adult review is the real backstop. Verified-by-platform proof (6a) is the strongest where it exists. The best defense is also the design: a fixed economy, values set by the AI and adults rather than by her, and tasks that do not feel impossible.
 
 ## 7. App Store reality check
 
@@ -421,7 +430,7 @@ The website goes first because it's fastest to switch Emma to. The App Store com
 2. Supabase database and the who-sees-what rules (including themes, connections and plan history)
 3. Logins and roles, plus a Yoda screen where Sofia creates accounts
 4. Days checklist in Expo, built on theme settings from day one (Emma's look is the first theme), with the ADHD check (1a): today by default, one clear next task, first-step prompt
-5. Start, egg, proof and photos, with the layered proof checks (6f)
+5. Start, egg, proof and photos, with the AI assignment intake and the layered proof checks (6f)
 6. Calendar, Plans and the bring-home list
 7. Rewards engine: coins, mystery box, Shelf and Shop. One fixed economy for everyone, with per-student currency looks and catalogs, plus small rewards for skill use (1a), and provisional rewards that an adult can reverse (6f)
 8. Helper v2: chat plus automatic rescheduling (6b)
@@ -468,12 +477,10 @@ Year one minimum is about $99 plus Helper chat usage.
 14. Streak and threshold rules (full box needs half the day, sparkle needs three days in a row, no dodging): keep or soften?
 15. Is the weekly real prize budget (about $40) an adult setting per student?
 16. Which currency looks to offer: gold coins (default), cash, others?
-17. Proof strictness default: gentle, normal (ask for more twice, then accept and flag), or strict?
-18. Should coins from tasks Emma adds herself be provisional with a small daily cap until an adult approves them? What cap?
-19. How long can an adult reverse a task (for example 7 days)?
-20. When coins are already spent or a box already opened, what does a reversal do (negative balance, or capped)?
-21. Photo proof: in-app camera only, or camera roll too (screenshots allowed for online work)?
-22. Do you consent to sending a task's proof text and photo to the AI checker, with rule checks first?
+17. Do you approve the "prevent, instead of take back" plan for coins and boxes in 6f (held coins, boxes that wait for confirmation, spent coins forgiven)?
+18. If a flagged item is not reviewed within 24 hours, is auto-confirm OK, or should it stay held until an adult looks?
+19. Photo proof: in-app camera only, or camera roll too (screenshots allowed for online work)?
+20. Annat's own consent to send Emma's task names, answers and proof to the AI checker, to record before real use.
 
 ### Sources
 - Claude Code in the cloud: quickstart

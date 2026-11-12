@@ -11,7 +11,7 @@ Read this at the start of every session and update it at the end. Rules are in C
 | 2 | Database and security (including themes, connections, plan history) | Two fake students cannot see each other's data; a fake parent sees only their child; a student cannot forge coins or verified status | Not started |
 | 3 | Logins and the Yoda screen | Sofia can create "emma" and sign in as her | Not started |
 | 4 | Days checklist in Expo, on theme settings | Looks and behaves like today's site, colors from theme data, today view by default with one clear next task and a first-step prompt | Not started |
-| 5 | Start, egg, proof and photos, with the layered proof checks (6f) | A photo uploads, only Sofia can open it, and junk proof (random titles, filler text, reused text or photos) is caught or flagged | Not started |
+| 5 | Start, egg, proof and photos, with the AI assignment intake and layered proof checks (6f) | A photo uploads, only Sofia can open it, a made-up assignment earns nothing, and junk proof (filler text, reused text or photos) is caught or flagged | Not started |
 | 6 | Calendar, Plans, bring-home list | Due dates stay off the daily list | Not started |
 | 7 | Rewards engine: one fixed economy, provisional rewards an adult can reverse (6f), reward packs and currency skins | A cleared day gives a box, rules match PRD 3a exactly, and two students with different themes earn and pay the same amounts, and reversing a task removes its coins | Not started |
 | 8 | Helper v2: chat plus automatic rescheduling | Finishing late or adding homework triggers a sensible replan, undoable | Not started |
@@ -36,6 +36,7 @@ Read this at the start of every session and update it at the end. Rules are in C
 - (Nov 12) The whole product is built for ADHD brains (PRD 1a, docs/ADHD-RESEARCH.md): a ten-point check every feature passes, and an optional ADHD profile at setup (PRD 6e) that tunes prompts, timing and tone, never the economy numbers.
 - (Nov 12) No bad-day or hard-day mode (Sofia's decision). Plans still have slack and the Helper still adapts.
 - (Nov 12) Rewards must be hard to cheat (PRD 6f): provisional rewards, layered proof checks that flag and ask instead of accusing, and adult review that can reverse rewards. A reversal is an undo, not a penalty.
+- (Nov 12) Decided: an adult can reverse a task for 24 hours after she finishes; default proof strictness is normal; no daily coin cap. Adding an assignment goes through an AI intake that sets its value, and Emma never sets a value. Sofia consented to the AI checks for building and testing, and Annat's own consent should be recorded before Emma uses it for real.
 - (Nov 12) Later: a clinician-fillable form a parent can upload at any time to personalize the app (PRD 6e). The setup question list is designed now so the form can be built from it.
 - (Nov 12) The Helper is a planner that replans on events and schedules, not only a chat.
 
@@ -59,12 +60,10 @@ Read this at the start of every session and update it at the end. Rules are in C
 16. Streak and threshold rules (full box needs half the day, sparkle needs three days in a row, no dodging): keep or soften
 17. Is the weekly real prize budget (about $40) an adult setting per student
 
-18. Proof strictness default: gentle, normal (ask for more twice, then accept and flag), or strict (step 5)
-19. Coins from tasks Emma adds herself: provisional with a small daily cap until an adult approves, and what cap (step 7)
-20. How long an adult can reverse a task, for example 7 days (step 12)
-21. When coins are already spent or a box already opened, what a reversal does: negative balance, or capped (step 7)
-22. Photo proof: in-app camera only, or camera roll too, with screenshots for online work (step 5)
-23. Consent to send a task's proof text and photo to the AI checker, with rule checks first (step 5)
+18. Approve the "prevent, instead of take back" plan for coins and boxes: held coins, boxes wait for confirmation, spent coins forgiven (step 7)
+19. A flagged item nobody reviews within 24 hours: auto-confirm, or keep held until an adult looks (step 7)
+20. Photo proof: in-app camera only, or camera roll too, with screenshots for online work (step 5)
+21. Annat's own consent to send Emma's task names, answers and proof to the AI checker, to record before real use
 
 ## Session log
 - 2026-11-12, step 1: read index.html, proof.html and backend/Code.gs. Wrote docs/PRD.md (new sections 3a, 6a), CLAUDE.md, this file, and docs/DB-PLAN.md. No app code and no live site files changed.
@@ -72,3 +71,4 @@ Read this at the start of every session and update it at the end. Rules are in C
 - 2026-11-12, step 1 revised: added PRD 6b (Helper v2), 6c (per-student themes), 6d (connections and the always-on agent). Build order is now 18 steps. House rules 6, 7, 11, 12 and 13 updated. DB plan gained themes, plan history and connections tables.
 - 2026-11-12, step 1 revised (3): researched ADHD and task completion (docs/ADHD-RESEARCH.md). Added PRD 1a (ten-point ADHD check), PRD 6e (ADHD profile at setup), and house rules 14 and 15. Economy structure made fixed for every student, only the currency look customizable (PRD 6c rewritten, house rule 6, DB plan).
 - 2026-11-12, step 1 revised (4): removed the hard-day mode everywhere. Added PRD 6f (anti-cheating: provisional rewards, layered proof checks, adult review that reverses rewards), the later clinician form upload in PRD 6e, house rule 16, and integrity tables in the DB plan.
+- 2026-11-12, step 1 revised (5): reversal window set to 24 hours, strictness default normal, daily cap dropped in favor of an AI assignment intake that sets the value, and a proposed hold-then-confirm design for coins and boxes (PRD 6f).
