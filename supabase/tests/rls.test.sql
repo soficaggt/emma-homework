@@ -1,4 +1,4 @@
--- Security tests for step 2. They try to break the rules, and each "must be refused" test
+-- Security tests for steps 2, 3 and 7. They try to break the rules, and each "must be refused" test
 -- also has "must work" tests next to it, so a rule cannot pass just because everything is broken.
 --
 -- Everything runs inside one block that is ALWAYS rolled back at the end (it finishes by raising
@@ -144,7 +144,7 @@ begin
       insert into collection (student_id, item_id, item_name, rarity, acquired_via)
         values (sid, case t when 'sa' then 'needoh-nice-cube' else 'slow-rise-bread' end, 'Owned ' || t, 'rare', 'box');
       insert into ledger (student_id, kind, amount, status, task_id) values (sid, 'earn', 3, 'confirmed', tk);
-      insert into day_results (student_id, date) values (sid, current_date);
+      insert into day_results (student_id, date) values (sid, current_date) on conflict (student_id, date) do nothing;
       insert into shop_weeks (student_id, week_start, item_ids) values (sid, date_trunc('week', current_date), '{a,b}');
       insert into themes (id, student_id, name) values (th, sid, 'Theme ' || t);
       insert into reward_packs (id, student_id) values (pk, sid);
@@ -239,7 +239,7 @@ begin
   perform pg_temp.t_ok('signed-in users can run only the intended functions',
     (select string_agg(p.proname, ',' order by p.proname) from pg_proc p
       where p.pronamespace = 'public'::regnamespace and has_function_privilege('authenticated', p.oid, 'execute'))
-    = 'app_role,authorize_photo_open,can_read_student,create_automation_key,is_coach_of,is_parent_of,read_adhd_profile,revoke_automation_key,save_adhd_profile,session_aal,visible_profile',
+    = 'app_role,approve_task_value,authorize_photo_open,buy_item,can_read_student,copy_reward_catalog_to_pack,create_automation_key,day_status,get_shop,give_box,give_coins,is_coach_of,is_parent_of,my_wallet,open_box,read_adhd_profile,real_pick_status,review_task,revoke_automation_key,save_adhd_profile,session_aal,visible_profile',
     (select string_agg(p.proname, ',' order by p.proname) from pg_proc p
       where p.pronamespace = 'public'::regnamespace and has_function_privilege('authenticated', p.oid, 'execute')));
   perform pg_temp.t_ok('every security-definer function pins its search path',
@@ -252,7 +252,8 @@ begin
           + (value->'sparkle'->>'legendary')::numeric + (value->'sparkle'->>'rare')::numeric + (value->'sparkle'->>'uncommon')::numeric + (value->'sparkle'->>'common')::numeric
        from economy_config where key = 'box_odds') = 2
     and (select count(*) from reward_catalog) = 53
-    and (select value->'prices'->>'common' from economy_config where key = 'shop') = '25');
+    and (select value->'prices'->>'common' from economy_config where key = 'shop') = '18'
+    and (select value->'prices'->>'uncommon' from economy_config where key = 'shop') = '32');
 
   -- every student-keyed table really has a row for B, otherwise "A sees none of B's rows" proves nothing
   for t in select c.table_name from information_schema.columns c
@@ -545,8 +546,11 @@ begin
   -- 4. COACHES: RUN THEIR OWN STUDENTS, NOTHING ELSE, AND NO FORGING
   ---------------------------------------------------------------------------------------------
   perform pg_temp.t_allowed('coach 1 adds a task for student A', ro, pg_temp.sub('{C1}')::uuid,
-    $$insert into tasks (student_id, date, title, source, value_set_by, coins, type) values ('{SA}', current_date, 'Coach task', 'coach', 'coach', 4, 'school')$$);
-  perform pg_temp.t_allowed('coach 1 edits a task of A', ro, pg_temp.sub('{C1}')::uuid, $$update tasks set title = 'Latin vocab', coins = 5, note = 'by Friday' where id = '{TA1}'$$);
+    $$insert into tasks (student_id, date, title, source, value_set_by, value_level, type) values ('{SA}', current_date, 'Coach task', 'coach', 'coach', 'high', 'school')$$);
+  perform pg_temp.t_denied('coach types coins on a new task (coins follow the level)', ro, pg_temp.sub('{C1}')::uuid,
+    $$insert into tasks (student_id, date, title, source, coins) values ('{SA}', current_date, 'x', 'coach', 4)$$);
+  perform pg_temp.t_allowed('coach 1 edits a task of A', ro, pg_temp.sub('{C1}')::uuid, $$update tasks set title = 'Latin vocab', value_level = 'must', note = 'by Friday' where id = '{TA1}'$$);
+  perform pg_temp.t_denied('coach types coins on a task (coins follow the level)', ro, pg_temp.sub('{C1}')::uuid, $$update tasks set coins = 5 where id = '{TA1}'$$);
   perform pg_temp.t_denied('coach 1 adds a task for student C', ro, pg_temp.sub('{C1}')::uuid, $$insert into tasks (student_id, date, title, source) values ('{SC}', current_date, 'x', 'coach')$$);
   perform pg_temp.t_denied('coach 1 edits a task of student C', ro, pg_temp.sub('{C1}')::uuid, $$update tasks set title = 'x' where id = '{TC1}'$$);
   perform pg_temp.t_denied('coach 2 edits a task of student A', ro, pg_temp.sub('{C2}')::uuid, $$update tasks set title = 'x' where id = '{TA1}'$$);
@@ -633,7 +637,7 @@ begin
     and pg_temp.t_val('anon', null, format($$select automation_upsert_task(%L,'rsm','e1','t',current_date)$$, raw_a)) = 'ERR:42501');
   perform pg_temp.t_ok('a key adds a task for its student, as a platform task, verified',
     pg_temp.t_val('service_role', null, format($$select automation_upsert_task(%L,'rsm','e100','Pull: Algebra set 7',current_date,current_date+3,'from RSM',25,true,'{"submitted":true}')$$, raw_a)) not like 'ERR:%'
-    and pg_temp.t_val('postgres', null, $$select (student_id = '{SA}' and source = 'platform' and verified_by = 'platform' and verified_at is not null and coins = 3 and not done and value_set_by = 'platform')::text from tasks where external_id = 'e100'$$) = 'true');
+    and pg_temp.t_val('postgres', null, $$select (student_id = '{SA}' and source = 'platform' and verified_by = 'platform' and verified_at is not null and coins = 1.5 and value_level = 'normal' and not done and value_set_by = 'platform')::text from tasks where external_id = 'e100'$$) = 'true');
   v := pg_temp.t_val('service_role', null, format($$select automation_upsert_task(%L,'rsm','e100','Pull: Algebra set 7 (new title)',current_date,current_date+4,null,30,false,null)$$, raw_a));
   perform pg_temp.t_ok('pulling the same task again updates it instead of duplicating',
     v not like 'ERR:%'
@@ -960,6 +964,465 @@ begin
     (select count(*) from auth.sessions where user_id = '00000000-0000-4000-8000-0000000000d1') = 0
     and (select count(*) from auth.sessions where user_id = pg_temp.sub('{SA}')::uuid) = 1
     and (select count(*) from audit_log where action = 'sign_out_everywhere') = 1);
+
+  ---------------------------------------------------------------------------------------------
+  -- 9. REWARDS ENGINE (step 7): one economy for everyone, held coins, boxes, shop, reversal,
+  --    forgiveness, auto-confirm, strikes. Every block tries to cheat it.
+  --    Cast: Dana (D, squishy theme, gold coins, parent PD), Eli (E, space theme, "credits"),
+  --    Fay (F, a tiny pack for box tests), Gus (G, sparkle and weekly prize). All coached by coach 1.
+  ---------------------------------------------------------------------------------------------
+  perform set_config('emma.test_aal', 'aal2', true);
+  declare
+    d   date := (now() at time zone 'America/New_York')::date;
+    sd  uuid := '00000000-0000-4000-8000-000000000701'; se uuid := '00000000-0000-4000-8000-000000000702';
+    sf  uuid := '00000000-0000-4000-8000-000000000703'; sg uuid := '00000000-0000-4000-8000-000000000704';
+    pd  uuid := '00000000-0000-4000-8000-000000000705';
+    c1  uuid := pg_temp.sub('{C1}')::uuid; c2 uuid := pg_temp.sub('{C2}')::uuid;
+    au  text := 'authenticated'; sr text := 'service_role';
+    pk  uuid; d1 uuid; d2 uuid; d3 uuid; d4 uuid; d5 uuid; e1 uuid; e2 uuid; e3 uuid; e4 uuid; e5 uuid; e6 uuid; e7 uuid; e8 uuid;
+    f1 uuid; f2 uuid; f3 uuid; g2 uuid; w date; it1 uuid; it2 uuid; rare_d uuid; unc_d uuid;
+    j jsonb; x text; y text; i int;
+  begin
+    -- fixtures (as the database owner, like server code)
+    insert into auth.users (id, email) select u, u::text || '@test.invalid' from unnest(array[sd, se, sf, sg, pd]) u;
+    insert into profiles (id, role, first_name, username) values
+      (sd, 'student', 'Dana', 'rwdana'), (se, 'student', 'Eli', 'rweli'), (sf, 'student', 'Fay', 'rwfay'),
+      (sg, 'student', 'Gus', 'rwgus'), (pd, 'parent', 'ParentD', 'rwparentd');
+    insert into student_links (student_id, adult_id, relation)
+      select u, c1, 'coach' from unnest(array[sd, se, sf, sg]) u;
+    insert into student_links (student_id, adult_id, relation) values (sd, pd, 'parent');
+    insert into student_settings (student_id) select u from unnest(array[sd, se, sf, sg]) u;
+    insert into themes (student_id, name, palette, color_system) values
+      (sd, 'Kawaii', '{"bg":"#fff6fb"}', '{"mode":"urgency_ladder","steps":[{"color":"#b18cff","name":"purple","meaning":"must do today"}]}'),
+      (se, 'Space',  '{"bg":"#0b1026"}', '{"mode":"by_subject","steps":[{"color":"#ffcc00","name":"gold","meaning":"science"}]}');
+    insert into reward_packs (student_id, collect_name, currency_skin) values
+      (sd, 'squishies', '{"name":"coins","look":"gold"}'), (se, 'starships', '{"name":"credits","look":"chips"}'),
+      (sf, 'stickers', '{"name":"coins","look":"gold"}'), (sg, 'squishies', '{"name":"coins","look":"gold"}');
+    foreach x in array array['D','E'] loop
+      select id into pk from reward_packs where student_id = case x when 'D' then sd else se end;
+      insert into catalog_items (pack_id, student_id, name, source, status, rarity, category)
+      select pk, case x when 'D' then sd else se end, x || ' ' || rar || ' ' || num, 'hand_made', 'approved', rar,
+             case when num % 2 = 0 then 'slime' else 'shelf' end
+        from (values ('common',1),('common',2),('common',3),('common',4),('common',5),('uncommon',1),('uncommon',2),('rare',1),('legendary',1)) v(rar, num);
+    end loop;
+    select id into pk from reward_packs where student_id = sf;
+    insert into catalog_items (pack_id, student_id, name, source, status, rarity, category) values
+      (pk, sf, 'F common 1', 'hand_made', 'approved', 'common', 'shelf'), (pk, sf, 'F common 2', 'hand_made', 'approved', 'common', 'shelf'),
+      (pk, sf, 'F uncommon 1', 'hand_made', 'approved', 'uncommon', 'shelf'), (pk, sf, 'F proposed', 'web_search', 'proposed', 'common', 'shelf');
+    select id into rare_d from catalog_items where student_id = sd and rarity = 'rare';
+    select id into unc_d from catalog_items where student_id = sd and rarity = 'uncommon' order by name limit 1;
+
+    -- 9a. ONE ECONOMY: coins follow a fixed level, never a theme
+    perform pg_temp.t_ok('economy: levels are must 3, high 2, normal 1.5, low 1, optional 1, dinner 1, waiting 0; skill coins 1; strikes 3 in 14 days',
+      (select value from economy_config where key = 'task_coins') -> 'levels'
+        = '{"must":3,"high":2,"normal":1.5,"low":1,"optional":1,"dinner":1,"waiting":0}'::jsonb
+      and (select value ->> 'packing' from economy_config where key = 'skill_coins') = '1'
+      and (select value from economy_config where key = 'strikes') = '{"window_days":14,"count":3,"check_mode_days":7}'::jsonb
+      and (select value -> 'sparkle' from economy_config where key = 'box_rules') = '{"full_boxes":3,"of_last_homework_days":4}'::jsonb);
+    perform pg_temp.t_allowed('coach adds a must-do task for Dana', au, c1,
+      format($$insert into tasks (student_id, date, title, source, value_level) values (%L, %L, 'Latin vocab', 'coach', 'must')$$, sd, d));
+    perform pg_temp.t_allowed('coach adds a normal task for Dana', au, c1,
+      format($$insert into tasks (student_id, date, title, source, value_level) values (%L, %L, 'Bio reading', 'coach', 'normal')$$, sd, d));
+    perform pg_temp.t_allowed('coach adds dinner for Dana (no level given)', au, c1,
+      format($$insert into tasks (student_id, date, title, source, type) values (%L, %L, 'Dinner', 'coach', 'flex')$$, sd, d));
+    perform pg_temp.t_allowed('coach adds a Plan (class) for Dana', au, c1,
+      format($$insert into tasks (student_id, date, title, source, type) values (%L, %L, 'Robotics class', 'coach', 'fixed')$$, sd, d));
+    perform pg_temp.t_allowed('coach adds the same three tasks for Eli (different theme and currency)', au, c1,
+      format($$insert into tasks (student_id, date, title, source, value_level, type) values
+               (%1$L, %2$L, 'Star map', 'coach', 'must', 'school'), (%1$L, %2$L, 'Physics', 'coach', 'normal', 'school'),
+               (%1$L, %2$L, 'Dinner', 'coach', null, 'flex')$$, se, d), 3);
+    select id into d1 from tasks where student_id = sd and title = 'Latin vocab';
+    select id into d2 from tasks where student_id = sd and title = 'Bio reading';
+    select id into d3 from tasks where student_id = sd and title = 'Dinner';
+    select id into d4 from tasks where student_id = sd and title = 'Robotics class';
+    select id into e1 from tasks where student_id = se and title = 'Star map';
+    select id into e2 from tasks where student_id = se and title = 'Physics';
+    select id into e3 from tasks where student_id = se and title = 'Dinner';
+    perform pg_temp.t_ok('two students with different themes get the same coins for the same levels (3, 1.5, dinner 1)',
+      (select coins from tasks where id = d1) = 3 and (select coins from tasks where id = e1) = 3
+      and (select coins from tasks where id = d2) = 1.5 and (select coins from tasks where id = e2) = 1.5
+      and (select coins from tasks where id = d3) = 1 and (select coins from tasks where id = e3) = 1
+      and (select value_level from tasks where id = d3) = 'dinner'
+      and (select value_set_by from tasks where id = d1) = 'coach');
+    perform pg_temp.t_denied('Dana sets her own coins', au, sd, format($$update tasks set coins = 6 where id = %L$$, d1));
+    perform pg_temp.t_denied('Dana raises a task''s level', au, sd, format($$update tasks set value_level = 'must' where id = %L$$, d2));
+    perform pg_temp.t_denied('Dana adds a task with a level', au, sd,
+      format($$insert into tasks (student_id, date, title, value_level) values (%L, %L, 'x', 'must')$$, sd, d));
+    perform pg_temp.t_denied('Dana adds a task with coins', au, sd,
+      format($$insert into tasks (student_id, date, title, coins) values (%L, %L, 'x', 3)$$, sd, d));
+    perform pg_temp.t_allowed('Dana adds her own task', au, sd,
+      format($$insert into tasks (student_id, date, title) values (%L, %L, 'Study for history')$$, sd, d));
+    select id into d5 from tasks where student_id = sd and title = 'Study for history';
+    perform pg_temp.t_ok('a task she adds herself waits for the intake or an adult and is worth 0',
+      (select value_level = 'waiting' and coins = 0 and value_set_by is null from tasks where id = d5));
+    perform pg_temp.t_denied('coach types coins directly (even on an unfinished task)', au, c1, format($$update tasks set coins = 3 where id = %L$$, d5));
+
+    -- 9b. CALLING THE REWARD FUNCTIONS DIRECTLY AS THE WRONG PERSON
+    perform pg_temp.t_ok('a student cannot call finish, undo, tick, skill or proof-added',
+      pg_temp.t_val(au, sd, format($$select rewards_finish_task(%L, 'pass')$$, d1)) = 'ERR:42501'
+      and pg_temp.t_val(au, sd, format($$select rewards_undo_task(%L, %L, 'uncheck')$$, d1, sd)) = 'ERR:42501'
+      and pg_temp.t_val(au, sd, 'select rewards_tick()') = 'ERR:42501'
+      and pg_temp.t_val(au, sd, format($$select rewards_award_skill(%L, 'packing', 'night:x')$$, sd)) = 'ERR:42501'
+      and pg_temp.t_val(au, sd, format($$select rewards_proof_added(%L, 'pass')$$, d1)) = 'ERR:42501'
+      and pg_temp.t_val(au, sd, format($$select effective_proof_strictness(%L)$$, sd)) = 'ERR:42501');
+    perform pg_temp.t_ok('a coach and a parent cannot call the server-only reward functions either',
+      pg_temp.t_val(au, c1, format($$select rewards_finish_task(%L, 'pass')$$, d1)) = 'ERR:42501'
+      and pg_temp.t_val(au, pd, format($$select rewards_finish_task(%L, 'pass')$$, d1)) = 'ERR:42501'
+      and pg_temp.t_val(au, c1, 'select rewards_tick()') = 'ERR:42501');
+    perform pg_temp.t_ok('a student cannot give herself coins or a box, or approve a value, or copy items',
+      pg_temp.t_val(au, sd, format($$select give_coins(%L, 50, 'me')$$, sd)) = 'ERR:42501'
+      and pg_temp.t_val(au, sd, format($$select give_box(%L, %L, 'me')$$, sd, d)) = 'ERR:42501'
+      and pg_temp.t_val(au, sd, format($$select approve_task_value(%L, 'must')$$, d5)) = 'ERR:42501'
+      and pg_temp.t_val(au, sd, format($$select copy_reward_catalog_to_pack(%L)$$, sd)) = 'ERR:42501');
+    perform pg_temp.t_ok('a parent cannot give coins or boxes; another coach cannot give to someone else''s student',
+      pg_temp.t_val(au, pd, format($$select give_coins(%L, 5, 'x')$$, sd)) = 'ERR:42501'
+      and pg_temp.t_val(au, pd, format($$select give_box(%L, %L, 'x')$$, sd, d)) = 'ERR:42501'
+      and pg_temp.t_val(au, c2, format($$select give_coins(%L, 5, 'x')$$, sd)) = 'ERR:42501');
+    perform pg_temp.t_ok('the signed-out role cannot open a box, shop or buy',
+      pg_temp.t_val('anon', null, format($$select open_box(%L)$$, d)) = 'ERR:42501'
+      and pg_temp.t_val('anon', null, 'select get_shop()') = 'ERR:42501'
+      and pg_temp.t_val('anon', null, format($$select buy_item(%L)$$, unc_d)) = 'ERR:42501');
+
+    -- 9c. FINISHING: coins show at once; trusted and clean proof is confirmed, flagged proof is held
+    insert into work_sessions (student_id, task_id, started_at) values (sd, d1, now() - interval '10 minutes');
+    j := pg_temp.t_val(sr, null, format($$select rewards_finish_task(%L, 'pass')$$, d1))::jsonb;
+    perform pg_temp.t_ok('finishing a must-do task she started pays 3 + the egg, confirmed at once, plus a starting coin',
+      j ->> 'status' = 'confirmed' and (j ->> 'coins')::numeric = 3 and (j ->> 'egg')::numeric = 1
+      and pg_temp.t_val(sr, null, format('select rw_spendable(%L)', sd))::numeric = 5
+      and (select count(*) from skill_events where student_id = sd and kind = 'starting') = 1, j::text);
+    perform pg_temp.t_ok('finishing the same task twice pays nothing more',
+      pg_temp.t_val(sr, null, format($$select rewards_finish_task(%L, 'pass') ->> 'status'$$, d1)) = 'already_done'
+      and (select count(*) from ledger where task_id = d1 and kind in ('earn','egg')) = 2);
+    j := pg_temp.t_val(sr, null, format($$select rewards_finish_task(%L, 'flagged')$$, d2))::jsonb;
+    perform pg_temp.t_ok('flagged proof is accepted but its coins are held (shown, not spendable)',
+      j ->> 'status' = 'held'
+      and pg_temp.t_val(au, sd, 'select my_wallet()') ::jsonb = '{"spendable":5,"waiting":1.5,"currency":{"name":"coins","look":"gold"}}'::jsonb,
+      pg_temp.t_val(au, sd, 'select my_wallet()'));
+    perform pg_temp.t_ok('a Plan (class) cannot be checked off',
+      pg_temp.t_val(sr, null, format($$select rewards_finish_task(%L, 'pass')$$, d4)) like 'ERR:%');
+    perform pg_temp.t_ok('a student cannot read another student''s wallet or day',
+      pg_temp.t_val(au, sd, format('select my_wallet(%L)', se)) = 'ERR:42501'
+      and pg_temp.t_val(au, sd, format('select day_status(%L, %L)', se, d)) = 'ERR:42501');
+    perform pg_temp.t_ok('the day is not cleared while dinner is still open, so no box yet',
+      (pg_temp.t_val(au, sd, format('select day_status(%L, %L)', sd, d))::jsonb ->> 'cleared') = 'false'
+      and not exists (select 1 from day_results where student_id = sd and date = d and box_earned));
+    perform pg_temp.t_val(sr, null, format($$select rewards_finish_task(%L, 'no_proof_needed')$$, d3));
+    perform pg_temp.t_ok('a cleared day earns a box at once; her own waiting task does not count; full box (2 of 2 real tasks)',
+      exists (select 1 from day_results where student_id = sd and date = d and box_earned and box_kind = 'full' and not opened));
+    perform pg_temp.t_ok('the box waits while a task that counted is still held',
+      pg_temp.t_val(au, sd, format($$select open_box(%L) ->> 'status'$$, d)) = 'waiting'
+      and not exists (select 1 from collection where student_id = sd));
+
+    -- 9d. HELD COINS CANNOT BE SPENT; THE SHOP IS THE SAME SIZE AND PRICE FOR EVERYONE
+    x := pg_temp.t_val(au, c1, format($$select give_coins(%L, 11.5, 'birthday')$$, sd));
+    perform pg_temp.t_ok('coach gives coins by hand (logged), within the limits',
+      x not like 'ERR:%'
+      and pg_temp.t_val(au, c1, format($$select give_coins(%L, 0.25, 'x')$$, sd)) like 'ERR:%'
+      and pg_temp.t_val(au, c1, format($$select give_coins(%L, 51, 'x')$$, sd)) like 'ERR:%'
+      and pg_temp.t_val(au, c1, format($$select give_coins(%L, 5, '')$$, sd)) like 'ERR:%'
+      and (select count(*) from audit_log where table_name = 'ledger' and student_id = sd and details ->> 'kind' = 'gift') = 1);
+    j := pg_temp.t_val(au, sd, 'select get_shop()')::jsonb;
+    perform pg_temp.t_ok('her shop: only common and uncommon, nothing she owns, priced 18 and 32',
+      jsonb_array_length(j -> 'items') = 7
+      and not exists (select 1 from jsonb_array_elements(j -> 'items') e where e ->> 'rarity' not in ('common','uncommon'))
+      and not exists (select 1 from jsonb_array_elements(j -> 'items') e
+                       where (e ->> 'price')::numeric <> case e ->> 'rarity' when 'common' then 18 else 32 end), j::text);
+    perform pg_temp.t_ok('the shop stays the same all week (asking again gives the same list)',
+      pg_temp.t_val(au, sd, 'select get_shop()')::jsonb = j
+      and (select count(*) from shop_weeks where student_id = sd) = 1);
+    select (e ->> 'id')::uuid into it1 from jsonb_array_elements(j -> 'items') e where e ->> 'rarity' = 'common' limit 1;
+    perform pg_temp.t_ok('Eli (different theme, credits) sees the same shop size rule and the same prices',
+      not exists (select 1 from jsonb_array_elements(pg_temp.t_val(au, se, 'select get_shop()')::jsonb -> 'items') e
+                   where (e ->> 'price')::numeric <> case e ->> 'rarity' when 'common' then 18 else 32 end)
+      and pg_temp.t_val(au, se, 'select get_shop() ->> ''currency''') = 'credits');
+    perform pg_temp.t_ok('spending held coins is refused (17.5 spendable + 1.5 held is not 18 spendable)',
+      pg_temp.t_val(au, sd, format('select buy_item(%L)', it1)) like 'ERR:P0001'
+      and not exists (select 1 from collection where student_id = sd));
+    perform pg_temp.t_allowed('her parent looks at the flagged task: Looks good', au, pd, format($$select review_task(%L, 'looks_good')$$, d2));
+    perform pg_temp.t_ok('Looks good confirms the held coins',
+      pg_temp.t_val(sr, null, format('select rw_spendable(%L)', sd))::numeric = 19 and pg_temp.t_val(sr, null, format('select rw_held(%L)', sd))::numeric = 0);
+    perform pg_temp.t_ok('buying a rare item is refused (rare and legendary only come from boxes)',
+      pg_temp.t_val(au, sd, format('select buy_item(%L)', rare_d)) like 'ERR:P0001');
+    perform pg_temp.t_ok('a parent cannot buy for her child',
+      pg_temp.t_val(au, pd, format('select buy_item(%L)', it1)) = 'ERR:42501');
+    x := pg_temp.t_val(au, sd, format($$select buy_item(%L) ->> 'spendable'$$, it1));
+    perform pg_temp.t_ok('buying a common item costs 18 confirmed coins',
+      x::numeric = 1
+      and exists (select 1 from collection where student_id = sd and item_id = it1::text and acquired_via = 'shop'));
+    perform pg_temp.t_ok('buying the same item twice is refused, and it leaves the shop',
+      pg_temp.t_val(au, sd, format('select buy_item(%L)', it1)) like 'ERR:P0001'
+      and jsonb_array_length(pg_temp.t_val(au, sd, 'select get_shop()')::jsonb -> 'items') = 6
+      and pg_temp.t_val(sr, null, format('select rw_spendable(%L)', sd))::numeric = 1);
+    perform pg_temp.t_ok('buying with too few coins is refused (uncommon is 32)',
+      pg_temp.t_val(au, sd, format('select buy_item(%L)', unc_d)) like 'ERR:P0001');
+    perform pg_temp.t_ok('Dana cannot buy from Eli''s catalog',
+      pg_temp.t_val(au, sd, format('select buy_item(%L)', (select id from catalog_items where student_id = se and rarity = 'common' limit 1))) like 'ERR:P0001');
+
+    -- 9e. OPENING THE BOX (once)
+    j := pg_temp.t_val(au, sd, format('select open_box(%L)', d))::jsonb;
+    perform pg_temp.t_ok('the box opens once every counted task is confirmed, and gives an item she did not own',
+      j ->> 'status' = 'opened' and (j ->> 'already')::boolean = false and j ->> 'item_id' <> it1::text
+      and exists (select 1 from collection where student_id = sd and item_id = j ->> 'item_id' and acquired_via = 'box' and box_date = d), j::text);
+    y := pg_temp.t_val(au, sd, format('select open_box(%L)', d));
+    perform pg_temp.t_ok('opening the same box again gives the same item and nothing new',
+      y::jsonb ->> 'item_id' = j ->> 'item_id' and (y::jsonb ->> 'already')::boolean
+      and (select count(*) from collection where student_id = sd and acquired_via = 'box') = 1, y);
+    perform pg_temp.t_ok('a day without a box gives nothing',
+      pg_temp.t_val(au, sd, format($$select open_box(%L) ->> 'status'$$, d + 1)) = 'none');
+    perform pg_temp.t_ok('the opened box remembers which tasks counted',
+      (select counted_task_ids @> array[d1, d2, d3] and not (d5 = any (counted_task_ids)) from day_results where student_id = sd and date = d));
+    perform pg_temp.t_denied('Dana marks her box unopened to open it again', au, sd, format($$update day_results set opened = false where student_id = %L$$, sd));
+
+    -- 9f. NOT DONE AFTER SHE SPENT THE COINS: forgiven, never negative, the item stays, it does not pay twice
+    perform pg_temp.t_ok('a student cannot reverse (or review) her own task',
+      pg_temp.t_val(au, sd, format($$select review_task(%L, 'not_done')$$, d1)) = 'ERR:42501'
+      and pg_temp.t_val(au, sd, format($$select review_task(%L, 'looks_good')$$, d2)) = 'ERR:42501');
+    perform pg_temp.t_ok('another coach cannot review Dana''s task',
+      pg_temp.t_val(au, c2, format($$select review_task(%L, 'not_done')$$, d1)) = 'ERR:42501');
+    perform pg_temp.t_allowed('coach marks Latin vocab Not done (within 24 hours)', au, c1, format($$select review_task(%L, 'not_done', 'only half the words')$$, d1));
+    perform pg_temp.t_ok('Not done: the unspent 1 coin is removed and the spent 3 are forgiven; balance is 0, not negative',
+      pg_temp.t_val(sr, null, format('select rw_spendable(%L)', sd))::numeric = 0
+      and (select sum(amount) from ledger where task_id = d1 and kind = 'forgiven' and status = 'confirmed') = 3
+      and not exists (select 1 from ledger where task_id = d1 and kind in ('earn','egg') and status <> 'reversed'));
+    perform pg_temp.t_ok('Not done: the task is open again, the box item stays, and Sofia gets a flag',
+      (select not done and reward_status = 'reversed' and review_status = 'not_done' and not pays_again and reopened_at is not null from tasks where id = d1)
+      and (select count(*) from collection where student_id = sd) = 2
+      and exists (select 1 from integrity_flags where student_id = sd and task_id = d1 and kind = 'rewards_forgiven')
+      and exists (select 1 from integrity_flags where student_id = sd and task_id = d1 and kind = 'not_done'));
+    perform pg_temp.t_ok('her message is calm and clear, uses her currency''s name, and never says cheating or fake',
+      exists (select 1 from notifications where recipient_id = sd and kind = 'reopened' and task_id = d1
+                and body like '%wasn''t finished yet. Coins only come from real work.%'
+                and body !~* '(cheat|fake|lazy|strike)'));
+    perform pg_temp.t_ok('Dana cannot see her strikes or flags',
+      pg_temp.t_val(au, sd, 'select count(*) from integrity_flags') = '0'
+      and pg_temp.t_val(au, c1, format($$select count(*) from integrity_flags where student_id = %L$$, sd)) = '2');
+    j := pg_temp.t_val(sr, null, format($$select rewards_finish_task(%L, 'pass')$$, d1))::jsonb;
+    perform pg_temp.t_ok('doing it again after a forgiven reopen pays nothing a second time',
+      (j ->> 'coins')::numeric = 0 and (j ->> 'egg')::numeric = 0
+      and pg_temp.t_val(sr, null, format('select rw_spendable(%L)', sd))::numeric = 0, j::text);
+    update tasks set final_at = now() - interval '1 second' where id = d2;
+    perform pg_temp.t_ok('Not done after the 24 hours is refused (rewards are final)',
+      pg_temp.t_val(au, c1, format($$select review_task(%L, 'not_done')$$, d2)) like 'ERR:P0001'
+      and (select done from tasks where id = d2));
+
+    -- 9g. NOT DONE BEFORE SHE SPENT: the coins are removed, the unopened box goes, and she can earn both back
+    perform pg_temp.t_val(sr, null, format($$select rewards_finish_task(%L, 'pass')$$, u)) from unnest(array[e1, e2, e3]) u;
+    perform pg_temp.t_ok('Eli earns exactly what Dana earned for the same tasks (3 + 1.5 + 1), in credits',
+      pg_temp.t_val(sr, null, format('select rw_spendable(%L)', se))::numeric = 5.5
+      and pg_temp.t_val(au, se, $$select my_wallet() -> 'currency' ->> 'name'$$) = 'credits'
+      and exists (select 1 from day_results where student_id = se and date = d and box_earned and not opened));
+    perform pg_temp.t_allowed('coach marks Star map Not done', au, c1, format($$select review_task(%L, 'not_done')$$, e1));
+    perform pg_temp.t_ok('reversing a task removes its coins (5.5 back to 2.5) and its box credit',
+      pg_temp.t_val(sr, null, format('select rw_spendable(%L)', se))::numeric = 2.5
+      and not exists (select 1 from day_results where student_id = se and date = d and box_earned)
+      and pg_temp.t_val(au, se, format($$select open_box(%L) ->> 'status'$$, d)) = 'none'
+      and (select pays_again from tasks where id = e1));
+    perform pg_temp.t_val(sr, null, format($$select rewards_finish_task(%L, 'pass')$$, e1));
+    perform pg_temp.t_ok('finishing it again earns the same 3 coins (held for a look, because it was marked Not done) and the box back',
+      pg_temp.t_val(sr, null, format('select rw_spendable(%L)', se))::numeric = 2.5
+      and pg_temp.t_val(sr, null, format('select rw_held(%L)', se))::numeric = 3
+      and exists (select 1 from day_results where student_id = se and date = d and box_earned));
+    perform pg_temp.t_val(au, c1, format($$select review_task(%L, 'looks_good')$$, e1));
+    perform pg_temp.t_ok('her coach looks at the redo: Looks good, and all 5.5 are spendable',
+      pg_temp.t_val(sr, null, format('select rw_spendable(%L)', se))::numeric = 5.5);
+
+    -- 9h. AUTO-CONFIRM AFTER 24 HOURS, A REMINDER FIRST, AND NEEDS MORE
+    insert into tasks (student_id, date, title, source, value_level) values (se, d, 'Essay', 'coach', 'normal'), (se, d, 'Lab notes', 'coach', 'normal');
+    select id into e4 from tasks where student_id = se and title = 'Essay';
+    select id into e5 from tasks where student_id = se and title = 'Lab notes';
+    perform pg_temp.t_val(sr, null, format($$select rewards_finish_task(%L, 'flagged')$$, u)) from unnest(array[e4, e5]) u;
+    update tasks set final_at = now() + interval '3 hours' where id = e4;
+    perform pg_temp.t_val(sr, null, 'select rewards_tick()');
+    perform pg_temp.t_val(sr, null, 'select rewards_tick()');
+    perform pg_temp.t_ok('about 4 hours before auto-confirm the adults get one reminder (not two)',
+      (select count(*) from notifications where recipient_id = c1 and kind = 'review_reminder' and task_id = e4) = 1
+      and (select reward_status from tasks where id = e4) = 'provisional');
+    perform pg_temp.t_allowed('coach asks for more on Lab notes', au, c1, format($$select review_task(%L, 'needs_more', 'which experiment?')$$, e5));
+    update tasks set final_at = now() - interval '1 minute' where id in (e4, e5);
+    perform pg_temp.t_val(sr, null, 'select rewards_tick()');
+    perform pg_temp.t_ok('nobody looked for 24 hours: held coins confirm by themselves',
+      (select reward_status from tasks where id = e4) = 'confirmed'
+      and not exists (select 1 from ledger where task_id = e4 and status = 'held'));
+    perform pg_temp.t_ok('a task sent back with Needs more stays held (it waits for her, not the clock)',
+      (select reward_status from tasks where id = e5) = 'provisional'
+      and exists (select 1 from notifications where recipient_id = se and kind = 'needs_more' and task_id = e5));
+    x := pg_temp.t_val(sr, null, format($$select rewards_proof_added(%L, 'pass') ->> 'status'$$, e5));
+    perform pg_temp.t_ok('when she adds more proof the 24-hour clock restarts and clean proof confirms',
+      x = 'confirmed'
+      and (select final_at > now() and review_status = 'unreviewed' from tasks where id = e5));
+
+    -- 9i. STRIKES: three Not done in 14 days turn on a 7-day check mode; she never sees a count
+    insert into tasks (student_id, date, title, source, value_level) values (se, d, 'Vocab 1', 'coach', 'low'), (se, d, 'Vocab 2', 'coach', 'low'), (se, d, 'Vocab 3', 'coach', 'low');
+    select id into e6 from tasks where student_id = se and title = 'Vocab 1';
+    select id into e7 from tasks where student_id = se and title = 'Vocab 2';
+    select id into e8 from tasks where student_id = se and title = 'Vocab 3';
+    perform pg_temp.t_val(sr, null, format($$select rewards_finish_task(%L, 'pass')$$, u)) from unnest(array[e6, e7]) u;
+    perform pg_temp.t_val(au, c1, format($$select review_task(%L, 'not_done')$$, e6));
+    perform pg_temp.t_ok('two strikes: no check mode yet',
+      (select check_mode_until is null from student_settings where student_id = se));
+    perform pg_temp.t_val(au, c1, format($$select review_task(%L, 'not_done')$$, e7));
+    perform pg_temp.t_ok('the third strike in 14 days turns on check mode for 7 days',
+      (select check_mode_until between now() + interval '6 days 23 hours' and now() + interval '7 days 1 hour' from student_settings where student_id = se)
+      and pg_temp.t_val(sr, null, format('select effective_proof_strictness(%L)', se)) = 'strict');
+    perform pg_temp.t_ok('she is told kindly, in her currency''s name, with no count and no blame; the adults get the reason',
+      exists (select 1 from notifications where recipient_id = se and kind = 'check_mode'
+                and body = 'For this week, CoachOne will check your work before credits count.')
+      and exists (select 1 from notifications where recipient_id = c1 and kind = 'check_mode' and body like '%3 tasks were marked Not done in 14 days%'));
+    perform pg_temp.t_ok('in check mode even clean proof is held for a look',
+      pg_temp.t_val(sr, null, format($$select rewards_finish_task(%L, 'pass') ->> 'status'$$, e8)) = 'held');
+    perform pg_temp.t_denied('Eli turns check mode off herself', au, se, format($$update student_settings set check_mode_until = null where student_id = %L$$, se));
+
+    -- 9j. MOVING WORK OFF TODAY COUNTS AS NOT TODAY; MINI BOX; GIFTS; NEVER A DUPLICATE; OLD STRIKES EXPIRE
+    insert into tasks (student_id, date, title, source, value_level) values (sf, d, 'Math 1', 'coach', 'normal'), (sf, d, 'Math 2', 'coach', 'normal'), (sf, d, 'Math 3', 'coach', 'normal');
+    select id into f1 from tasks where student_id = sf and title = 'Math 1';
+    select id into f2 from tasks where student_id = sf and title = 'Math 2';
+    select id into f3 from tasks where student_id = sf and title = 'Math 3';
+    perform pg_temp.t_allowed('Fay drags two tasks to tomorrow', au, sf, format($$update tasks set date = %L where id in (%L, %L)$$, d + 1, f2, f3), 2);
+    perform pg_temp.t_val(sr, null, format($$select rewards_finish_task(%L, 'pass')$$, f1));
+    perform pg_temp.t_ok('dragging work away still counts against today: 1 of 3 done is a mini box, not a full one',
+      exists (select 1 from day_results where student_id = sf and date = d and box_earned and box_kind = 'mini'
+                and moved_task_ids @> array[f2, f3])
+      and (pg_temp.t_val(au, sf, format('select day_status(%L, %L)', sf, d))::jsonb ->> 'need_for_full') = '1');
+    perform pg_temp.t_ok('a mini box gives a common',
+      pg_temp.t_val(au, sf, format($$select open_box(%L) ->> 'rarity'$$, d)) = 'common');
+    perform pg_temp.t_ok('a gift box needs a reason and is coach-only',
+      pg_temp.t_val(au, c1, format($$select give_box(%L, %L, '')$$, sf, d - 1)) like 'ERR:%'
+      and pg_temp.t_val(au, c1, format($$select give_box(%L, %L, 'make-up box')$$, sf, d - 1)) not like 'ERR:%'
+      and pg_temp.t_val(au, c1, format($$select give_box(%L, %L, 'again')$$, sf, d)) like 'ERR:%');
+    perform pg_temp.t_val(au, sf, format('select open_box(%L)', d - 1));
+    perform pg_temp.t_val(au, c1, format($$select give_box(%L, %L, 'another')$$, sf, d - 2));
+    perform pg_temp.t_val(au, sf, format('select open_box(%L)', d - 2));
+    perform pg_temp.t_ok('boxes never give a duplicate (3 boxes, 3 different items) and never an unapproved item',
+      (select count(distinct item_id) from collection where student_id = sf) = 3
+      and not exists (select 1 from collection c join catalog_items ci on ci.id::text = c.item_id where c.student_id = sf and ci.status <> 'approved'));
+    perform pg_temp.t_val(au, c1, format($$select give_box(%L, %L, 'one more')$$, sf, d - 3));
+    x := pg_temp.t_val(au, sf, format($$select open_box(%L) ->> 'status'$$, d - 3));
+    perform pg_temp.t_ok('when she owns everything, the box waits ("new items coming") and the coach is asked to add items',
+      x = 'new_items_coming'
+      and exists (select 1 from day_results where student_id = sf and date = d - 3 and box_earned and not opened)
+      and exists (select 1 from notifications where recipient_id = c1 and kind = 'box_pool_empty' and student_id = sf));
+    insert into integrity_flags (student_id, kind, created_at) values (sf, 'not_done', now() - interval '20 days'), (sf, 'not_done', now() - interval '16 days');
+    perform pg_temp.t_val(au, c1, format($$select review_task(%L, 'not_done')$$, f1));
+    perform pg_temp.t_ok('strikes older than 14 days do not count (2 old + 1 new is not check mode)',
+      (select check_mode_until is null from student_settings where student_id = sf));
+
+    -- 9k. THE BOX ODDS (PRD 3a), checked at the edges
+    perform pg_temp.t_ok('normal box: under 2 legendary, under 12 rare, under 40 uncommon, the rest common',
+      rw_box_rarity(1.99, 'full') = 'legendary' and rw_box_rarity(2, 'full') = 'rare' and rw_box_rarity(11.99, 'full') = 'rare'
+      and rw_box_rarity(12, 'full') = 'uncommon' and rw_box_rarity(39.99, 'full') = 'uncommon' and rw_box_rarity(40, 'full') = 'common'
+      and rw_box_rarity(99.99, 'full') = 'common');
+    perform pg_temp.t_ok('sparkle box: under 15 legendary, under 50 rare, under 80 uncommon, the rest common; mini is always common',
+      rw_box_rarity(14.99, 'sparkle') = 'legendary' and rw_box_rarity(15, 'sparkle') = 'rare' and rw_box_rarity(49.99, 'sparkle') = 'rare'
+      and rw_box_rarity(50, 'sparkle') = 'uncommon' and rw_box_rarity(79.99, 'sparkle') = 'uncommon' and rw_box_rarity(80, 'sparkle') = 'common'
+      and rw_box_rarity(0, 'mini') = 'common');
+    perform pg_temp.t_ok('the roll is between 0 and 100',
+      (select bool_and(rr >= 0 and rr < 100) from (select rw_roll() rr from generate_series(1, 200)) z));
+
+    -- 9l. SPARKLE: 3 full boxes in the last 4 homework days; days with no homework are skipped
+    x := pg_temp.t_val(au, c1, format('select copy_reward_catalog_to_pack(%L)', sg));
+    y := pg_temp.t_val(au, c1, format('select copy_reward_catalog_to_pack(%L)', sg));
+    perform pg_temp.t_ok('a coach copies the squishy list into Gus''s pack once (a second copy adds nothing)',
+      x::int = (select count(*) from reward_catalog where active) and x::int >= 53 and y = '0'
+      and (select count(*) from catalog_items where student_id = sg and status = 'approved' and approved_by = c1 and legacy_id is not null) = x::int, x || ' / ' || y);
+    insert into tasks (student_id, date, title, source, value_level, done, done_at, reward_status)
+    select sg, d - k, 'Homework ' || k, 'coach', 'normal', true, now(), 'confirmed' from unnest(array[1, 3, 4]) k;
+    insert into tasks (student_id, date, title, source, type, done, done_at, reward_status) values (sg, d - 2, 'Dinner only', 'coach', 'flex', true, now(), 'confirmed');
+    insert into day_results (student_id, date, box_earned, box_kind) values (sg, d - 1, true, 'mini'), (sg, d - 3, true, 'full'), (sg, d - 4, true, 'full')
+      on conflict (student_id, date) do update set box_earned = excluded.box_earned, box_kind = excluded.box_kind;
+    insert into tasks (student_id, date, title, source, value_level) values (sg, d, 'Today''s homework', 'coach', 'normal');
+    select id into g2 from tasks where student_id = sg and title = 'Today''s homework';
+    perform pg_temp.t_val(sr, null, format($$select rewards_finish_task(%L, 'pass')$$, g2));
+    perform pg_temp.t_ok('mini yesterday, a dinner-only day (skipped, not a break), full, full: today''s full box is a sparkle box (3 of the last 4 homework days)',
+      (pg_temp.t_val(au, sg, format('select day_status(%L, %L)', sg, d))::jsonb ->> 'sparkle_ready') = 'true');
+    update day_results set box_kind = 'mini' where student_id = sg and date = d - 3;
+    perform pg_temp.t_ok('with only 1 of the 3 homework days before it full, it is a plain full box',
+      (pg_temp.t_val(au, sg, format('select day_status(%L, %L)', sg, d))::jsonb ->> 'sparkle_ready') = 'false');
+    update day_results set box_kind = 'full' where student_id = sg and date = d - 3;
+    j := pg_temp.t_val(au, sg, format('select open_box(%L)', d))::jsonb;
+    perform pg_temp.t_ok('opening it records a sparkle box', j ->> 'status' = 'opened' and (j ->> 'sparkle')::boolean
+      and exists (select 1 from day_results where student_id = sg and date = d and sparkle and box_kind = 'full'), j::text);
+
+    -- 9m. THE WEEKLY REAL PRIZE: one missed homework day allowed, and every reward must be confirmed
+    w := d - ((extract(isodow from d)::int + 6) % 7) - 14;
+    insert into tasks (student_id, date, title, source, value_level, done, done_at, reward_status)
+    select sg, w + k, 'Week homework ' || k, 'coach', 'normal', true, now(), 'confirmed' from generate_series(0, 4) k;
+    insert into day_results (student_id, date, box_earned, box_kind) select sg, w + k, true, 'full' from generate_series(0, 3) k;
+    perform pg_temp.t_ok('5 homework days, 4 boxes (one missed): the real prize is earned and ready',
+      (pg_temp.t_val(au, pd, format('select real_pick_status(%L, %L)', sg, w)) = 'ERR:42501')
+      and (pg_temp.t_val(au, c1, format('select real_pick_status(%L, %L)', sg, w))::jsonb ->> 'ready') = 'true');
+    update day_results set box_earned = false where student_id = sg and date = w + 3;
+    perform pg_temp.t_ok('two missed homework days: not earned',
+      (pg_temp.t_val(au, c1, format('select real_pick_status(%L, %L)', sg, w))::jsonb ->> 'earned') = 'false');
+    update day_results set box_earned = true where student_id = sg and date = w + 3;
+    update tasks set reward_status = 'provisional' where student_id = sg and date = w;
+    perform pg_temp.t_ok('a reward still waiting in that week: earned but not ready',
+      (pg_temp.t_val(au, c1, format('select real_pick_status(%L, %L)', sg, w))::jsonb ->> 'earned') = 'true'
+      and (pg_temp.t_val(au, c1, format('select real_pick_status(%L, %L)', sg, w))::jsonb ->> 'ready') = 'false');
+    perform pg_temp.t_ok('a student cannot check another student''s prize',
+      pg_temp.t_val(au, sd, format('select real_pick_status(%L, %L)', sg, w)) = 'ERR:42501');
+
+    -- 9n. SKILL COINS: packing once per night, only for tonight's list
+    insert into bring_home (student_id, date, label) values (sd, d, 'Hobbit'), (sd, d, 'Vocab book'), (sd, d + 1, 'Bio textbook');
+    perform pg_temp.t_allowed('Dana ticks one thing', au, sd, format($$update bring_home set packed = true where student_id = %L and date = %L and label = 'Hobbit'$$, sd, d));
+    perform pg_temp.t_ok('half a list pays nothing', not exists (select 1 from skill_events where student_id = sd and kind = 'packing'));
+    perform pg_temp.t_allowed('Dana ticks the rest', au, sd, format($$update bring_home set packed = true where student_id = %L and date = %L$$, sd, d));
+    perform pg_temp.t_allowed('Dana unticks and ticks again', au, sd, format($$update bring_home set packed = false where student_id = %L and date = %L and label = 'Hobbit'$$, sd, d));
+    perform pg_temp.t_allowed('Dana ticks it again', au, sd, format($$update bring_home set packed = true where student_id = %L and date = %L and label = 'Hobbit'$$, sd, d));
+    perform pg_temp.t_allowed('Dana ticks tomorrow''s list early', au, sd, format($$update bring_home set packed = true where student_id = %L and date = %L$$, sd, d + 1));
+    perform pg_temp.t_ok('a whole list pays 1 packing coin, once per night, and tomorrow''s list pays nothing tonight',
+      (select count(*) from skill_events where student_id = sd and kind = 'packing') = 1
+      and (select count(*) from ledger where student_id = sd and kind = 'skill' and note = 'packing') = 1);
+    x := pg_temp.t_val(sr, null, format($$select rewards_award_skill(%L, 'planning', 'task:x')$$, sd));
+    y := pg_temp.t_val(sr, null, format($$select rewards_award_skill(%L, 'planning', 'task:x')$$, sd));
+    perform pg_temp.t_ok('a skill coin is paid once per thing even if server code asks twice', x::numeric = 1 and y::numeric = 0, x || ' / ' || y);
+
+    -- 9o. A TASK SHE ADDED, WAITING FOR AN ADULT: earns nothing until an adult approves its value
+    j := pg_temp.t_val(sr, null, format($$select rewards_finish_task(%L, 'pass')$$, d5))::jsonb;
+    perform pg_temp.t_ok('finishing her own unapproved task pays nothing and is held',
+      (j ->> 'coins')::numeric = 0 and j ->> 'status' = 'held', j::text);
+    perform pg_temp.t_ok('another coach cannot approve it',
+      pg_temp.t_val(au, c2, format($$select approve_task_value(%L, 'must')$$, d5)) = 'ERR:42501');
+    x := pg_temp.t_val(au, c1, format($$select approve_task_value(%L, 'normal')$$, d5));
+    perform pg_temp.t_ok('her coach approves it at normal: it pays 1.5, confirmed',
+      (x::jsonb ->> 'coins')::numeric = 1.5
+      and exists (select 1 from ledger where task_id = d5 and kind = 'earn' and amount = 1.5 and status = 'confirmed'));
+    perform pg_temp.t_ok('a finished task''s value cannot be changed again',
+      pg_temp.t_val(au, c1, format($$select approve_task_value(%L, 'must')$$, d5)) like 'ERR:%'
+      and pg_temp.t_val(au, c1, format($$update tasks set value_level = 'must' where id = %L returning 1$$, d5)) like 'ERR:%');
+
+    -- 9p. THE CURRENCY LOOK IS ADULT-ONLY AND CHANGES NO NUMBER
+    perform pg_temp.t_denied('Eli changes her own currency look', au, se, format($$update reward_packs set currency_skin = '{"name":"gold bars"}' where student_id = %L$$, se));
+    perform pg_temp.t_allowed('coach changes Eli''s currency look', au, c1, format($$update reward_packs set currency_skin = '{"name":"stars","look":"silver"}' where student_id = %L$$, se));
+    perform pg_temp.t_ok('her balance is the same number in the new look',
+      pg_temp.t_val(au, se, 'select my_wallet()')::jsonb ->> 'spendable' = pg_temp.t_val(sr, null, format('select rw_spendable(%L)', se))
+      and pg_temp.t_val(au, se, $$select my_wallet() -> 'currency' ->> 'name'$$) = 'stars');
+
+    -- 9p2. HER OWN UNCHECK (step 5 calls the same undo): coins come off, no strike, no message to her
+    i := (select count(*) from integrity_flags where student_id = se and kind = 'not_done');
+    x := pg_temp.t_val(sr, null, format($$select rewards_undo_task(%L, %L, 'uncheck')$$, e3, se));
+    perform pg_temp.t_ok('unchecking dinner herself takes its 1 coin back and is not a strike',
+      x not like 'ERR:%' and (select not done and pays_again from tasks where id = e3)
+      and not exists (select 1 from ledger where task_id = e3 and status <> 'reversed')
+      and (select count(*) from integrity_flags where student_id = se and kind = 'not_done') = i
+      and not exists (select 1 from notifications where recipient_id = se and task_id = e3), x);
+    perform pg_temp.t_ok('a server undo of a task that is not finished is refused',
+      pg_temp.t_val(sr, null, format($$select rewards_undo_task(%L, %L, 'uncheck')$$, e3, se)) like 'ERR:%');
+
+    -- 9p3. SERVER CODE (for example the old-Sheet import) KEEPS THE VALUE IT GIVES
+    insert into tasks (student_id, date, title, source, done, done_at, coins, reward_status) values
+      (sg, d - 30, 'Imported finished task', 'student', true, now(), 0, 'confirmed'),
+      (sg, d - 30, 'Imported old 5-coin task', 'coach', true, now(), 5, 'confirmed');
+    perform pg_temp.t_ok('a server insert with no level keeps its coins exactly (0 stays 0, an old 5 stays 5)',
+      (select coins = 0 and value_level is null from tasks where student_id = sg and title = 'Imported finished task')
+      and (select coins = 5 and value_level is null from tasks where student_id = sg and title = 'Imported old 5-coin task'));
+
+    -- 9q. NEVER A NEGATIVE BALANCE, ANYWHERE
+    perform pg_temp.t_ok('no student has a negative spendable balance',
+      not exists (select 1 from profiles p where p.role = 'student' and rw_spendable(p.id) < 0));
+  exception when others then
+    -- A broken rule can make a later step error out. Report it as a failure instead of hiding the report.
+    perform pg_temp.t_ok('the rewards tests ran to the end without an error', false, sqlerrm);
+  end;
 
   ---------------------------------------------------------------------------------------------
   -- REPORT (always ends by raising, which rolls everything back)

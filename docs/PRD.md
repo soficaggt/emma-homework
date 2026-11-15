@@ -122,10 +122,10 @@ These are in backend/Code.gs and are easy to lose in a rebuild.
 
 - **Day cleared:** a day is cleared when it has something to check off and every checkable item is done or in the Not today pile. Plans (type "fixed") are never checkable.
 - **Full box vs mini box:** a full box needs at least half of the day's real work (dinner excluded) actually checked off. Otherwise it is a mini box: common squishies only. Moving a task off today counts the same as Not today (no dodging work by dragging it away).
-- **Sparkle box:** a full box on a day when the two days before were also full boxes. Much better odds.
+- **Sparkle box:** a full box on a day when the two days before were also full boxes. Much better odds. (Revised Nov 15, step 7: full boxes on 3 of her last 4 homework days. Days with no homework, such as a dinner-only Sunday, are skipped and do not break it.)
 - **Box odds:** normal box is 2% legendary, 10% rare, 28% uncommon, 60% common. Sparkle box is 15% legendary, 35% rare, 30% uncommon, 20% common. Boxes never give a duplicate.
-- **Coins:** each finished task gives 0 to 6 coins (default 3, more for more necessary colors, dinner 1). Pressing Start then finishing the same task adds +1 (the egg). Boxes give no coins (the Nov 1 commit message mentions 2 coins for a mini box, but the code does not do it; confirm with Sofia). The balance is the sum of finished-task coins plus the ledger (purchases are negative).
-- **Real weekly pick:** a Monday to Sunday week where every day that had homework earned a box.
+- **Coins:** each finished task gives 0 to 6 coins (default 3, more for more necessary colors, dinner 1). Pressing Start then finishing the same task adds +1 (the egg). Boxes give no coins (the Nov 1 commit message mentions 2 coins for a mini box, but the code does not do it; confirm with Sofia). The balance is the sum of finished-task coins plus the ledger (purchases are negative). (Revised Nov 15, step 7: coins come from a fixed priority level, never from a theme's colors: must do 3, high 2, normal 1.5, low 1, optional 1, dinner 1, a task waiting for an adult 0; the egg stays +1. Small skill coins of +1 each for starting, writing it down, packing and planning, once per real thing, no daily caps. The balance is now the ledger alone, and only confirmed coins are spendable.)
+- **Real weekly pick:** a Monday to Sunday week where every day that had homework earned a box. (Revised Nov 15, step 7: one missed homework day is allowed, and every reward in the week must be confirmed.)
 - **Shop:** a fixed shuffle seeded by the week, so it is the same all week and new every Monday. Only common and uncommon items are for sale. Already-owned items never appear.
 - **Template:** dueInDays on a template row sets the due date (0 = due that night, 1 = due next morning).
 - **Time zone:** America/New_York.
@@ -288,7 +288,7 @@ Palette, fonts, shapes and corners, icons, the names and looks of the three help
 
 ### Currency and the economy: the structure is fixed, the look is not
 - **The way money works is the same for every student.** How coins are earned (PRD 3a), what things cost, the box odds, the weekly shop size and refresh day, and the rules for full box, mini box, sparkle and the real weekly pick do not change per student. Earn rates and prices are not adjustable. This keeps the economy fair and predictable, and the Helper and the app can rely on it.
-- **Items are priced in coins by rarity only:** common 25, uncommon 45, and rare and legendary come only from boxes. This holds for every reward pack.
+- **Items are priced in coins by rarity only:** common 18, uncommon 32 (revised Nov 15 from 25 and 45, a 30% cut to match the smaller coin amounts), and rare and legendary come only from boxes. This holds for every reward pack.
 - **What the currency looks like is customizable.** The default is gold coins, which look the same for everyone unless changed. Other skins: cash or bills, stars, gems, credits, tokens, whatever fits. The name and the picture change, never the numbers.
 - Only Sofia (not the student) changes the skin. Adults can still give a box or coins by hand, always logged.
 - To confirm: the real weekly prize budget (about $40 for Emma) is real money, not an in-app rate, so it is likely an adult setting per student.
