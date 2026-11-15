@@ -1,7 +1,7 @@
 // Maps the old Sheet onto the new tables (docs/DB-PLAN.md, supabase/migrations). Pure: no network, no database.
 // Every new ID is worked out from the student and the old ID, so a re-run updates the same rows.
-import { newId, bool, isDate, isTimestamp, nyDate, addDays, parseDuration } from './util.mjs';
-import { CATS, GIFT_BOXES, LADDER, checkable, oldBalance, oldCoinsFor, cleared, quality, realPickWeeks } from './old-rules.mjs';
+import { newId, bool, isDate, isTimestamp, nyDate, parseDuration } from './util.mjs';
+import { CATS, GIFT_BOXES, LADDER, checkable, oldBalance, oldCoinsFor } from './old-rules.mjs';
 
 const WEEKDAYS = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
 const SOURCE_BY_ADDED = { template: 'template', emma: 'student', sofia: 'coach', setup: 'coach', chat: 'helper' };
@@ -36,8 +36,8 @@ function oldTasks(rows, rep) {
   return out;
 }
 
-export function mapSnapshot(snap, { studentId, importAt, waitingBoxes = null, photoHashes = {} }) {
-  const rep = { unmapped: [], notes: [], decisions: [], estimates: {} };
+export function mapSnapshot(snap, { studentId, importAt, photoHashes = {} }) {
+  const rep = { unmapped: [], notes: [], decisions: [] };
   const today = nyDate(importAt);
   const tasks = oldTasks(snap.tabs.Tasks.rows, rep);
   const squishies = snap.tabs.Squishies.rows;
@@ -150,15 +150,14 @@ export function mapSnapshot(snap, { studentId, importAt, waitingBoxes = null, ph
     rep.decisions.push(`The old balance was ${newBalance}; a "forgiven" entry brings it to 0 (never a negative balance, PRD 6f).`);
   }
 
-  // ---- collection, opened boxes, real picks ----
-  const seenItems = new Set(), boxDays = new Map();
+  // ---- collection and real picks ----
+  // Box history is NOT imported (Sofia, Nov 15): her box count, sparkle streak and real-pick weeks start
+  // from scratch in the new app. The items she got from old boxes stay on her shelf.
+  const seenItems = new Set(), boxDays = new Set();
   for (const q of squishies) {
     const src = q.source.trim(), date = q.date.trim();
     const isBox = src === 'box' || src === 'sparkle box';
-    if (isBox && isDate(date)) {
-      if (boxDays.has(date)) rep.unmapped.push(`Two boxes opened for ${date}; only the first is recorded on that day`);
-      else boxDays.set(date, q);
-    }
+    if (isBox && isDate(date)) boxDays.add(date);
     if (q.kind.trim() === 'none') continue;                       // a box opened when everything was collected
     const itemId = q.itemId.trim();
     if (!itemId) { rep.unmapped.push(`Shelf item "${q.name}" has no item id; skipped`); continue; }
@@ -170,53 +169,13 @@ export function mapSnapshot(snap, { studentId, importAt, waitingBoxes = null, ph
       acquired_via: via, box_date: isBox && isDate(date) ? date : null, shelf_pos: Math.round(Number(q.pos) || 0),
       acquired_at: isTimestamp(q.openedAt) ? new Date(q.openedAt).toISOString() : noonNY(date) });
     if (q.realWeek.trim()) {
+      // Sofia confirmed on Nov 15 that the real pick arrived.
       out.prize_orders.push({ id: newId(studentId, 'prize', q.realWeek.trim()), week_start: q.realWeek.trim(), item_name: q.name,
-        price_cents: Math.round((Number(q.price) || 0) * 100), status: 'placed' });
+        price_cents: Math.round((Number(q.price) || 0) * 100), status: 'delivered' });
     }
   }
-  if (out.prize_orders.length) rep.decisions.push(`${out.prize_orders.length} real weekly pick(s) recorded as prize orders with status "placed" (the old Sheet does not say whether it arrived). Weeks: ${out.prize_orders.map(p => p.week_start).join(', ')}.`);
-
-  // Box days. Full or mini is not stored in the Sheet, so it is worked out the old way (half of the real
-  // work checked off), except: a gift box, a sparkle box, or any non-common item can only have been a full box.
-  const fullDays = new Set();
-  const kindOf = (d, q) => {
-    if (GIFT_BOXES.includes(d)) return 'full';
-    if (q && (q.source.trim() === 'sparkle box' || (q.rarity && q.rarity !== 'common'))) return 'full';
-    return quality(tasks, d).full ? 'full' : 'mini';
-  };
-  for (const [d, q] of [...boxDays.entries()].sort()) {
-    const kind = kindOf(d, q);
-    if (kind === 'full') fullDays.add(d);
-    out.day_results.push({ id: newId(studentId, 'day', d), date: d, box_earned: true, box_kind: kind,
-      sparkle: q.source.trim() === 'sparkle box', opened: true,
-      opened_at: isTimestamp(q.openedAt) ? new Date(q.openedAt).toISOString() : noonNY(d),
-      box_item_id: q.kind.trim() === 'none' ? null : q.itemId.trim() || null });
-  }
-
-  // Boxes earned but not opened yet. The old list of earned days lived in Apps Script properties, which
-  // are not in the Sheet. So these come from what Emma's old screen shows; here we only estimate them.
-  const opened = new Set(boxDays.keys());
-  const firstBox = [...boxDays.keys()].filter(d => !GIFT_BOXES.includes(d)).sort()[0] || today;
-  const candidates = [];
-  for (let d = firstBox; d <= today; d = addDays(d, 1)) {
-    if (opened.has(d) || !cleared(tasks, d)) continue;
-    const finishedThatDay = tasks.some(t => t.date === d && t.done && isTimestamp(t.doneAt) && nyDate(t.doneAt) === d);
-    if (finishedThatDay) candidates.push(d);
-  }
-  rep.estimates.waitingBoxCandidates = candidates;
-  rep.estimates.rewardsStart = firstBox;
-  if (waitingBoxes) {
-    for (const d of waitingBoxes) {
-      if (!isDate(d)) { rep.unmapped.push(`Waiting box date "${d}" is not a date; skipped`); continue; }
-      if (opened.has(d)) { rep.unmapped.push(`Waiting box ${d} was already opened in the Sheet; skipped`); continue; }
-      const kind = kindOf(d, null);
-      const sparkle = kind === 'full' && fullDays.has(addDays(d, -1)) && fullDays.has(addDays(d, -2));
-      out.day_results.push({ id: newId(studentId, 'day', d), date: d, box_earned: true, box_kind: kind, sparkle,
-        opened: false, opened_at: null, box_item_id: null });
-    }
-  }
-  out.day_results.sort((a, b) => a.date.localeCompare(b.date));
-  rep.decisions.push('Which tasks were dragged off a day (the old "moved" lists) lived in Apps Script properties, not the Sheet, so moved_task_ids is empty on imported days. It only mattered on the day itself.');
+  if (out.prize_orders.length) rep.decisions.push(`${out.prize_orders.length} real weekly pick(s) recorded as delivered (confirmed by Sofia). Weeks: ${out.prize_orders.map(p => p.week_start).join(', ')}.`);
+  rep.decisions.push(`Box history starts from scratch in the new app (Sofia, Nov 15): no box days are imported (${boxDays.size} opened in the old site, plus any waiting), so no waiting boxes, no sparkle streak and no real-pick weeks carry over. The ${out.collection.filter(c => c.acquired_via !== 'shop').length} items she got from old boxes stay on her shelf.`);
 
   // ---- weekly template ----
   const groups = new Map();
@@ -255,7 +214,6 @@ export function mapSnapshot(snap, { studentId, importAt, waitingBoxes = null, ph
 
   // ---- the old site's own numbers, for the comparison ----
   const realWeeksUsed = new Set(squishies.map(q => q.realWeek.trim()).filter(Boolean));
-  const earnedEstimate = [...new Set([...[...boxDays.keys()].filter(d => !GIFT_BOXES.includes(d)), ...(waitingBoxes || [])])].sort();
   const old = {
     coins: oldBalance(tasks, ledgerOld),
     earnedCoins: tasks.filter(t => t.done && !t.deleted).reduce((n, t) => n + t.coins, 0),
@@ -263,13 +221,11 @@ export function mapSnapshot(snap, { studentId, importAt, waitingBoxes = null, ph
     tasks: tasks.length, tasksNotDeleted: tasks.filter(t => !t.deleted).length,
     doneTasks: tasks.filter(t => t.done && !t.deleted).length,
     shelfItems: squishies.filter(q => q.kind.trim() !== 'none').length,
-    boxesOpened: boxDays.size, sparkleBoxes: [...boxDays.values()].filter(q => q.source.trim() === 'sparkle box').length,
+    boxesOpened: boxDays.size,
     shopPurchases: ledgerOld.filter(l => l.kind.trim() === 'shop').length,
     realPicksUsed: realWeeksUsed.size,
-    realPickWeeksEstimate: realPickWeeks(tasks, earnedEstimate, firstBox, today).filter(w => !realWeeksUsed.has(w)),
     photosLinked: tasks.filter(t => t.proofPhoto).length,
     templateRows: snap.tabs.Template.rows.filter(r => r.title.trim()).length,
-    boxesWaiting: waitingBoxes ? waitingBoxes.length : null,
   };
   return { out, rep, old, today };
 }

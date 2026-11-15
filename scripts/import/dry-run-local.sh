@@ -2,7 +2,7 @@
 # Dry run on a throwaway local Postgres: builds it, applies supabase/migrations (read only, nothing in
 # supabase/ is changed), runs the import against a fake student inside a rolled-back block, prints the
 # report, and deletes the database. Needs PostgreSQL 16 or 17 and Node 18+.
-#   scripts/import/dry-run-local.sh --snapshot /path/to/snapshot [--waiting-boxes none] [--screen-coins N]
+#   scripts/import/dry-run-local.sh --snapshot /path/to/snapshot [--screen-coins N]
 set -euo pipefail
 HERE="$(cd "$(dirname "$0")" && pwd)"
 ROOT="$(cd "$HERE/../.." && pwd)"

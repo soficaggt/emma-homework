@@ -39,8 +39,8 @@ put in this folder. The Settings values `sofiaKey` and `textTo` are never read.
 | Finished tasks | `tasks` + `ledger` | Done, already **confirmed** and **final** (no review window, no held coins). Each paid task gets one confirmed `earn` entry |
 | Ledger tab (shop) | `ledger` | Confirmed `purchase` entries (negative) |
 | Squishies tab | `collection` | Shop items `shop`, box items `box`, the Oct 28 box Sofia gave back `gift`. Shelf order kept |
-| Opened boxes | `day_results` | One row per box day: opened, which item, sparkle, and full or mini (worked out the old way; a gift, sparkle or non-common item means full). **No coins for any box**, mini box included (PRD 3a) |
-| Real weekly pick | `prize_orders` | Recorded as `placed` for its week, so that week is not offered again |
+| Box days | (none) | **Not imported** (Sofia, Nov 15): her box count starts from scratch in the new app, so no waiting boxes, sparkle streak or real-pick weeks carry over. The items from old boxes stay on her shelf. No coins for any box, mini box included (PRD 3a) |
+| Real weekly pick | `prize_orders` | Recorded as `delivered` for its week (Sofia confirmed it arrived) |
 | Template tab | `template_items` | Identical rows on different weekdays become one item with several weekdays (18 rows to 8 items) |
 | Settings (2 safe ones) | `student_settings` | `no_proof_types`, `no_alert_types` |
 | Proof photos | `proof_images` + bucket | See PHOTOS-PLAN.md |
@@ -49,10 +49,9 @@ Values of tasks that are still open: template, coach and RSM tasks get what the 
 (dinner 1, else by color). Tasks Emma added herself get the default 3 (dinner 1), because Emma never sets
 a value (PRD 6f).
 
-Not imported, on purpose: this week's shop (step 7 makes its own), a running Start (none today), the
-Settings secrets, and the Apps Script properties (earned-day list, full-day list, moved lists). Those
-properties are not in the Sheet. The only one that matters is **boxes earned but not opened yet**, so the
-real run asks for them from Emma's screen (see below).
+Not imported, on purpose: box history (see above), this week's shop (step 7 makes its own), a running
+Start (none today), the Settings secrets, and the Apps Script properties (earned-day list, full-day list,
+moved lists), which are not in the Sheet and only fed the box history.
 
 ## How a re-run stays safe
 
@@ -79,7 +78,7 @@ SUPABASE_PROJECT_REF=<project ref> node scripts/import/import.mjs dry-run --targ
 The remote one needs the Supabase connection this environment already has (or `SUPABASE_ACCESS_TOKEN`
 in the environment settings). Look for `EMMA_IMPORT result=PASS` at the end.
 
-Optional: `--waiting-boxes 2026-11-08` (or `none`) and `--screen-coins 12`, read from Emma's old screen.
+Optional: `--screen-coins N`, the number on Emma's old coin counter, as an extra check.
 
 ## The real run (not in step 10)
 
@@ -87,12 +86,12 @@ Only with Sofia's explicit go-ahead, after step 3 has made Emma's account, ideal
 (step 15) so the old site stops changing. In order:
 
 1. Take a fresh snapshot (read-only).
-2. Sofia reads Emma's old screen: the coin counter, and any boxes waiting to be opened (which days).
+2. Optional: Sofia reads the coin counter on Emma's old screen.
 3. Download the photos and check them (PHOTOS-PLAN.md).
-4. Dry run on the real project with `--waiting-boxes` and `--screen-coins`: must say PASS.
+4. Dry run on the real project: must say PASS.
 5. Upload the photos (`photos.mjs upload`).
-6. `node scripts/import/import.mjs real --snapshot DIR --photos-dir DIR --student <Emma's id> --waiting-boxes ... --screen-coins N --confirm "import into <Emma's id>"`
-7. Check Emma's new screen shows the same coins, shelf and waiting boxes.
+6. `node scripts/import/import.mjs real --snapshot DIR --photos-dir DIR --student <Emma's id> --confirm "import into <Emma's id>"` (add `--screen-coins N` if read in step 2)
+7. Check Emma's new screen shows the same coins and shelf.
 8. Delete the local snapshot and photo copies.
 
-The `real` command refuses to start without every one of those options.
+The `real` command refuses to start without `--student` and the matching `--confirm`.

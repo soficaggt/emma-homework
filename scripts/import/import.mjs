@@ -7,8 +7,7 @@
 //   node scripts/import/import.mjs dry-run --snapshot DIR --target remote rolled-back test on the real project
 //   node scripts/import/import.mjs real    ...                            NOT for step 10 (see README)
 //
-// Options: --waiting-boxes 2026-11-14,2026-11-15 | none   boxes Emma's old screen shows as waiting
-//          --screen-coins N                               the coin counter on Emma's old screen
+// Options: --screen-coins N                               the coin counter on Emma's old screen (optional check)
 //          --photos-dir DIR                               downloaded Drive photos (<drive id>.jpg), for hashes
 //          --out FILE                                     also save the report (keep it outside the repo)
 import { readFileSync, writeFileSync, readdirSync, mkdtempSync } from 'node:fs';
@@ -75,7 +74,7 @@ function extractDryRun(text) {
   return JSON.parse(s.slice(0, end));
 }
 
-function report({ mode, target, old, rep, db, screenCoins, waitingBoxes, out }) {
+function report({ mode, target, old, rep, db, screenCoins, out }) {
   const L = [], checks = [];
   const ok = (name, pass, detail = '') => checks.push(`${pass ? 'pass' : 'FAIL'}  ${name}${detail ? `   (${detail})` : ''}`);
   L.push(`Emma's Homework: old Sheet import, ${mode}${target ? ` (${target})` : ''}`, `Run at ${new Date().toISOString()}`, '');
@@ -93,14 +92,12 @@ function report({ mode, target, old, rep, db, screenCoins, waitingBoxes, out }) 
     row('tasks not deleted', old.tasksNotDeleted, n.tasks_not_deleted);
     row('finished tasks', old.doneTasks, n.done_tasks);
     row('shelf items', old.shelfItems, n.shelf_items);
-    row('boxes opened', old.boxesOpened, n.boxes_opened);
-    row('sparkle boxes', old.sparkleBoxes, n.sparkle_boxes);
-    row('boxes waiting', old.boxesWaiting, n.boxes_waiting);
+    row('box days (start from scratch)', old.boxesOpened, n.boxes_opened + n.boxes_waiting);
     row('real weekly picks used', old.realPicksUsed, n.real_picks_recorded);
     row('proof photos', old.photosLinked, n.photos);
     row('template day slots', old.templateRows, n.template_day_slots);
     if (screenCoins != null) row('coins on Emma\'s screen', screenCoins, n.coins_spendable);
-    L.push(`  (template: ${n.template_items} items cover those ${n.template_day_slots} weekday rows; full boxes ${n.full_boxes}, mini boxes ${n.mini_boxes})`, '');
+    L.push(`  (template: ${n.template_items} items cover those ${n.template_day_slots} weekday rows)`, '');
 
     ok('coins match the old site', n.coins_spendable === Math.max(0, old.coins), `${old.coins} vs ${n.coins_spendable}`);
     if (screenCoins != null) ok('coins match Emma\'s old screen', n.coins_spendable === screenCoins);
@@ -112,9 +109,8 @@ function report({ mode, target, old, rep, db, screenCoins, waitingBoxes, out }) 
     ok('all task rows came across', n.tasks === old.tasks);
     ok('shelf matches', n.shelf_items === old.shelfItems);
     ok('every shelf item is in the item list', n.shelf_items_not_in_catalog === 0);
-    ok('opened boxes match', n.boxes_opened === old.boxesOpened);
-    ok('sparkle boxes match', n.sparkle_boxes === old.sparkleBoxes);
-    ok('real picks match', n.real_picks_recorded === old.realPicksUsed);
+    ok('no box days carried over (box count starts from scratch)', n.boxes_opened === 0 && n.boxes_waiting === 0);
+    ok('real picks match and are recorded as delivered', n.real_picks_recorded === old.realPicksUsed && n.real_picks_delivered === old.realPicksUsed);
     ok('every linked photo has a photo record', n.photos === old.photosLinked && n.tasks_with_photo === old.photosLinked);
     ok('every photo path is inside the student\'s own folder', n.photo_paths_outside_her_folder === 0);
     ok('template covers every old template row', n.template_day_slots === old.templateRows);
@@ -130,9 +126,6 @@ function report({ mode, target, old, rep, db, screenCoins, waitingBoxes, out }) 
     }
     L.push('Checks', ...checks.map(c => '  ' + c), '');
   }
-  L.push(`Boxes waiting on the old screen: ${waitingBoxes ? (waitingBoxes.length ? waitingBoxes.join(', ') : 'none') : 'NOT GIVEN. The Sheet does not store them; read them from Emma\'s old screen before the real run.'}`);
-  L.push(`  Days that look like earned-but-unopened boxes (estimate only, not imported): ${rep.estimates.waitingBoxCandidates.join(', ') || 'none'}`);
-  L.push(`  Weeks that might still owe a real pick (estimate only): ${old.realPickWeeksEstimate.join(', ') || 'none'}`, '');
   L.push(`Could not map (${rep.unmapped.length})`, ...(rep.unmapped.length ? rep.unmapped.map(s => '  - ' + s) : ['  nothing']), '');
   L.push(`Mapping decisions (${rep.decisions.length})`, ...rep.decisions.map(s => '  - ' + s), '');
   L.push(`Small fixes (${rep.notes.length})`, ...(rep.notes.length ? rep.notes.map(s => '  - ' + s) : ['  none']));
@@ -146,7 +139,6 @@ async function main() {
   const mode = a._[0];
   if (!['plan', 'dry-run', 'real'].includes(mode)) { console.error('usage: import.mjs plan|dry-run|real --snapshot DIR [...]'); process.exit(2); }
   if (!a.snapshot) { console.error('--snapshot DIR is required'); process.exit(2); }
-  const waitingBoxes = a['waiting-boxes'] == null ? null : a['waiting-boxes'] === 'none' ? [] : a['waiting-boxes'].split(',').map(s => s.trim()).filter(Boolean);
   const screenCoins = a['screen-coins'] == null ? null : Number(a['screen-coins']);
   const importAt = new Date().toISOString();
 
@@ -155,10 +147,8 @@ async function main() {
     const sid = a.student;
     if (!/^[0-9a-f-]{36}$/.test(sid || '')) { console.error('real: --student <Emma\'s account id> is required'); process.exit(2); }
     if (a.confirm !== `import into ${sid}`) { console.error(`real: add --confirm "import into ${sid}" (only with Sofia's explicit go-ahead)`); process.exit(2); }
-    if (!waitingBoxes) { console.error('real: --waiting-boxes is required (dates from Emma\'s old screen, or "none")'); process.exit(2); }
-    if (screenCoins == null) { console.error('real: --screen-coins is required (the number on Emma\'s old coin counter)'); process.exit(2); }
     const snap = readSnapshot(a.snapshot);
-    const { out } = mapSnapshot(snap, { studentId: sid, importAt, waitingBoxes, photoHashes: photoHashes(a['photos-dir']) });
+    const { out } = mapSnapshot(snap, { studentId: sid, importAt, photoHashes: photoHashes(a['photos-dir']) });
     const text = await runRemote(realSql(sid, out));
     console.log(text);
     return;
@@ -166,17 +156,17 @@ async function main() {
 
   const sid = FAKE_STUDENT;
   const snap = readSnapshot(a.snapshot);
-  const { out, rep, old } = mapSnapshot(snap, { studentId: sid, importAt, waitingBoxes, photoHashes: photoHashes(a['photos-dir']) });
+  const { out, rep, old } = mapSnapshot(snap, { studentId: sid, importAt, photoHashes: photoHashes(a['photos-dir']) });
   let db = null;
   if (mode === 'dry-run') {
     const target = a.target || 'local';
     // Map a second time from scratch with a later clock, as a real re-run would.
-    const again = mapSnapshot(snap, { studentId: sid, importAt: new Date(Date.now() + 1000).toISOString(), waitingBoxes, photoHashes: photoHashes(a['photos-dir']) }).out;
+    const again = mapSnapshot(snap, { studentId: sid, importAt: new Date(Date.now() + 1000).toISOString(), photoHashes: photoHashes(a['photos-dir']) }).out;
     const sql = dryRunSql(sid, out, again);
     const raw = target === 'remote' ? await runRemote(sql) : runLocal(sql);
     db = extractDryRun(raw);
   }
-  const r = report({ mode, target: mode === 'dry-run' ? a.target || 'local' : null, old, rep, db, screenCoins, waitingBoxes, out });
+  const r = report({ mode, target: mode === 'dry-run' ? a.target || 'local' : null, old, rep, db, screenCoins, out });
   console.log(r.text);
   if (a.out) writeFileSync(a.out, r.text + '\n', { mode: 0o600 });
   process.exit(r.failed ? 1 : 0);

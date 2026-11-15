@@ -145,6 +145,7 @@ create function pg_temp.import_numbers(sid uuid) returns jsonb language sql as $
     'photo_paths_outside_her_folder', (select count(*) from public.proof_images where student_id = sid
                                     and split_part(storage_path, '/', 1) <> sid::text),
     'real_picks_recorded', (select count(*) from public.prize_orders where student_id = sid),
+    'real_picks_delivered', (select count(*) from public.prize_orders where student_id = sid and status = 'delivered'),
     'template_items',   (select count(*) from public.template_items where student_id = sid),
     'template_day_slots', (select coalesce(sum(cardinality(weekdays)), 0) from public.template_items where student_id = sid)
   )
