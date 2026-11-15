@@ -39,7 +39,7 @@ language plpgsql as $$
 declare q text := pg_temp.sub(p_sql);
 begin
   perform set_config('request.jwt.claims',
-    case when p_uid is null then '' else json_build_object('sub', p_uid, 'role', p_role)::text end, true);
+    case when p_uid is null then '' else json_build_object('sub', p_uid, 'role', p_role, 'aal', coalesce(nullif(current_setting('emma.test_aal', true), ''), 'aal2'))::text end, true);
   perform set_config('request.jwt.claim.sub', coalesce(p_uid::text, ''), true);
   execute format('set local role %I', p_role);
   begin
@@ -57,7 +57,7 @@ create function pg_temp.t_val(p_role text, p_uid uuid, p_sql text) returns text 
 declare v text; q text := pg_temp.sub(p_sql);
 begin
   perform set_config('request.jwt.claims',
-    case when p_uid is null then '' else json_build_object('sub', p_uid, 'role', p_role)::text end, true);
+    case when p_uid is null then '' else json_build_object('sub', p_uid, 'role', p_role, 'aal', coalesce(nullif(current_setting('emma.test_aal', true), ''), 'aal2'))::text end, true);
   perform set_config('request.jwt.claim.sub', coalesce(p_uid::text, ''), true);
   execute format('set local role %I', p_role);
   begin
@@ -110,6 +110,10 @@ begin
     (pg_temp.sub('{SA}')::uuid, pg_temp.sub('{C1}')::uuid, 'coach'), (pg_temp.sub('{SB}')::uuid, pg_temp.sub('{C1}')::uuid, 'coach'),
     (pg_temp.sub('{SC}')::uuid, pg_temp.sub('{C2}')::uuid, 'coach'),
     (pg_temp.sub('{SA}')::uuid, pg_temp.sub('{PA}')::uuid, 'parent'), (pg_temp.sub('{SB}')::uuid, pg_temp.sub('{PB}')::uuid, 'parent');
+
+  -- A waiting parent invite for student B (so the "every student-keyed table" check covers invites).
+  insert into invites (code_hash, role, first_name, student_id, expires_at)
+  values ('inv-fixture-b', 'parent', 'ParentB2', pg_temp.sub('{SB}')::uuid, now() + interval '1 day');
 
   perform pg_temp.t_ok('a link must join a student to an adult with the matching role',
     pg_temp.t_val('postgres', null, $$insert into student_links (student_id, adult_id, relation) values ('{SA}','{SB}','parent')$$) like 'ERR:%');
@@ -235,7 +239,7 @@ begin
   perform pg_temp.t_ok('signed-in users can run only the intended functions',
     (select string_agg(p.proname, ',' order by p.proname) from pg_proc p
       where p.pronamespace = 'public'::regnamespace and has_function_privilege('authenticated', p.oid, 'execute'))
-    = 'app_role,authorize_photo_open,can_read_student,create_automation_key,is_coach_of,is_parent_of,read_adhd_profile,revoke_automation_key,save_adhd_profile,visible_profile',
+    = 'app_role,authorize_photo_open,can_read_student,create_automation_key,is_coach_of,is_parent_of,read_adhd_profile,revoke_automation_key,save_adhd_profile,session_aal,visible_profile',
     (select string_agg(p.proname, ',' order by p.proname) from pg_proc p
       where p.pronamespace = 'public'::regnamespace and has_function_privilege('authenticated', p.oid, 'execute')));
   perform pg_temp.t_ok('every security-definer function pins its search path',
@@ -716,6 +720,246 @@ begin
     pg_temp.t_val(ro, pg_temp.sub('{SA}')::uuid, $$select (done and coins = 4 and reward_status = 'confirmed')::text from tasks where id = '{TA1}'$$) = 'true');
   perform pg_temp.t_ok('the signed-out role cannot call the helper functions',
     pg_temp.t_val('anon', null, 'select app_role()') = 'ERR:42501' and pg_temp.t_val('anon', null, $$select can_read_student('{SA}')$$) = 'ERR:42501');
+
+  ---------------------------------------------------------------------------------------------
+  -- 8. LOGINS (step 3): two-factor for coaches, invites, lockout, reset links, signing out
+  ---------------------------------------------------------------------------------------------
+  -- A coach who has only typed her password (no authenticator code yet) has no coach powers.
+  perform set_config('emma.test_aal', 'aal1', true);
+  perform pg_temp.t_ok('coach without the authenticator step has no role',
+    pg_temp.t_val(ro, pg_temp.sub('{C1}')::uuid, 'select coalesce(app_role(), ''none'')') = 'none');
+  perform pg_temp.t_denied('coach without the authenticator step reads her student''s tasks', ro, pg_temp.sub('{C1}')::uuid,
+    $$select * from tasks where student_id = '{SA}'$$);
+  perform pg_temp.t_denied('coach without the authenticator step reads her student''s profile', ro, pg_temp.sub('{C1}')::uuid,
+    $$select * from profiles where id = '{SA}'$$);
+  perform pg_temp.t_denied('coach without the authenticator step reads her links', ro, pg_temp.sub('{C1}')::uuid,
+    $$select * from student_links$$);
+  perform pg_temp.t_denied('coach without the authenticator step edits her student''s settings', ro, pg_temp.sub('{C1}')::uuid,
+    $$update student_settings set proof_strictness = 'strict' where student_id = '{SA}'$$);
+  perform pg_temp.t_denied('coach without the authenticator step reads the audit log', ro, pg_temp.sub('{C1}')::uuid,
+    $$select * from audit_log$$);
+  perform pg_temp.t_ok('coach without the authenticator step cannot open the ADHD profile',
+    pg_temp.t_val(ro, pg_temp.sub('{C1}')::uuid, $$select read_adhd_profile('{SA}')::text$$) = 'ERR:42501');
+  perform pg_temp.t_allowed('coach without the authenticator step still sees her own profile (so the app can ask for the code)',
+    ro, pg_temp.sub('{C1}')::uuid, $$select * from profiles where id = '{C1}'$$);
+  perform pg_temp.t_allowed('a student signs in with just a password and reads her tasks', ro, pg_temp.sub('{SA}')::uuid,
+    $$select * from tasks where student_id = '{SA}'$$);
+  perform pg_temp.t_allowed('a parent signs in with just a password and reads their child''s tasks', ro, pg_temp.sub('{PA}')::uuid,
+    $$select * from tasks where student_id = '{SA}'$$);
+  perform set_config('emma.test_aal', 'aal2', true);
+  perform pg_temp.t_allowed('coach with the authenticator step reads her student''s tasks', ro, pg_temp.sub('{C1}')::uuid,
+    $$select * from tasks where student_id = '{SA}'$$);
+  perform pg_temp.t_allowed('coach with the authenticator step reads her links', ro, pg_temp.sub('{C1}')::uuid,
+    $$select * from student_links$$, 2);
+
+  -- The login tables are closed to everyone in the app, whatever their role.
+  foreach t in array array['invites','account_contacts','auth_attempts','reset_tokens'] loop
+    perform pg_temp.t_ok('nobody in the app can read ' || t,
+      pg_temp.t_val(ro, pg_temp.sub('{C1}')::uuid, format('select count(*)::text from %I', t)) = 'ERR:42501'
+      and pg_temp.t_val(ro, pg_temp.sub('{SA}')::uuid, format('select count(*)::text from %I', t)) = 'ERR:42501'
+      and pg_temp.t_val(ro, pg_temp.sub('{PA}')::uuid, format('select count(*)::text from %I', t)) = 'ERR:42501'
+      and pg_temp.t_val('anon', null, format('select count(*)::text from %I', t)) = 'ERR:42501');
+  end loop;
+  perform pg_temp.t_denied('a student writes her own invite', ro, pg_temp.sub('{SA}')::uuid,
+    $$insert into invites (code_hash, role, first_name, expires_at) values ('x', 'coach', 'Me', now() + interval '1 day')$$);
+  perform pg_temp.t_denied('a coach writes an invite directly', ro, pg_temp.sub('{C1}')::uuid,
+    $$insert into invites (code_hash, role, first_name, expires_at) values ('x', 'student', 'Kid', now() + interval '1 day')$$);
+  perform pg_temp.t_denied('a student makes her own reset link', ro, pg_temp.sub('{SA}')::uuid,
+    $$insert into reset_tokens (user_id, token_hash, expires_at) values ('{SA}', 'x', now() + interval '1 hour')$$);
+  perform pg_temp.t_denied('a parent changes a recovery email', ro, pg_temp.sub('{PA}')::uuid,
+    $$insert into account_contacts (user_id, recovery_email) values ('{SA}', 'me@example.com')$$);
+  perform pg_temp.t_denied('someone clears their failed sign-ins', ro, pg_temp.sub('{SA}')::uuid, $$delete from auth_attempts$$);
+
+  -- The login functions can only be called by server code.
+  foreach t in array array[
+      $$select account_invite_create('{C1}', 'student', 'Kid', null, 'h1', 7)::text$$,
+      $$select account_invite_peek('h1')::text$$,
+      $$select account_invite_finish('h1', '{SA}', 'kid', 'a@b.co')::text$$,
+      $$select account_invite_list('{C1}')::text$$,
+      $$select account_invite_cancel('{C1}', '{SA}')::text$$,
+      $$select auth_attempt_blocked('sign_in', 'studenta', null)::text$$,
+      $$select auth_attempt_record('sign_in', 'studenta', null, true)::text$$,
+      $$select account_login_email('studenta')$$,
+      $$select account_reset_create(null, '{SA}', 'h2')::text$$,
+      $$select account_reset_use('h2')::text$$,
+      $$select account_end_sessions(null, '{SA}')::text$$,
+      $$select account_can_manage('{SA}', '{SB}')::text$$] loop
+    perform pg_temp.t_ok('app logins cannot call: ' || left(t, 40),
+      pg_temp.t_val(ro, pg_temp.sub('{C1}')::uuid, t) = 'ERR:42501'
+      and pg_temp.t_val(ro, pg_temp.sub('{SA}')::uuid, t) = 'ERR:42501'
+      and pg_temp.t_val('anon', null, t) = 'ERR:42501');
+  end loop;
+
+  -- Who may make an invite (server code acting for someone).
+  perform pg_temp.t_ok('a coach can invite a student',
+    pg_temp.t_val('service_role', null, $$select id::text from account_invite_create('{C1}', 'student', 'Newkid', null, 'inv-student', 7)$$) not like 'ERR:%');
+  perform pg_temp.t_ok('a coach can invite a parent for her own student',
+    pg_temp.t_val('service_role', null, $$select id::text from account_invite_create('{C1}', 'parent', 'Newparent', '{SA}', 'inv-parent', 7)$$) not like 'ERR:%');
+  perform pg_temp.t_ok('a coach cannot invite a parent for another coach''s student',
+    pg_temp.t_val('service_role', null, $$select id::text from account_invite_create('{C1}', 'parent', 'Sneaky', '{SC}', 'inv-x1', 7)$$) = 'ERR:42501');
+  perform pg_temp.t_ok('a student cannot make an invite',
+    pg_temp.t_val('service_role', null, $$select id::text from account_invite_create('{SA}', 'student', 'Friend', null, 'inv-x2', 7)$$) = 'ERR:42501');
+  perform pg_temp.t_ok('a parent cannot make an invite',
+    pg_temp.t_val('service_role', null, $$select id::text from account_invite_create('{PA}', 'parent', 'Other', '{SA}', 'inv-x3', 7)$$) = 'ERR:42501');
+  perform pg_temp.t_ok('a coach cannot invite another coach',
+    pg_temp.t_val('service_role', null, $$select id::text from account_invite_create('{C1}', 'coach', 'Coach3', null, 'inv-x4', 7)$$) = 'ERR:42501');
+  perform pg_temp.t_ok('the developer script can only make coach invites',
+    pg_temp.t_val('service_role', null, $$select id::text from account_invite_create(null, 'student', 'Kid', null, 'inv-x5', 7)$$) = 'ERR:42501'
+    and pg_temp.t_val('service_role', null, $$select id::text from account_invite_create(null, 'coach', 'Coach3', null, 'inv-coach', 7)$$) not like 'ERR:%');
+  perform pg_temp.t_ok('an invite cannot last more than 14 days',
+    pg_temp.t_val('service_role', null, $$select id::text from account_invite_create('{C1}', 'student', 'Kid', null, 'inv-x6', 30)$$) like 'ERR:%');
+  perform pg_temp.t_ok('an invite stores only the code''s hash, and making one is logged',
+    (select count(*) from invites where code_hash = 'inv-student') = 1
+    and (select count(*) from audit_log where action = 'invite_create' and actor_id = pg_temp.sub('{C1}')::uuid) >= 2);
+  perform pg_temp.t_ok('the coach sees her waiting invites, not other coaches''',
+    pg_temp.t_val('service_role', null, $$select count(*)::text from account_invite_list('{C1}')$$) = '2'
+    and pg_temp.t_val('service_role', null, $$select count(*)::text from account_invite_list('{C2}')$$) = '0');
+
+  -- Using an invite.
+  insert into auth.users (id, email) values
+    ('00000000-0000-4000-8000-0000000000d1', 'd1@test.invalid'), ('00000000-0000-4000-8000-0000000000d2', 'd2@test.invalid'),
+    ('00000000-0000-4000-8000-0000000000d3', 'd3@test.invalid'), ('00000000-0000-4000-8000-0000000000d4', 'd4@test.invalid');
+  perform pg_temp.t_ok('a valid invite greets the person by first name',
+    pg_temp.t_val('service_role', null, $$select first_name from account_invite_peek('inv-student')$$) = 'Newkid');
+  perform pg_temp.t_ok('a made-up code finds nothing',
+    pg_temp.t_val('service_role', null, $$select count(*)::text from account_invite_peek('not-a-code')$$) = '0');
+  perform pg_temp.t_ok('a student uses her invite',
+    pg_temp.t_val('service_role', null, $$select role from account_invite_finish('inv-student', '00000000-0000-4000-8000-0000000000d1', 'newkid', 'Grownup@Example.com')$$) = 'student');
+  perform pg_temp.t_ok('the new student has her profile, her coach link and all six starting rows',
+    (select role from profiles where id = '00000000-0000-4000-8000-0000000000d1') = 'student'
+    and exists (select 1 from student_links where student_id = '00000000-0000-4000-8000-0000000000d1'
+                and adult_id = pg_temp.sub('{C1}')::uuid and relation = 'coach')
+    and exists (select 1 from student_settings where student_id = '00000000-0000-4000-8000-0000000000d1')
+    and exists (select 1 from helper_settings where student_id = '00000000-0000-4000-8000-0000000000d1')
+    and exists (select 1 from tutor_settings where student_id = '00000000-0000-4000-8000-0000000000d1')
+    and exists (select 1 from prize_settings where student_id = '00000000-0000-4000-8000-0000000000d1')
+    and exists (select 1 from reward_packs where student_id = '00000000-0000-4000-8000-0000000000d1')
+    and exists (select 1 from themes where student_id = '00000000-0000-4000-8000-0000000000d1'));
+  perform pg_temp.t_ok('her recovery email is saved in lower case',
+    (select recovery_email from account_contacts where user_id = '00000000-0000-4000-8000-0000000000d1') = 'grownup@example.com');
+  perform pg_temp.t_ok('the new student starts with chat and tutor off, and no consent recorded',
+    (select not chat_on and not chat_consent from helper_settings where student_id = '00000000-0000-4000-8000-0000000000d1')
+    and (select not consent_given from tutor_settings where student_id = '00000000-0000-4000-8000-0000000000d1'));
+  perform pg_temp.t_ok('an invite works only once',
+    pg_temp.t_val('service_role', null, $$select role from account_invite_finish('inv-student', '00000000-0000-4000-8000-0000000000d2', 'second', 'x@example.com')$$) like 'ERR:%'
+    and pg_temp.t_val('service_role', null, $$select count(*)::text from account_invite_peek('inv-student')$$) = '0');
+  perform pg_temp.t_ok('a taken username is refused',
+    pg_temp.t_val('service_role', null, $$select role from account_invite_finish('inv-coach', '00000000-0000-4000-8000-0000000000d2', 'newkid', 'x@example.com')$$) like 'ERR:%');
+  perform pg_temp.t_ok('a bad recovery email is refused',
+    pg_temp.t_val('service_role', null, $$select role from account_invite_finish('inv-coach', '00000000-0000-4000-8000-0000000000d2', 'coachthree', 'not an email')$$) like 'ERR:%');
+  perform pg_temp.t_ok('the coach invite was not used up by those failed tries',
+    pg_temp.t_val('service_role', null, $$select count(*)::text from account_invite_peek('inv-coach')$$) = '1');
+  v := pg_temp.t_val('service_role', null, $$select role from account_invite_finish('inv-parent', '00000000-0000-4000-8000-0000000000d2', 'newparent', 'p@example.com')$$);
+  perform pg_temp.t_ok('a parent uses their invite and is linked to the right child only',
+    v = 'parent'
+    and (select count(*) from student_links where adult_id = '00000000-0000-4000-8000-0000000000d2') = 1
+    and exists (select 1 from student_links where adult_id = '00000000-0000-4000-8000-0000000000d2'
+                and student_id = pg_temp.sub('{SA}')::uuid and relation = 'parent'), 'result=' || coalesce(v, 'null'));
+  perform pg_temp.t_allowed('the new parent reads their child''s tasks', ro, '00000000-0000-4000-8000-0000000000d2',
+    $$select * from tasks where student_id = '{SA}'$$);
+  perform pg_temp.t_denied('the new parent cannot read another child''s tasks', ro, '00000000-0000-4000-8000-0000000000d2',
+    $$select * from tasks where student_id = '{SB}'$$);
+  perform pg_temp.t_ok('using an invite is logged',
+    (select count(*) from audit_log where action = 'invite_used') >= 2);
+
+  -- Expired and cancelled invites.
+  insert into invites (code_hash, role, first_name, created_by, expires_at)
+  values ('inv-old', 'student', 'Late', pg_temp.sub('{C1}')::uuid, now() - interval '1 minute');
+  perform pg_temp.t_ok('an expired invite cannot be used',
+    pg_temp.t_val('service_role', null, $$select count(*)::text from account_invite_peek('inv-old')$$) = '0'
+    and pg_temp.t_val('service_role', null, $$select role from account_invite_finish('inv-old', '00000000-0000-4000-8000-0000000000d3', 'late', 'l@example.com')$$) like 'ERR:%');
+  perform pg_temp.t_ok('a coach cannot cancel another coach''s invite',
+    pg_temp.t_val('service_role', null, $$select account_invite_cancel('{C2}', (select id from invites where code_hash = 'inv-coach'))::text$$) = 'false');
+  perform pg_temp.t_ok('the developer''s coach invite cannot be cancelled by an app coach either',
+    pg_temp.t_val('service_role', null, $$select account_invite_cancel('{C1}', (select id from invites where code_hash = 'inv-coach'))::text$$) = 'false');
+  perform pg_temp.t_ok('a coach makes and cancels an invite, and then it cannot be used',
+    pg_temp.t_val('service_role', null, $$select id::text from account_invite_create('{C1}', 'student', 'Maybe', null, 'inv-cancel', 7)$$) not like 'ERR:%'
+    and pg_temp.t_val('service_role', null, $$select account_invite_cancel('{C1}', (select id from invites where code_hash = 'inv-cancel'))::text$$) = 'true'
+    and pg_temp.t_val('service_role', null, $$select role from account_invite_finish('inv-cancel', '00000000-0000-4000-8000-0000000000d3', 'maybe', 'm@example.com')$$) like 'ERR:%');
+  perform pg_temp.t_ok('the hidden sign-in address is found by username (server only)',
+    pg_temp.t_val('service_role', null, $$select account_login_email('newkid')$$) = 'd1@test.invalid'
+    and pg_temp.t_val('service_role', null, $$select coalesce(account_login_email('nobody_here'), 'none')$$) = 'none');
+
+  -- Lockout after 5 wrong passwords.
+  insert into auth_attempts (kind, key, ip, ok, at)
+  select 'sign_in', 'newkid', '10.0.0.1', false, now() - interval '2 minutes' from generate_series(1, 4);
+  perform pg_temp.t_ok('4 wrong passwords do not lock the username',
+    pg_temp.t_val('service_role', null, $$select auth_attempt_blocked('sign_in', 'newkid', '10.0.0.1')::text$$) = 'false');
+  perform pg_temp.t_val('service_role', null, $$select auth_attempt_record('sign_in', 'newkid', '10.0.0.1', false)::text$$);
+  perform pg_temp.t_ok('the 5th wrong password locks it',
+    pg_temp.t_val('service_role', null, $$select auth_attempt_blocked('sign_in', 'newkid', '10.0.0.2')::text$$) = 'true');
+  perform pg_temp.t_ok('a username that does not exist locks the same way (so the lock does not reveal who exists)',
+    (select count(*) from (select pg_temp.t_val('service_role', null, $$select auth_attempt_record('sign_in', 'ghost', null, false)::text$$) from generate_series(1, 5)) x) = 5
+    and pg_temp.t_val('service_role', null, $$select auth_attempt_blocked('sign_in', 'ghost', null)::text$$) = 'true');
+  perform pg_temp.t_ok('the lock is only for that username',
+    pg_temp.t_val('service_role', null, $$select auth_attempt_blocked('sign_in', 'studenta', null)::text$$) = 'false');
+  insert into auth_attempts (kind, key, ok, at) values
+    ('sign_in', 'studentb', false, now() - interval '20 minutes'), ('sign_in', 'studentb', false, now() - interval '20 minutes'),
+    ('sign_in', 'studentb', false, now() - interval '20 minutes'), ('sign_in', 'studentb', false, now() - interval '20 minutes'),
+    ('sign_in', 'studentb', false, now() - interval '20 minutes');
+  perform pg_temp.t_ok('the lock lifts after 15 minutes',
+    pg_temp.t_val('service_role', null, $$select auth_attempt_blocked('sign_in', 'studentb', null)::text$$) = 'false');
+  insert into auth_attempts (kind, key, ok, at)
+  select 'sign_in', 'studentc', false, now() - interval '5 minutes' from generate_series(1, 5);
+  insert into auth_attempts (kind, key, ok, at) values ('sign_in', 'studentc', true, now() - interval '1 minute');
+  perform pg_temp.t_ok('a good sign-in clears earlier wrong tries',
+    pg_temp.t_val('service_role', null, $$select auth_attempt_blocked('sign_in', 'studentc', null)::text$$) = 'false');
+  insert into auth_attempts (kind, key, ip, ok)
+  select 'invite', '-', '10.9.9.9', false from generate_series(1, 20);
+  perform pg_temp.t_ok('20 wrong invite codes from one address pause that address only',
+    pg_temp.t_val('service_role', null, $$select auth_attempt_blocked('invite', '-', '10.9.9.9')::text$$) = 'true'
+    and pg_temp.t_val('service_role', null, $$select auth_attempt_blocked('invite', '-', '10.9.9.8')::text$$) = 'false');
+
+  -- Reset links.
+  perform pg_temp.t_ok('who may send a reset: the student''s coach, her parent, herself',
+    pg_temp.t_val('service_role', null, $$select account_can_manage('{C1}', '{SA}')::text$$) = 'true'
+    and pg_temp.t_val('service_role', null, $$select account_can_manage('{PA}', '{SA}')::text$$) = 'true'
+    and pg_temp.t_val('service_role', null, $$select account_can_manage('{SA}', '{SA}')::text$$) = 'true'
+    and pg_temp.t_val('service_role', null, $$select account_can_manage('{C1}', '{PA}')::text$$) = 'true');
+  perform pg_temp.t_ok('who may not: another coach, another parent, another student, a child for her parent',
+    pg_temp.t_val('service_role', null, $$select account_can_manage('{C2}', '{SA}')::text$$) = 'false'
+    and pg_temp.t_val('service_role', null, $$select account_can_manage('{PB}', '{SA}')::text$$) = 'false'
+    and pg_temp.t_val('service_role', null, $$select account_can_manage('{SB}', '{SA}')::text$$) = 'false'
+    and pg_temp.t_val('service_role', null, $$select account_can_manage('{SA}', '{PA}')::text$$) = 'false'
+    and pg_temp.t_val('service_role', null, $$select account_can_manage('{PA}', '{C1}')::text$$) = 'false'
+    and pg_temp.t_val('service_role', null, $$select account_can_manage('{C2}', '{PA}')::text$$) = 'false');
+  perform pg_temp.t_ok('a reset for someone you do not look after is refused',
+    pg_temp.t_val('service_role', null, $$select recovery_email from account_reset_create('{C2}', '00000000-0000-4000-8000-0000000000d1', 'rst-x')$$) = 'ERR:42501');
+  perform pg_temp.t_ok('a reset for an account with no recovery email is refused',
+    pg_temp.t_val('service_role', null, $$select recovery_email from account_reset_create('{C1}', '{SA}', 'rst-y')$$) like 'ERR:%');
+  perform pg_temp.t_ok('a reset goes to the saved recovery email',
+    pg_temp.t_val('service_role', null, $$select recovery_email from account_reset_create('{C1}', '00000000-0000-4000-8000-0000000000d1', 'rst-1')$$) = 'grownup@example.com');
+  perform pg_temp.t_ok('a newer reset link replaces the older one',
+    pg_temp.t_val('service_role', null, $$select recovery_email from account_reset_create(null, '00000000-0000-4000-8000-0000000000d1', 'rst-2')$$) = 'grownup@example.com'
+    and pg_temp.t_val('service_role', null, $$select coalesce(account_reset_use('rst-1')::text, 'none')$$) = 'none');
+  perform pg_temp.t_ok('a reset link works once',
+    pg_temp.t_val('service_role', null, $$select account_reset_use('rst-2')::text$$) = '00000000-0000-4000-8000-0000000000d1'
+    and pg_temp.t_val('service_role', null, $$select coalesce(account_reset_use('rst-2')::text, 'none')$$) = 'none');
+  perform pg_temp.t_ok('a made-up reset link does nothing',
+    pg_temp.t_val('service_role', null, $$select coalesce(account_reset_use('rst-made-up')::text, 'none')$$) = 'none');
+  perform pg_temp.t_ok('at most 3 reset emails per account per hour',
+    pg_temp.t_val('service_role', null, $$select recovery_email from account_reset_create('{C1}', '00000000-0000-4000-8000-0000000000d1', 'rst-3')$$) = 'grownup@example.com'
+    and pg_temp.t_val('service_role', null, $$select recovery_email from account_reset_create('{C1}', '00000000-0000-4000-8000-0000000000d1', 'rst-4')$$) like 'ERR:%');
+  insert into account_contacts (user_id, recovery_email) values ('00000000-0000-4000-8000-0000000000d2', 'p@example.com')
+    on conflict (user_id) do nothing;
+  insert into reset_tokens (user_id, token_hash, expires_at, created_at)
+  values ('00000000-0000-4000-8000-0000000000d2', 'rst-old', now() - interval '1 minute', now() - interval '2 hours');
+  perform pg_temp.t_ok('an expired reset link does nothing',
+    pg_temp.t_val('service_role', null, $$select coalesce(account_reset_use('rst-old')::text, 'none')$$) = 'none');
+  perform pg_temp.t_ok('reset requests and uses are logged',
+    (select count(*) from audit_log where action = 'reset_requested') >= 3 and (select count(*) from audit_log where action = 'reset_used') >= 1);
+
+  -- Signing out of every device.
+  insert into auth.sessions (id, user_id) values (gen_random_uuid(), '00000000-0000-4000-8000-0000000000d1'),
+    (gen_random_uuid(), '00000000-0000-4000-8000-0000000000d1'), (gen_random_uuid(), pg_temp.sub('{SA}')::uuid);
+  perform pg_temp.t_ok('another coach cannot sign a student out',
+    pg_temp.t_val('service_role', null, $$select account_end_sessions('{C2}', '00000000-0000-4000-8000-0000000000d1')::text$$) = 'ERR:42501'
+    and (select count(*) from auth.sessions where user_id = '00000000-0000-4000-8000-0000000000d1') = 2);
+  perform pg_temp.t_val('service_role', null, $$select account_end_sessions('{C1}', '00000000-0000-4000-8000-0000000000d1')::text$$);
+  perform pg_temp.t_ok('her coach signs her out of every device, and nobody else is signed out',
+    (select count(*) from auth.sessions where user_id = '00000000-0000-4000-8000-0000000000d1') = 0
+    and (select count(*) from auth.sessions where user_id = pg_temp.sub('{SA}')::uuid) = 1
+    and (select count(*) from audit_log where action = 'sign_out_everywhere') = 1);
 
   ---------------------------------------------------------------------------------------------
   -- REPORT (always ends by raising, which rolls everything back)

@@ -29,3 +29,6 @@ grant usage on schema storage to anon, authenticated, service_role;
 grant all on storage.objects, storage.buckets to anon, authenticated, service_role;
 
 create publication supabase_realtime;
+
+-- Saved sign-ins (step 3 signs people out by removing these).
+create table auth.sessions (id uuid primary key default gen_random_uuid(), user_id uuid, created_at timestamptz default now());

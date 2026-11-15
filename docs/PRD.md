@@ -203,7 +203,7 @@ Everyone signs in through either door. Supabase holds the logins, data and photo
 ### Data and photos
 - Everything moves from the Google Sheet and Drive into Supabase once, then the Sheet is retired
 - Proof photos go in a private storage bucket and open only through links that expire in minutes. They're shrunk on upload so the free 1 GB lasts
-- Collect only what the app needs: first name, schedule, homework, proof. No home addresses, no school IDs, no school passwords
+- Collect only what the app needs: first name, schedule, homework, proof. No school IDs, no school passwords, and no child's address. A parent's card and shipping address for real prizes are kept by Stripe, not in our database (6j)
 
 ### Secrets stay on the server
 - The Anthropic key, Apple push key and automation keys live in Supabase server secrets, never in the app or the code on GitHub
@@ -482,23 +482,26 @@ For a child with ADHD both sides matter. She needs the outside record, because h
 - It reinforces principle 9: Emma and the adults share the plan.
 - Set up as measurements: whether she starts without a prompt, and whether the walk-through and start plans help. Sofia reviews, and anything that does not help is dropped.
 
-## 6j. Real prizes: how they get bought (added Nov 12)
+## 6j. Real prizes: how they get bought (added Nov 12, revised Nov 12: the parent pays through Stripe, Sofia orders)
 
 - **The budget belongs to the parent.** A parent sets the weekly real prize budget for their child. For Emma it is $40 today, and it may be lower later. The child, Sofia and the app cannot change it. The price including shipping and tax must fit within it. Whether any exception above it is allowed (the old "legendary exception") is the parent's choice, and the default is none.
-- **The parent chooses how it gets bought,** per child:
-  1. **Alert only (how it works today):** an adult gets an alert and orders it.
-  2. **One-tap checkout:** the app prepares the order (the item in the retailer's cart) and the parent finishes it in the retailer's own page or app, behind a parent gate, with their own saved card and address.
-  3. **Automatic:** once the week's rewards are confirmed, the app orders what the child earned and it ships to the home.
-- **Automatic buying: what is possible, and the limits.** There is no universal way to buy from any store automatically. It depends on the retailer. A few offer proper ordering tools, and many do not. Automating a normal shopping site by logging in and clicking is often against its terms and breaks easily. So automatic buying is offered only for retailers where a proper ordering method has been tested, item by item, and every other item falls back to one-tap checkout. Squishy and slime shops vary a lot, so this is checked in step 9 before it is promised. This is not legal advice.
+- **How it works (decided Nov 12):**
+  1. Emma earns her real prize for the week.
+  2. The parent gets a note in the app: "Emma earned this, $12. Buy it?" with the item, its price and the store. The parent taps Yes. Emma never taps this; a child can never trigger a payment.
+  3. The app charges the parent's saved card through Stripe, within the budget. The money goes to Sofia's Stripe account.
+  4. Sofia gets an alert with the item link and the parent's shipping address. She orders it herself on whatever site sells it (Five Below, Amazon, a slime shop, anything) and ships it to that address. She marks the order placed, then shipped.
+  - This works for any store, because a person places the order. The app does not log into stores or check out by itself: most stores do not allow that, and it breaks easily.
+- **Card and address are entered once, inside the app.** The parent types their card and shipping address once in a Stripe form inside the app, behind a parent gate. Stripe keeps both. Our own database never holds a card number, and does not keep the address either: it stays in Stripe, and the app fetches it from Stripe only for Sofia when an order needs placing. The parent can change or remove the card and address at any time.
+- **Sofia in effect buys on the parent's behalf and is paid back.** Stripe takes a fee (about 3% plus a small amount per charge). Refunds (an order that cannot be filled, or a mistake) go back through Stripe to the parent's card.
 - **Safeguards, always:**
-  - The parent opts in, per child, and can turn it off at any time.
-  - The parent's budget is a hard cap. If the price, shipping or tax would go over it, the order stops.
-  - Only items that Sofia and the parent approved in the catalog can be ordered.
-  - An order is placed only after the week's rewards are confirmed (after the 24-hour review window in 6f), and after a short delay during which the parent can cancel. The parent gets a notice when an order is placed.
-  - Emma cannot trigger a purchase. The server does, from an earned week.
-  - Every order is logged (item, price, retailer, status), and the parent and Sofia can read the log.
-- **No stored card or address.** The app never stores a card number or a home address. The payment method and the shipping address stay in the parent's own retailer account or payment provider. This keeps the app within "collect only what the app needs" (section 6) and the App Store's kids rules. Physical goods are outside Apple's in-app purchase system, and anything to buy sits behind a parent gate.
-- **Suggested first release:** alert only and one-tap checkout. Add automatic buying after at least one retailer's ordering method has been tested.
+  - The parent opts in, per child, and can turn it off at any time. Without a saved card, it falls back to an alert only: an adult orders and pays however they like.
+  - The parent's budget is a hard cap. If the price, shipping or tax would go over it, the charge does not happen.
+  - Only items that Sofia and the parent approved in the catalog can be bought.
+  - A charge happens only after the parent taps Yes, and only after the week's rewards are confirmed (after the 24-hour review window in 6f).
+  - Emma cannot trigger a purchase.
+  - Every charge and order is logged (item, price, store, status, Stripe reference), and the parent and Sofia can read the log.
+- **To check before step 9 builds it:** that a Stripe payment form for parents fits Apple's rules for kids' apps (physical goods are outside Apple's in-app purchase system, and payment sits behind a parent gate); Stripe's terms for Sofia buying on a parent's behalf; whether sales tax applies; and how the parent's address is shown to Sofia (only for an order, and logged). This is not legal or tax advice.
+- **Not doing:** the earlier ideas of the app ordering automatically through a store's own system, or opening the parent's own store account, are dropped. Shop Pay and similar store checkouts cannot be charged by an outside app.
 
 ## 7. App Store reality check
 
