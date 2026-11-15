@@ -1408,6 +1408,14 @@ begin
     perform pg_temp.t_ok('a server undo of a task that is not finished is refused',
       pg_temp.t_val(sr, null, format($$select rewards_undo_task(%L, %L, 'uncheck')$$, e3, se)) like 'ERR:%');
 
+    -- 9p3. SERVER CODE (for example the old-Sheet import) KEEPS THE VALUE IT GIVES
+    insert into tasks (student_id, date, title, source, done, done_at, coins, reward_status) values
+      (sg, d - 30, 'Imported finished task', 'student', true, now(), 0, 'confirmed'),
+      (sg, d - 30, 'Imported old 5-coin task', 'coach', true, now(), 5, 'confirmed');
+    perform pg_temp.t_ok('a server insert with no level keeps its coins exactly (0 stays 0, an old 5 stays 5)',
+      (select coins = 0 and value_level is null from tasks where student_id = sg and title = 'Imported finished task')
+      and (select coins = 5 and value_level is null from tasks where student_id = sg and title = 'Imported old 5-coin task'));
+
     -- 9q. NEVER A NEGATIVE BALANCE, ANYWHERE
     perform pg_temp.t_ok('no student has a negative spendable balance',
       not exists (select 1 from profiles p where p.role = 'student' and rw_spendable(p.id) < 0));
