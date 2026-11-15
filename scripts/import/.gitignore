@@ -1,0 +1,6 @@
+# Emma's real data never goes into git (the repo is public until step 15).
+snapshot/
+photos/
+*.report.txt
+report*.txt
+*.sql.out
