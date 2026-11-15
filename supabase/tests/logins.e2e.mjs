@@ -66,6 +66,8 @@ const run = crypto.randomBytes(3).toString("hex");
 const U = { coach: `e2e_coach_${run}`, kid: `e2e_kid_${run}`, parent: `e2e_parent_${run}` };
 const PW = { coach: `coach-pass-${run}-x`, kid: `kid-pass-${run}-x`, parent: `parent-pass-${run}-x` };
 const made = [];
+// Where the test reset emails go. Resend's free test sender only delivers to the Resend account owner.
+const RESET_EMAIL = process.env.RESET_TEST_EMAIL ?? "e2e-grownup@example.com";
 
 const startedAt = (await sql("select now()::text t"))[0].t;
 
@@ -129,7 +131,7 @@ try {
   const list = await call("account-admin", { action: "list_invites" }, coachTok);
   check("the coach sees the waiting invite", list.body.invites?.some((i) => i.id === inv.body.id));
 
-  const kidClaim = await call("account-public", { action: "claim_invite", code: inv.body.code, username: U.kid, password: PW.kid, email: "e2e-grownup@example.com" });
+  const kidClaim = await call("account-public", { action: "claim_invite", code: inv.body.code, username: U.kid, password: PW.kid, email: RESET_EMAIL });
   check("the student chooses her username and password and is signed in", kidClaim.status === 200 && kidClaim.body.role === "student" && kidClaim.body.session?.access_token, JSON.stringify(kidClaim.body).slice(0, 200));
   const kidId = kidClaim.body.session?.user?.id; if (kidId) made.push(kidId);
   const kidTok = kidClaim.body.session.access_token;
@@ -192,15 +194,17 @@ try {
   const ciCoach = await call("account-public", ci, coachTok);
   check("nobody in the app can send a coach invite (signed out, student or coach)", ciAnon.status === 403 && ciKid.status === 403 && ciCoach.status === 403);
   const ciServer = await call("account-public", { ...ci, first_name: "E2eserver" }, SERVICE);
-  check("the developer script (server key) is accepted", ciServer.status === 200 || ciServer.body.error === "email_not_set_up", JSON.stringify(ciServer.body));
+  check("the developer script (server key) is accepted", ciServer.status === 200 || ["email_not_set_up", "email_failed"].includes(ciServer.body.error), JSON.stringify(ciServer.body));
+  const orphan = await sql("select count(*)::int n from public.invites where first_name = 'E2eserver' and used_at is null");
+  check("an invite whose email could not be sent is not left behind", ciServer.status === 200 || orphan[0].n === 0, JSON.stringify(orphan[0]));
 
   // 6. Reset links. Email sending is checked separately once the email key exists.
-  const emailOn = (await mgmt("/secrets")).some((s) => s.name === "RESEND_API_KEY");
+  const emailOn = (await mgmt("/secrets")).some((s) => s.name === "RESEND_API_KEY" || s.name === "Resend API Key");
   const forgot = await call("account-public", { action: "forgot", username: U.kid });
   const yodaReset = await call("account-admin", { action: "send_reset", user_id: kidId }, coachTok);
   if (emailOn) {
     check("forgot password answers the same way and emails the link", forgot.status === 200);
-    check("the coach sends a reset and sees only a masked email", yodaReset.status === 200 && yodaReset.body.sent_to === "e***@example.com", JSON.stringify(yodaReset.body));
+    check("the coach sends a reset and sees only a masked email", yodaReset.status === 200 && yodaReset.body.sent_to === RESET_EMAIL[0] + "***@" + RESET_EMAIL.split("@")[1], JSON.stringify(yodaReset.body));
   } else {
     check("without the email key, a reset says email is not set up (no link shown anywhere)",
       forgot.status === 503 && yodaReset.status === 503 && !JSON.stringify(yodaReset.body).includes("token"), JSON.stringify(yodaReset.body));
@@ -242,7 +246,7 @@ try {
     delete from public.invites where created_by in (${ids}) or used_by in (${ids}) or (first_name like 'E2e%' and (created_by is null or created_by in (${ids})));
     delete from public.auth_attempts where key in (${users}) or key like 'nobody\\_%' or key like 'e2e\\_%';
     delete from public.audit_log where actor_id in (${ids}) or student_id in (${ids})
-       or (action = 'invite_create' and actor_id is null and details->>'first_name' = 'E2ecoach');
+       or (action = 'invite_create' and actor_id is null and details->>'first_name' like 'E2e%');
     -- the wrong invite codes this run tried on purpose (they have no username, only a time)
     delete from public.auth_attempts where kind = 'invite' and key = '-' and at >= ${lit(startedAt)};
   `).catch((e) => check("cleanup step 1", false, e.message));

@@ -111,16 +111,24 @@ export async function getCaller(req: Request, admin: SupabaseClient): Promise<Ca
 }
 
 export function emailReady(): boolean {
-  return !!Deno.env.get("RESEND_API_KEY") && !!Deno.env.get("EMAIL_FROM");
+  return !!resendKey() && !!emailFrom();
 }
 
-// Sends one email through Resend. Needs the RESEND_API_KEY and EMAIL_FROM server secrets.
+// The email secrets, under the names Sofia saved them with in Supabase.
+function resendKey(): string | undefined {
+  return Deno.env.get("Resend API Key") ?? Deno.env.get("RESEND_API_KEY");
+}
+function emailFrom(): string | undefined {
+  return Deno.env.get("Email From") ?? Deno.env.get("EMAIL_FROM");
+}
+
+// Sends one email through Resend. Needs the "Resend API Key" and "Email From" server secrets.
 export async function sendEmail(to: string, subject: string, text: string): Promise<void> {
   if (!emailReady()) throw new Refusal("email_not_set_up", "Email is not set up yet, so reset links cannot be sent.", 503);
   const r = await fetch("https://api.resend.com/emails", {
     method: "POST",
-    headers: { Authorization: `Bearer ${env("RESEND_API_KEY")}`, "Content-Type": "application/json" },
-    body: JSON.stringify({ from: env("EMAIL_FROM"), to: [to], subject, text }),
+    headers: { Authorization: `Bearer ${resendKey()}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ from: emailFrom(), to: [to], subject, text }),
   });
   if (!r.ok) {
     console.error("email send failed", r.status);

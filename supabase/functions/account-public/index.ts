@@ -160,6 +160,7 @@ serve(async (req, body) => {
       p_code_hash: await sha256Hex(normalizeCode(code)), p_days: 7,
     });
     if (error || !data?.length) throw new Refusal("server_error", "Could not make the invite.", 500);
+    // If the email cannot be sent, remove the invite again so no unusable invite is left behind.
     await sendEmail(to, `${appName()}: your coach account`, [
       `Hi ${firstName},`,
       "",
@@ -169,7 +170,10 @@ serve(async (req, body) => {
       "",
       "You will choose your own username and password, then add an authenticator app.",
       "The invite works once and stops working in 7 days.",
-    ].join("\n"));
+    ].join("\n")).catch(async (e) => {
+      await admin.from("invites").delete().eq("id", data[0].id);
+      throw e;
+    });
     return json({ ok: true, expires_at: data[0].expires_at });
   }
 
