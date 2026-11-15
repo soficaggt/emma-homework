@@ -1,0 +1,56 @@
+{
+  "name": "Emma (kawaii)",
+  "theming_depth": "whole_app",
+  "palette": {
+    "light": {
+      "bg": "#f4efff", "bg2": "#ffeef6", "card": "#ffffff", "fg": "#2b2440", "muted": "#6b6285", "line": "#ebe4f7",
+      "accent": "#7f48f0", "accentInk": "#ffffff", "good": "#2fbf8f", "alert": "#ff5c7c", "alertInk": "#2b2440", "ledge": "#e4dbf6",
+      "tintL": 92, "tintS": 85, "strongL": 52, "strongS": 70
+    },
+    "dark": {
+      "bg": "#17132a", "bg2": "#24152b", "card": "#211c36", "fg": "#f3efff", "muted": "#a89fc4", "line": "#322b4d",
+      "accent": "#b996ff", "accentInk": "#17132a", "good": "#4fdcaa", "alert": "#ff8aa3", "alertInk": "#17132a", "ledge": "#0f0c1e",
+      "tintL": 24, "tintS": 38, "strongL": 68, "strongS": 80
+    }
+  },
+  "fonts": { "display": "fredoka", "body": "nunito" },
+  "shapes": { "card": 24, "task": 16, "pill": 99, "check": 9, "ledge": 6 },
+  "page_names": { "days": "Days", "calendar": "Calendar", "collection": "Shelf", "shop": "Shop" },
+  "currency": { "name": "coins", "look": "gold" },
+  "wording": {
+    "title": "{name}'s Homework",
+    "next_up": "Next up",
+    "first_step_ask": "What's a tiny first step? About two minutes.",
+    "check_soon": "Checking off is almost ready.",
+    "delete_msg": "It'll be gone from the plan.",
+    "nothing_planned": "Nothing planned. Tap + Add.",
+    "first_step_ideas": "Open the book|Get a pencil|Read the first line|Set a 2 minute timer"
+  },
+  "color_system": {
+    "mode": "urgency_ladder",
+    "steps": [
+      { "key": "purple", "name": "Purple", "meaning": "Must do today", "hue": 276, "sat": 1 },
+      { "key": "blue", "name": "Blue", "meaning": "Really should", "hue": 218, "sat": 1 },
+      { "key": "white", "name": "White", "meaning": "Should do", "hue": 250, "sat": 0.05, "shadeScale": 0,
+        "surface": "#ffffff", "ink": "#2b2440", "edge": "#2b2440", "chip": "#f3effa", "heart": "#ffffff", "heartStroke": "#2b2440" },
+      { "key": "pink", "name": "Pink", "meaning": "Good to do", "hue": 340, "sat": 1, "shadeScale": 0.5 },
+      { "key": "orange", "name": "Orange", "meaning": "If there’s time", "hue": 24, "sat": 1, "shadeScale": 0.5 },
+      { "key": "yellow", "name": "Yellow", "meaning": "Could wait", "hue": 46, "sat": 1, "shadeScale": 0.5 },
+      { "key": "green", "name": "Green", "meaning": "Can wait", "hue": 148, "sat": 1 },
+      { "key": "gray", "name": "Gray", "meaning": "Optional", "hue": 250, "sat": 0.12, "shadeScale": 0, "heart": "#aaa5b8" }
+    ],
+    "rules": { "byGap": [0, 1, 2, 3, 4, 5, 6], "plan": 0, "flex": 5, "noDue": 2, "noDueTest": 1 },
+    "shades": [
+      { "pattern": "latin", "shift": -7 },
+      { "pattern": "hist", "shift": 14 },
+      { "pattern": "rsm|algebra|geometry|\\bgeo\\b", "shift": 7 },
+      { "pattern": "math|quiz", "shift": -14 },
+      { "pattern": "hunter", "shift": 0 },
+      { "pattern": "english|vocab|hobbit|grammar|reading|essay|book", "shift": 7 },
+      { "pattern": "bio|science", "shift": -7 },
+      { "pattern": "physics|chem", "shift": 0 },
+      { "pattern": "robot|canva", "shift": -14 },
+      { "pattern": "dinner|break|snack", "shift": 0 }
+    ]
+  }
+}
